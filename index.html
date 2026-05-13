@@ -283,11 +283,11 @@
             </div>
         </header>
         <div id="history-container" class="space-y-4">
-            </div>
+        </div>
     </div>
 
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
-        <i class="fa-solid fa-check-circle text-gray-200"></i>
+        <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
         <span id="toast-msg">Mensaje</span>
     </div>
 
@@ -296,7 +296,6 @@
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // TUS LLAVES
         const firebaseConfig = {
             apiKey: "AIzaSyBSzvWwy61Zexsy4dBSCJZtCChBLge7Nlk",
             authDomain: "cev-registro-insumos-diarios.firebaseapp.com",
@@ -551,7 +550,7 @@
                 });
 
             } catch (error) {
-                showToast("Error al cargar inventario");
+                showToast("Error al cargar inventario", true);
             } finally {
                 renderInventoryTable(document.getElementById('search-input').value.toLowerCase());
                 toggleLoader(false);
@@ -564,7 +563,7 @@
             try {
                 await setDoc(doc(db, "inventarios", fechaActual), { items: inventory });
             } catch (error) {
-                showToast("Error al guardar.");
+                showToast("Error al guardar.", true);
             } finally {
                 toggleLoader(false);
             }
@@ -658,8 +657,8 @@
             const start = document.getElementById('export-start').value;
             const end = document.getElementById('export-end').value;
 
-            if (!start || !end) { showToast("Selecciona fecha de inicio y fin"); return; }
-            if (start > end) { showToast("La fecha de inicio debe ser anterior a la de fin"); return; }
+            if (!start || !end) { showToast("Selecciona fecha de inicio y fin", true); return; }
+            if (start > end) { showToast("La fecha de inicio debe ser anterior a la de fin", true); return; }
 
             showToast("Consultando a la nube...");
             toggleLoader(true);
@@ -711,7 +710,7 @@
         // ==========================================
         // 2. SISTEMA DE PEDIDOS A FARMACIA
         // ==========================================
-        const listaInsumosFarmacia = [
+        let listaInsumosFarmacia = [
             "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)", 
             "Arena", "Atropina", "Bladuril", "Buretrol", "Carbón activado", "Catéter", "Cefalexina 500 mg", 
             "Cefalotina 1 mL", "Ceftriaxona ampolla x 10 mL", "Cerenia 1 mL iny.", "Cloruro de sodio", 
@@ -741,7 +740,8 @@
             }
         }
 
-        window.initOrders = async function() {
+        // Función para poblar el menú desplegable (Select)
+        window.actualizarSelectInsumos = function() {
             const select = document.getElementById('order-item-select');
             select.innerHTML = '<option value="">Seleccione un insumo...</option>';
             listaInsumosFarmacia.forEach(insumo => {
@@ -750,6 +750,19 @@
                 opt.textContent = insumo;
                 select.appendChild(opt);
             });
+        }
+
+        window.initOrders = async function() {
+            // Cargar insumos extra guardados en la memoria del dispositivo y agregarlos a la lista
+            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+            extraInsumos.forEach(insumo => {
+                if (!listaInsumosFarmacia.includes(insumo)) {
+                    listaInsumosFarmacia.push(insumo);
+                }
+            });
+            listaInsumosFarmacia.sort(); // Mantener el orden alfabético
+            
+            actualizarSelectInsumos();
 
             const d = new Date();
             document.getElementById('ticket-date').textContent = `Fecha: ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()} - ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
@@ -797,20 +810,47 @@
 
         window.addOrderRow = async function() {
             let itemName = "";
+            
             if (modoManual) {
                 itemName = document.getElementById('order-item-input').value.trim();
+                
+                if (itemName === "") {
+                    showToast("Por favor escribe un insumo.", true);
+                    return;
+                }
+
+                // VALIDACIÓN: OBLIGAR QUE LA PRIMERA LETRA SEA MAYÚSCULA
+                const primeraLetra = itemName.charAt(0);
+                if (primeraLetra !== primeraLetra.toUpperCase() || !/[A-ZÁÉÍÓÚÑ]/.test(primeraLetra)) {
+                    showToast("Requisito: La primera letra debe ser MAYÚSCULA.", true);
+                    return;
+                }
+
+                // SI NO EXISTE EN LA LISTA, LO APRENDEMOS Y LO GUARDAMOS
+                if (!listaInsumosFarmacia.includes(itemName)) {
+                    listaInsumosFarmacia.push(itemName);
+                    listaInsumosFarmacia.sort();
+                    
+                    let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+                    if (!extraInsumos.includes(itemName)) {
+                        extraInsumos.push(itemName);
+                        localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
+                    }
+                    
+                    actualizarSelectInsumos();
+                }
+
             } else {
                 itemName = document.getElementById('order-item-select').value;
+                if (itemName === "") {
+                    showToast("Por favor selecciona un insumo de la lista.", true);
+                    return;
+                }
             }
 
             const qty = document.getElementById('order-qty').value;
-
-            if (itemName === "") {
-                showToast("Por favor selecciona o escribe un insumo.");
-                return;
-            }
             if (qty <= 0) {
-                showToast("La cantidad debe ser mayor a 0.");
+                showToast("La cantidad debe ser mayor a 0.", true);
                 return;
             }
 
@@ -829,7 +869,7 @@
             document.getElementById('order-qty').value = "1";
 
             renderOrderTable();
-            showToast("Insumo agregado (Sincronizado en la nube)");
+            showToast("Insumo agregado (Sincronizado)");
         }
 
         window.removeOrderRow = async function(index) {
@@ -879,7 +919,7 @@
         // --- ENVIAR A WHATSAPP Y GUARDAR EL TEXTO EXACTO ---
         window.generarYEnviarWhatsApp = async function() {
             if (pedidoActual.length === 0) {
-                showToast("El pedido está vacío.");
+                showToast("El pedido está vacío.", true);
                 return;
             }
 
@@ -888,7 +928,6 @@
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
-                // Generamos el texto plano exacto que se va a enviar
                 let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n`;
                 textoPlano += `📅 Fecha: ${fechaBonita}\n\n`;
                 
@@ -901,13 +940,12 @@
                 const datosGuardar = {
                     fecha: fechaBonita,
                     timestamp: parseInt(timestamp),
-                    textoEnviado: textoPlano // <-- AHORA GUARDAMOS EL TEXTO EXACTO
+                    textoEnviado: textoPlano 
                 };
 
                 showToast("Guardando mensaje en historial...");
                 await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
 
-                // Reemplazamos los saltos de línea para la URL de WhatsApp
                 const textoWhatsAppUrl = encodeURIComponent(textoPlano);
                 const numeroWhatsApp = "573235834349"; 
                 const waUrl = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${textoWhatsAppUrl}`;
@@ -923,7 +961,7 @@
 
             } catch (error) {
                 console.error("Error al guardar el historial:", error);
-                showToast("Hubo un error al guardar. Revisa tu conexión a internet.");
+                showToast("Hubo un error al guardar. Revisa tu conexión a internet.", true);
             }
         }
 
@@ -963,15 +1001,13 @@
                 container.innerHTML = '';
                 
                 pedidosGuardados.forEach((pedido) => {
-                    // Reconstruir el texto para que se vea bonito en HTML
                     let textoFormateado = "Mensaje antiguo, no tiene formato guardado.";
                     
                     if (pedido.textoEnviado) {
                         textoFormateado = pedido.textoEnviado
-                            .replace(/\n/g, '<br>') // Cambia saltos de línea a HTML
-                            .replace(/\*(.*?)\*/g, '<b>$1</b>'); // Pone en negrita lo que tiene asteriscos
+                            .replace(/\n/g, '<br>')
+                            .replace(/\*(.*?)\*/g, '<b>$1</b>');
                     } else if (pedido.items) {
-                        // Por si acaso hay pedidos viejos guardados de la versión anterior
                         textoFormateado = `<b>Pedido antiguo (${pedido.fecha})</b><br>`;
                         pedido.items.forEach((it, idx) => {
                             textoFormateado += `${idx+1}. ${it.name} ➡️ Cant: <b>${it.qty}</b><br>`;
@@ -981,7 +1017,6 @@
                     const card = document.createElement('div');
                     card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-green-200 mb-4 hover:shadow-lg transition-shadow";
                     
-                    // El texto exacto codificado para el botón de reenviar
                     const textoParaReenviar = encodeURIComponent(pedido.textoEnviado || "Reenviando pedido");
 
                     card.innerHTML = `
@@ -1006,9 +1041,21 @@
             }
         }
 
-        window.showToast = function(message) {
+        // --- SISTEMA DE NOTIFICACIONES MEJORADO ---
+        window.showToast = function(message, isError = false) {
             const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            
             document.getElementById('toast-msg').textContent = message;
+            
+            if(isError) {
+                toast.classList.replace('bg-[#154390]', 'bg-red-600');
+                icon.className = 'fa-solid fa-triangle-exclamation text-gray-100';
+            } else {
+                toast.classList.replace('bg-red-600', 'bg-[#154390]');
+                icon.className = 'fa-solid fa-check-circle text-gray-200';
+            }
+
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         }
