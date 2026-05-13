@@ -99,7 +99,7 @@
                 </div>
                 <div class="text-center">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
-                    <p class="text-gray-500 text-center">Solicita insumos y guarda un histórico automático.</p>
+                    <p class="text-gray-500 text-center">Solicita insumos y guarda el mensaje de WhatsApp.</p>
                 </div>
             </button>
         </div>
@@ -196,8 +196,8 @@
                 </div>
             </div>
             
-            <button onclick="openHistory()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center shadow-sm">
-                <i class="fa-solid fa-clock-rotate-left"></i> Ver Historial
+            <button onclick="openHistory()" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-green-200 w-full sm:w-auto justify-center shadow-sm">
+                <i class="fa-brands fa-whatsapp"></i> Ver Mensajes Enviados
             </button>
         </header>
 
@@ -264,7 +264,7 @@
 
         <button onclick="generarYEnviarWhatsApp()" class="w-full py-4 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-colors shadow-lg flex justify-center items-center gap-3 text-lg">
             <i class="fa-brands fa-whatsapp text-2xl"></i>
-            Enviar Pedido y Guardar Historial
+            Enviar a WhatsApp y Guardar Texto
         </button>
     </div>
 
@@ -275,15 +275,15 @@
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-[#154390] flex items-center gap-2">
-                        Historial de Pedidos
+                    <h1 class="text-xl sm:text-2xl font-bold text-green-600 flex items-center gap-2">
+                        Mensajes Enviados a Farmacia
                     </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Registros guardados en la nube de Firebase</p>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Aquí verás el texto exacto de lo que se envió</p>
                 </div>
             </div>
         </header>
         <div id="history-container" class="space-y-4">
-        </div>
+            </div>
     </div>
 
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
@@ -317,7 +317,7 @@
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.remove('hidden');
-            initInventoryApp(); // Llamada al sistema de inventario original
+            initInventoryApp();
         };
 
         window.openOrders = function() {
@@ -465,7 +465,6 @@
             if(!exportEnd.value) exportEnd.value = todayStr;
         }
 
-        // Lógica de festivos de Colombia
         function getHolidays(year) {
             const holidays = [];
             const addDays = (d, days) => new Date(d.getTime() + days * 86400000);
@@ -710,7 +709,7 @@
 
 
         // ==========================================
-        // 2. SISTEMA NUEVO DE PEDIDOS A FARMACIA
+        // 2. SISTEMA DE PEDIDOS A FARMACIA
         // ==========================================
         const listaInsumosFarmacia = [
             "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)", 
@@ -877,6 +876,7 @@
             totalItems.textContent = total;
         }
 
+        // --- ENVIAR A WHATSAPP Y GUARDAR EL TEXTO EXACTO ---
         window.generarYEnviarWhatsApp = async function() {
             if (pedidoActual.length === 0) {
                 showToast("El pedido está vacío.");
@@ -888,28 +888,31 @@
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
+                // Generamos el texto plano exacto que se va a enviar
+                let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n`;
+                textoPlano += `📅 Fecha: ${fechaBonita}\n\n`;
+                
+                pedidoActual.forEach((item, i) => {
+                    textoPlano += `${i+1}. ${item.name} ➡️ Cant: *${item.qty}*\n`;
+                });
+                
+                textoPlano += `\n_Enviado desde el sistema de control de insumos._`;
+
                 const datosGuardar = {
                     fecha: fechaBonita,
                     timestamp: parseInt(timestamp),
-                    items: pedidoActual
+                    textoEnviado: textoPlano // <-- AHORA GUARDAMOS EL TEXTO EXACTO
                 };
 
-                showToast("Guardando historial en la nube...");
+                showToast("Guardando mensaje en historial...");
                 await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
 
-                let textoWhatsApp = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*%0A`;
-                textoWhatsApp += `📅 Fecha: ${fechaBonita}%0A%0A`;
-                
-                pedidoActual.forEach((item, i) => {
-                    textoWhatsApp += `${i+1}. ${item.name} ➡️ Cant: *${item.qty}*%0A`;
-                });
-                
-                textoWhatsApp += `%0A_Enviado desde el sistema de control de insumos._`;
-
+                // Reemplazamos los saltos de línea para la URL de WhatsApp
+                const textoWhatsAppUrl = encodeURIComponent(textoPlano);
                 const numeroWhatsApp = "573235834349"; 
-                const waUrl = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${textoWhatsApp}`;
+                const waUrl = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${textoWhatsAppUrl}`;
                 
-                showToast("¡Guardado exitoso! Abriendo WhatsApp...");
+                showToast("¡Mensaje guardado! Abriendo WhatsApp...");
                 
                 pedidoActual = [];
                 await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: [] });
@@ -924,7 +927,7 @@
             }
         }
 
-        // --- HISTORIAL ---
+        // --- HISTORIAL ESTILO CHAT DE WHATSAPP ---
         window.openHistory = function() {
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.remove('hidden');
@@ -953,34 +956,46 @@
                 pedidosGuardados.sort((a, b) => b.timestamp - a.timestamp);
                 
                 if (pedidosGuardados.length === 0) {
-                    container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i><br>Aún no hay pedidos registrados en el historial.</div>';
+                    container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-comment-slash text-4xl mb-3 opacity-50"></i><br>Aún no hay mensajes enviados a farmacia.</div>';
                     return;
                 }
                 
                 container.innerHTML = '';
                 
                 pedidosGuardados.forEach((pedido) => {
-                    let itemsHtml = '';
-                    pedido.items.forEach(item => {
-                        itemsHtml += `<li class="flex justify-between border-b border-gray-100 py-1.5"><span class="text-gray-600">${item.name}</span><span class="font-bold text-[#154390] bg-blue-50 px-2 rounded">${item.qty}</span></li>`;
-                    });
+                    // Reconstruir el texto para que se vea bonito en HTML
+                    let textoFormateado = "Mensaje antiguo, no tiene formato guardado.";
                     
-                    const totalSuma = pedido.items.reduce((sum, item) => sum + item.qty, 0);
+                    if (pedido.textoEnviado) {
+                        textoFormateado = pedido.textoEnviado
+                            .replace(/\n/g, '<br>') // Cambia saltos de línea a HTML
+                            .replace(/\*(.*?)\*/g, '<b>$1</b>'); // Pone en negrita lo que tiene asteriscos
+                    } else if (pedido.items) {
+                        // Por si acaso hay pedidos viejos guardados de la versión anterior
+                        textoFormateado = `<b>Pedido antiguo (${pedido.fecha})</b><br>`;
+                        pedido.items.forEach((it, idx) => {
+                            textoFormateado += `${idx+1}. ${it.name} ➡️ Cant: <b>${it.qty}</b><br>`;
+                        });
+                    }
 
                     const card = document.createElement('div');
-                    card.className = "bg-white p-5 rounded-xl shadow-md border-l-4 border-l-[#154390] mb-4 hover:shadow-lg transition-shadow";
+                    card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-green-200 mb-4 hover:shadow-lg transition-shadow";
+                    
+                    // El texto exacto codificado para el botón de reenviar
+                    const textoParaReenviar = encodeURIComponent(pedido.textoEnviado || "Reenviando pedido");
+
                     card.innerHTML = `
                         <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
-                            <div class="font-bold text-gray-800 flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-check text-[#154390]"></i> ${pedido.fecha}
+                            <div class="font-bold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
+                                <i class="fa-brands fa-whatsapp text-green-500 text-lg"></i> Enviado el ${pedido.fecha.split(' - ')[0]}
                             </div>
-                            <div class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full uppercase tracking-wide border border-green-200">
-                                ${totalSuma} ítems pedidos
-                            </div>
+                            <a href="https://api.whatsapp.com/send?phone=573235834349&text=${textoParaReenviar}" target="_blank" class="text-xs sm:text-sm font-bold bg-green-100 text-green-700 px-3 py-1.5 rounded-full uppercase tracking-wide border border-green-200 hover:bg-green-200 transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-share"></i> Reenviar
+                            </a>
                         </div>
-                        <ul class="text-sm">
-                            ${itemsHtml}
-                        </ul>
+                        <div class="bg-green-50 p-3 sm:p-4 rounded-lg text-sm text-gray-700 font-mono shadow-inner border border-green-100">
+                            ${textoFormateado}
+                        </div>
                     `;
                     container.appendChild(card);
                 });
