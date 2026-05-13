@@ -205,18 +205,25 @@
             <div class="flex flex-col sm:flex-row gap-4 items-end">
                 <div class="w-full sm:w-1/2">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
-                    <div id="select-container" class="flex items-center gap-2">
-                        <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
-                            <option value="">Seleccione...</option>
-                        </select>
-                        <button id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()" class="hidden text-red-500 hover:text-red-700 p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200 shrink-0" title="Eliminar este insumo de la lista">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
+                    
+                    <div id="select-container" class="flex flex-col gap-1 w-full">
+                        <div class="flex items-center gap-2 w-full">
+                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
+                                <option value="">Seleccione...</option>
+                            </select>
+                            
+                            <button type="button" id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()" class="hidden text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors border border-red-600 shrink-0 flex items-center justify-center gap-1 text-sm font-bold shadow-sm" title="Eliminar este insumo de la memoria permanentemente">
+                                <i class="fa-solid fa-trash-can"></i> Borrar
+                            </button>
+                        </div>
+                        <p id="custom-item-help" class="hidden text-xs text-red-500 font-semibold italic"><i class="fa-solid fa-circle-info"></i> Insumo agregado por ti. Puedes borrarlo de la lista si lo escribiste mal.</p>
                     </div>
+
                     <div id="input-container" class="hidden">
                         <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
                     </div>
                 </div>
+                
                 <div class="w-full sm:w-1/4">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Cantidad</label>
                     <input type="number" id="order-qty" min="1" value="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm text-center font-bold">
@@ -754,12 +761,14 @@
             });
             // Ocultar botón de eliminar al actualizar el select
             document.getElementById('btn-delete-custom-list').classList.add('hidden');
+            const helpText = document.getElementById('custom-item-help');
+            if (helpText) helpText.classList.add('hidden');
         }
 
-        // NUEVO: Verifica si el insumo seleccionado es manual para mostrar la papelera
         window.verificarInsumoPersonalizado = function() {
             const select = document.getElementById('order-item-select');
             const btnDelete = document.getElementById('btn-delete-custom-list');
+            const helpText = document.getElementById('custom-item-help');
             const selectedValue = select.value;
 
             // Extraemos la lista de insumos agregados manualmente de la memoria
@@ -767,32 +776,33 @@
 
             if (selectedValue !== "" && extraInsumos.includes(selectedValue)) {
                 btnDelete.classList.remove('hidden'); // Muestra la papelera
+                if (helpText) helpText.classList.remove('hidden'); // Muestra la ayudita
             } else {
                 btnDelete.classList.add('hidden'); // Oculta la papelera
+                if (helpText) helpText.classList.add('hidden');
             }
         }
 
-        // NUEVO: Elimina el insumo manual de la lista si el usuario se equivocó
         window.eliminarInsumoPersonalizado = function() {
             const select = document.getElementById('order-item-select');
             const insumoAEliminar = select.value;
 
             if (!insumoAEliminar) return;
 
-            if (confirm(`¿Estás seguro de que deseas eliminar permanentemente "${insumoAEliminar}" de tu lista de insumos?`)) {
-                // 1. Quitarlo de los guardados manualmente (localStorage)
-                let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
-                extraInsumos = extraInsumos.filter(item => item !== insumoAEliminar);
-                localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
+            // ELIMINACIÓN DIRECTA: Quitamos el "confirm" porque los celulares a veces lo bloquean
+            
+            // 1. Quitarlo de los guardados manualmente (localStorage)
+            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+            extraInsumos = extraInsumos.filter(item => item !== insumoAEliminar);
+            localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
 
-                // 2. Quitarlo de la lista principal que se está mostrando en pantalla
-                listaInsumosFarmacia = listaInsumosFarmacia.filter(item => item !== insumoAEliminar);
+            // 2. Quitarlo de la lista principal que se está mostrando en pantalla
+            listaInsumosFarmacia = listaInsumosFarmacia.filter(item => item !== insumoAEliminar);
 
-                // 3. Actualizar la vista del menú desplegable
-                actualizarSelectInsumos();
-                
-                showToast(`"${insumoAEliminar}" fue eliminado de la lista.`);
-            }
+            // 3. Actualizar la vista del menú desplegable (esto oculta automáticamente el botón rojo)
+            actualizarSelectInsumos();
+            
+            showToast(`¡Listo! "${insumoAEliminar}" fue eliminado permanentemente.`);
         }
 
         window.initOrders = async function() {
@@ -847,8 +857,9 @@
                 inputCont.classList.add('hidden');
                 document.getElementById('order-item-input').value = "";
                 btn.innerHTML = '<i class="fa-solid fa-pencil"></i> ¿No está en la lista? Ingresar manual';
-                // Al volver a la lista normal, nos aseguramos de esconder la papelera
                 document.getElementById('btn-delete-custom-list').classList.add('hidden');
+                const helpText = document.getElementById('custom-item-help');
+                if (helpText) helpText.classList.add('hidden');
             }
         }
 
@@ -909,7 +920,9 @@
             if (modoManual) document.getElementById('order-item-input').value = "";
             else document.getElementById('order-item-select').value = "";
             document.getElementById('order-qty').value = "1";
-            document.getElementById('btn-delete-custom-list').classList.add('hidden'); // Ocultar papelera tras agregar
+            document.getElementById('btn-delete-custom-list').classList.add('hidden');
+            const helpText = document.getElementById('custom-item-help');
+            if (helpText) helpText.classList.add('hidden');
 
             renderOrderTable();
             showToast("Insumo agregado (Sincronizado)");
