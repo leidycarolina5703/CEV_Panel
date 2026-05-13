@@ -205,10 +205,13 @@
             <div class="flex flex-col sm:flex-row gap-4 items-end">
                 <div class="w-full sm:w-1/2">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
-                    <div id="select-container">
-                        <select id="order-item-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
+                    <div id="select-container" class="flex items-center gap-2">
+                        <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
                             <option value="">Seleccione...</option>
                         </select>
+                        <button id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()" class="hidden text-red-500 hover:text-red-700 p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200 shrink-0" title="Eliminar este insumo de la lista">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
                     <div id="input-container" class="hidden">
                         <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
@@ -740,7 +743,6 @@
             }
         }
 
-        // Función para poblar el menú desplegable (Select)
         window.actualizarSelectInsumos = function() {
             const select = document.getElementById('order-item-select');
             select.innerHTML = '<option value="">Seleccione un insumo...</option>';
@@ -750,17 +752,57 @@
                 opt.textContent = insumo;
                 select.appendChild(opt);
             });
+            // Ocultar botón de eliminar al actualizar el select
+            document.getElementById('btn-delete-custom-list').classList.add('hidden');
+        }
+
+        // NUEVO: Verifica si el insumo seleccionado es manual para mostrar la papelera
+        window.verificarInsumoPersonalizado = function() {
+            const select = document.getElementById('order-item-select');
+            const btnDelete = document.getElementById('btn-delete-custom-list');
+            const selectedValue = select.value;
+
+            // Extraemos la lista de insumos agregados manualmente de la memoria
+            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+
+            if (selectedValue !== "" && extraInsumos.includes(selectedValue)) {
+                btnDelete.classList.remove('hidden'); // Muestra la papelera
+            } else {
+                btnDelete.classList.add('hidden'); // Oculta la papelera
+            }
+        }
+
+        // NUEVO: Elimina el insumo manual de la lista si el usuario se equivocó
+        window.eliminarInsumoPersonalizado = function() {
+            const select = document.getElementById('order-item-select');
+            const insumoAEliminar = select.value;
+
+            if (!insumoAEliminar) return;
+
+            if (confirm(`¿Estás seguro de que deseas eliminar permanentemente "${insumoAEliminar}" de tu lista de insumos?`)) {
+                // 1. Quitarlo de los guardados manualmente (localStorage)
+                let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+                extraInsumos = extraInsumos.filter(item => item !== insumoAEliminar);
+                localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
+
+                // 2. Quitarlo de la lista principal que se está mostrando en pantalla
+                listaInsumosFarmacia = listaInsumosFarmacia.filter(item => item !== insumoAEliminar);
+
+                // 3. Actualizar la vista del menú desplegable
+                actualizarSelectInsumos();
+                
+                showToast(`"${insumoAEliminar}" fue eliminado de la lista.`);
+            }
         }
 
         window.initOrders = async function() {
-            // Cargar insumos extra guardados en la memoria del dispositivo y agregarlos a la lista
             let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
             extraInsumos.forEach(insumo => {
                 if (!listaInsumosFarmacia.includes(insumo)) {
                     listaInsumosFarmacia.push(insumo);
                 }
             });
-            listaInsumosFarmacia.sort(); // Mantener el orden alfabético
+            listaInsumosFarmacia.sort();
             
             actualizarSelectInsumos();
 
@@ -805,6 +847,8 @@
                 inputCont.classList.add('hidden');
                 document.getElementById('order-item-input').value = "";
                 btn.innerHTML = '<i class="fa-solid fa-pencil"></i> ¿No está en la lista? Ingresar manual';
+                // Al volver a la lista normal, nos aseguramos de esconder la papelera
+                document.getElementById('btn-delete-custom-list').classList.add('hidden');
             }
         }
 
@@ -819,14 +863,12 @@
                     return;
                 }
 
-                // VALIDACIÓN: OBLIGAR QUE LA PRIMERA LETRA SEA MAYÚSCULA
                 const primeraLetra = itemName.charAt(0);
                 if (primeraLetra !== primeraLetra.toUpperCase() || !/[A-ZÁÉÍÓÚÑ]/.test(primeraLetra)) {
                     showToast("Requisito: La primera letra debe ser MAYÚSCULA.", true);
                     return;
                 }
 
-                // SI NO EXISTE EN LA LISTA, LO APRENDEMOS Y LO GUARDAMOS
                 if (!listaInsumosFarmacia.includes(itemName)) {
                     listaInsumosFarmacia.push(itemName);
                     listaInsumosFarmacia.sort();
@@ -867,6 +909,7 @@
             if (modoManual) document.getElementById('order-item-input').value = "";
             else document.getElementById('order-item-select').value = "";
             document.getElementById('order-qty').value = "1";
+            document.getElementById('btn-delete-custom-list').classList.add('hidden'); // Ocultar papelera tras agregar
 
             renderOrderTable();
             showToast("Insumo agregado (Sincronizado)");
