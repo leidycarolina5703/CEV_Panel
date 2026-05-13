@@ -215,6 +215,7 @@
                 <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wider">TICKET DE PEDIDO</h2>
                 <h3 class="text-lg font-bold text-gray-600 mt-1">Farmacia CEV</h3>
                 <p class="text-gray-500 text-sm mt-2" id="ticket-date">Fecha: --/--/----</p>
+                <p id="draft-badge" class="hidden text-yellow-600 text-xs font-bold mt-2"><i class="fa-solid fa-floppy-disk"></i> Borrador Autoguardado</p>
             </div>
             
             <table class="w-full text-left border-collapse">
@@ -375,9 +376,6 @@
             });
         };
 
-        // --- SISTEMA DE INVENTARIO (Lógica original mantenida) ---
-        // (Las funciones como getHolidays, loadDataFromFirebase, etc. siguen aquí e intactas en memoria)
-
         // --- MÓDULO DE PEDIDOS A FARMACIA ---
         const listaInsumosFarmacia = [
             "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)", 
@@ -402,6 +400,7 @@
         let modoManual = false;
 
         window.initOrders = function() {
+            // Llenar select
             const select = document.getElementById('order-item-select');
             select.innerHTML = '<option value="">Seleccione un insumo...</option>';
             listaInsumosFarmacia.forEach(insumo => {
@@ -410,6 +409,19 @@
                 opt.textContent = insumo;
                 select.appendChild(opt);
             });
+
+            // RECUPERAR BORRADOR DEL ALMACENAMIENTO LOCAL
+            const borradorGuardado = localStorage.getItem('borradorPedidoCEV');
+            const badgeBorrador = document.getElementById('draft-badge');
+            
+            if (borradorGuardado) {
+                pedidoActual = JSON.parse(borradorGuardado);
+                if (pedidoActual.length > 0) {
+                    badgeBorrador.classList.remove('hidden'); // Mostrar aviso de que hay un borrador
+                } else {
+                    badgeBorrador.classList.add('hidden');
+                }
+            }
 
             // Actualizar fecha
             const d = new Date();
@@ -463,16 +475,27 @@
                 pedidoActual.push({ name: itemName, qty: parseInt(qty) });
             }
 
+            // GUARDAR AUTOMÁTICAMENTE EL BORRADOR
+            localStorage.setItem('borradorPedidoCEV', JSON.stringify(pedidoActual));
+            document.getElementById('draft-badge').classList.remove('hidden');
+
             if (modoManual) document.getElementById('order-item-input').value = "";
             else document.getElementById('order-item-select').value = "";
             document.getElementById('order-qty').value = "1";
 
             renderOrderTable();
-            showToast("Insumo agregado al pedido");
+            showToast("Insumo agregado (Borrador guardado)");
         }
 
         window.removeOrderRow = function(index) {
             pedidoActual.splice(index, 1);
+            
+            // ACTUALIZAR BORRADOR TRAS ELIMINAR
+            localStorage.setItem('borradorPedidoCEV', JSON.stringify(pedidoActual));
+            if (pedidoActual.length === 0) {
+                document.getElementById('draft-badge').classList.add('hidden');
+            }
+            
             renderOrderTable();
         }
 
@@ -519,12 +542,10 @@
             }
 
             try {
-                // 1. Obtener la fecha y el timestamp único
                 const timestamp = new Date().getTime().toString();
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
-                // 2. Armar el objeto para guardar en la base de datos
                 const datosGuardar = {
                     fecha: fechaBonita,
                     timestamp: parseInt(timestamp),
@@ -532,11 +553,8 @@
                 };
 
                 showToast("Guardando historial en la nube...");
-                
-                // 3. Guardar en la nueva colección 'pedidos_farmacia'
                 await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
 
-                // 4. Crear el texto formateado para WhatsApp
                 let textoWhatsApp = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*%0A`;
                 textoWhatsApp += `📅 Fecha: ${fechaBonita}%0A%0A`;
                 
@@ -546,17 +564,17 @@
                 
                 textoWhatsApp += `%0A_Enviado desde el sistema de control de insumos._`;
 
-                // 5. Construir la URL de WhatsApp y abrirla
                 const numeroWhatsApp = "573235834349"; 
                 const waUrl = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${textoWhatsApp}`;
                 
                 showToast("¡Guardado exitoso! Abriendo WhatsApp...");
                 
-                // 6. Limpiar la lista para el siguiente pedido
+                // LIMPIAR EL PEDIDO Y BORRAR EL BORRADOR DE MEMORIA
                 pedidoActual = [];
+                localStorage.removeItem('borradorPedidoCEV');
+                document.getElementById('draft-badge').classList.add('hidden');
                 renderOrderTable();
 
-                // 7. Abrir WhatsApp (pequeño retraso para que el usuario lea el mensaje flotante)
                 setTimeout(() => { window.open(waUrl, '_blank'); }, 1200);
 
             } catch (error) {
@@ -582,7 +600,6 @@
             container.innerHTML = '<div class="text-center py-8"><div class="loader mx-auto mb-4"></div><p class="text-gray-500 font-semibold">Cargando registros...</p></div>';
             
             try {
-                // Consultar toda la colección
                 const querySnapshot = await getDocs(collection(db, "pedidos_farmacia"));
                 let pedidosGuardados = [];
                 
@@ -590,7 +607,6 @@
                     pedidosGuardados.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Ordenar por timestamp (los más nuevos de primeros)
                 pedidosGuardados.sort((a, b) => b.timestamp - a.timestamp);
                 
                 if (pedidosGuardados.length === 0) {
@@ -600,7 +616,6 @@
                 
                 container.innerHTML = '';
                 
-                // Dibujar tarjetas por cada pedido
                 pedidosGuardados.forEach((pedido) => {
                     let itemsHtml = '';
                     pedido.items.forEach(item => {
