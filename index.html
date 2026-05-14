@@ -24,6 +24,7 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans antialiased">
 
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 bg-[#154390] flex items-center justify-center z-50 transition-opacity duration-300">
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div class="text-center mb-8">
@@ -70,6 +71,7 @@
         </div>
     </div>
 
+    <!-- DASHBOARD SCREEN -->
     <div id="dashboard-screen" class="hidden max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pt-10">
         <header class="bg-white rounded-xl shadow-md p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex items-center gap-4">
@@ -105,6 +107,7 @@
         </div>
     </div>
 
+    <!-- INVENTORY SCREEN -->
     <div id="inventory-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
         <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
@@ -182,6 +185,7 @@
         </div>
     </div>
 
+    <!-- MÓDULO DE PEDIDOS A FARMACIA -->
     <div id="orders-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
         <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
@@ -203,7 +207,8 @@
 
         <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <div class="flex flex-col sm:flex-row gap-4 items-end">
-                <div class="w-full sm:w-1/2">
+                <!-- Se amplió el ancho a 3/4 al quitar la cantidad -->
+                <div class="w-full sm:w-3/4">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
                     
                     <div id="select-container" class="flex flex-col gap-1 w-full">
@@ -224,10 +229,7 @@
                     </div>
                 </div>
                 
-                <div class="w-full sm:w-1/4">
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Cantidad</label>
-                    <input type="number" id="order-qty" min="1" value="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm text-center font-bold">
-                </div>
+                <!-- Botón Agregar adaptado -->
                 <div class="w-full sm:w-1/4 flex gap-2">
                     <button onclick="addOrderRow()" class="w-full bg-green-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-plus"></i> Agregar
@@ -256,7 +258,7 @@
                     <tr class="border-b-2 border-gray-800">
                         <th class="py-2 text-sm font-bold text-gray-800 w-12 text-center">N°</th>
                         <th class="py-2 text-sm font-bold text-gray-800">Descripción del Insumo</th>
-                        <th class="py-2 text-sm font-bold text-gray-800 text-center w-24">Cantidad</th>
+                        <!-- Se quitó la columna Cantidad -->
                         <th class="py-2 text-sm text-center w-12"></th>
                     </tr>
                 </thead>
@@ -278,6 +280,7 @@
         </button>
     </div>
 
+    <!-- PANTALLA HISTORIAL -->
     <div id="history-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
         <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex items-center gap-4 w-full sm:w-auto">
@@ -296,6 +299,7 @@
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION -->
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
         <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
         <span id="toast-msg">Mensaje</span>
@@ -759,7 +763,6 @@
                 opt.textContent = insumo;
                 select.appendChild(opt);
             });
-            // Ocultar botón de eliminar al actualizar el select
             document.getElementById('btn-delete-custom-list').classList.add('hidden');
             const helpText = document.getElementById('custom-item-help');
             if (helpText) helpText.classList.add('hidden');
@@ -771,14 +774,13 @@
             const helpText = document.getElementById('custom-item-help');
             const selectedValue = select.value;
 
-            // Extraemos la lista de insumos agregados manualmente de la memoria
             let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
 
             if (selectedValue !== "" && extraInsumos.includes(selectedValue)) {
-                btnDelete.classList.remove('hidden'); // Muestra la papelera
-                if (helpText) helpText.classList.remove('hidden'); // Muestra la ayudita
+                btnDelete.classList.remove('hidden'); 
+                if (helpText) helpText.classList.remove('hidden'); 
             } else {
-                btnDelete.classList.add('hidden'); // Oculta la papelera
+                btnDelete.classList.add('hidden'); 
                 if (helpText) helpText.classList.add('hidden');
             }
         }
@@ -789,19 +791,13 @@
 
             if (!insumoAEliminar) return;
 
-            // ELIMINACIÓN DIRECTA: Quitamos el "confirm" porque los celulares a veces lo bloquean
-            
-            // 1. Quitarlo de los guardados manualmente (localStorage)
             let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
             extraInsumos = extraInsumos.filter(item => item !== insumoAEliminar);
             localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
 
-            // 2. Quitarlo de la lista principal que se está mostrando en pantalla
             listaInsumosFarmacia = listaInsumosFarmacia.filter(item => item !== insumoAEliminar);
 
-            // 3. Actualizar la vista del menú desplegable (esto oculta automáticamente el botón rojo)
             actualizarSelectInsumos();
-            
             showToast(`¡Listo! "${insumoAEliminar}" fue eliminado permanentemente.`);
         }
 
@@ -901,17 +897,16 @@
                 }
             }
 
-            const qty = document.getElementById('order-qty').value;
-            if (qty <= 0) {
-                showToast("La cantidad debe ser mayor a 0.", true);
-                return;
-            }
-
+            // AHORA SOLO AGREGAMOS EL NOMBRE, NO HAY CANTIDAD
             const index = pedidoActual.findIndex(item => item.name.toLowerCase() === itemName.toLowerCase());
+            
             if (index !== -1) {
-                pedidoActual[index].qty = parseInt(pedidoActual[index].qty) + parseInt(qty);
+                // Si ya está en la lista, mostramos un error y no dejamos agregarlo
+                showToast("Este insumo ya está en el pedido actual.", true);
+                return;
             } else {
-                pedidoActual.push({ name: itemName, qty: parseInt(qty) });
+                // Si no está, lo agregamos (ya no necesitamos qty)
+                pedidoActual.push({ name: itemName });
             }
 
             await guardarBorradorEnNube();
@@ -919,13 +914,13 @@
 
             if (modoManual) document.getElementById('order-item-input').value = "";
             else document.getElementById('order-item-select').value = "";
-            document.getElementById('order-qty').value = "1";
+            
             document.getElementById('btn-delete-custom-list').classList.add('hidden');
             const helpText = document.getElementById('custom-item-help');
             if (helpText) helpText.classList.add('hidden');
 
             renderOrderTable();
-            showToast("Insumo agregado (Sincronizado)");
+            showToast("Insumo agregado a la lista");
         }
 
         window.removeOrderRow = async function(index) {
@@ -953,13 +948,12 @@
             let total = 0;
 
             pedidoActual.forEach((item, index) => {
-                total += item.qty;
+                total++; // Cada fila es 1 ítem
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-100";
                 tr.innerHTML = `
                     <td class="py-3 text-center text-gray-500 font-bold text-sm">${index + 1}</td>
                     <td class="py-3 text-gray-800 font-medium text-sm sm:text-base">${item.name}</td>
-                    <td class="py-3 text-center text-gray-800 font-bold text-sm sm:text-base bg-gray-50 rounded">${item.qty}</td>
                     <td class="py-3 text-center">
                         <button onclick="removeOrderRow(${index})" class="text-red-500 hover:text-red-700 p-1">
                             <i class="fa-solid fa-times-circle"></i>
@@ -988,7 +982,7 @@
                 textoPlano += `📅 Fecha: ${fechaBonita}\n\n`;
                 
                 pedidoActual.forEach((item, i) => {
-                    textoPlano += `${i+1}. ${item.name} ➡️ Cant: *${item.qty}*\n`;
+                    textoPlano += `${i+1}. ${item.name}\n`; // Modificado para enviar solo el nombre
                 });
                 
                 textoPlano += `\n_Enviado desde el sistema de control de insumos._`;
@@ -1066,7 +1060,12 @@
                     } else if (pedido.items) {
                         textoFormateado = `<b>Pedido antiguo (${pedido.fecha})</b><br>`;
                         pedido.items.forEach((it, idx) => {
-                            textoFormateado += `${idx+1}. ${it.name} ➡️ Cant: <b>${it.qty}</b><br>`;
+                            // Compatibilidad con pedidos muy antiguos que sí tenían cantidad
+                            if (it.qty) {
+                                textoFormateado += `${idx+1}. ${it.name} ➡️ Cant: <b>${it.qty}</b><br>`;
+                            } else {
+                                textoFormateado += `${idx+1}. ${it.name}<br>`;
+                            }
                         });
                     }
 
