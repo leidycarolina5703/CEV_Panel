@@ -72,7 +72,7 @@
     </div>
 
     <!-- DASHBOARD SCREEN -->
-    <div id="dashboard-screen" class="hidden max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pt-10">
+    <div id="dashboard-screen" class="hidden max-w-6xl mx-auto p-4 sm:p-6 space-y-6 pt-10">
         <header class="bg-white rounded-xl shadow-md p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex items-center gap-4">
                 <img src="Logo.png" alt="Logo CEV" class="h-14 sm:h-16 w-auto object-contain" onerror="this.style.display='none'">
@@ -86,12 +86,12 @@
             </button>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
             <button onclick="openInventory()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800">Registro de Insumos</h2>
+                <h2 class="text-2xl font-bold text-gray-800 text-center">Registro de Insumos</h2>
                 <p class="text-gray-500 text-center">Gestión, conteo y control diario del inventario clínico.</p>
             </button>
 
@@ -103,6 +103,48 @@
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
                     <p class="text-gray-500 text-center">Solicita insumos y guarda el mensaje de WhatsApp.</p>
                 </div>
+            </button>
+
+            <!-- NUEVO MÓDULO DOCUMENTACIÓN -->
+            <button onclick="openDocumentation()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Documentación</h2>
+                    <p class="text-gray-500 text-center">Manuales, protocolos y guías del sistema.</p>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA DOCUMENTACIÓN (PRÓXIMAMENTE) -->
+    <div id="documentation-screen" class="hidden max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pt-10 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-purple-600 flex items-center gap-2">
+                        Documentación
+                    </h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Biblioteca de recursos CEV</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-md p-10 sm:p-20 border border-gray-200 flex flex-col items-center justify-center text-center mt-8">
+            <div class="w-28 h-28 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center text-6xl mb-6 shadow-inner relative">
+                <i class="fa-solid fa-person-digging"></i>
+                <i class="fa-solid fa-gear absolute -bottom-2 -right-2 text-2xl text-purple-600 animate-spin" style="animation-duration: 3s;"></i>
+            </div>
+            <h2 class="text-3xl font-black text-gray-800 mb-4 uppercase tracking-wide">¡Próximamente!</h2>
+            <p class="text-gray-500 text-lg max-w-md">
+                Estamos trabajando en la construcción de este módulo. Muy pronto podrás acceder a todas las guías, protocolos y documentos importantes de la clínica desde aquí.
+            </p>
+            <button onclick="goToDashboard()" class="mt-8 px-8 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-colors shadow-lg flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Volver al inicio
             </button>
         </div>
     </div>
@@ -326,6 +368,7 @@
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.remove('hidden');
             initInventoryApp();
         };
@@ -334,14 +377,24 @@
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.remove('hidden');
             initOrders();
+        };
+
+        window.openDocumentation = function() {
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('documentation-screen').classList.remove('hidden');
         };
 
         window.goToDashboard = function() {
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
         };
 
@@ -370,6 +423,7 @@
                 document.getElementById('inventory-screen').classList.add('hidden');
                 document.getElementById('orders-screen').classList.add('hidden');
                 document.getElementById('history-screen').classList.add('hidden');
+                document.getElementById('documentation-screen').classList.add('hidden');
             }
         });
 
@@ -972,7 +1026,7 @@
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
-                // AQUÍ SE QUITARON LOS NÚMEROS Y LOS GUIONES, SOLO QUEDA EL NOMBRE
+                // AQUÍ SE QUITARON LOS NÚMEROS Y LOS GUIONES, SOLO QUEDA EL NOMBRE DEL INSUMO
                 let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n\n`;
                 
                 pedidoActual.forEach((item) => {
