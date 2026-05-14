@@ -972,17 +972,15 @@
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
-                // AQUÍ QUITAMOS LA FECHA DEL TEXTO QUE SE ENVÍA POR WHATSAPP
+                // AQUÍ SE QUITARON LOS NÚMEROS Y LOS GUIONES, SOLO QUEDA EL NOMBRE
                 let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n\n`;
                 
-                pedidoActual.forEach((item, i) => {
-                    textoPlano += `${i+1}. ${item.name}\n`;
+                pedidoActual.forEach((item) => {
+                    textoPlano += `${item.name}\n`;
                 });
-                
-                textoPlano += `\n_Enviado desde el sistema de control de insumos._`;
 
                 const datosGuardar = {
-                    fecha: fechaBonita, // Se guarda en la nube para el historial visual
+                    fecha: fechaBonita,
                     timestamp: parseInt(timestamp),
                     textoEnviado: textoPlano 
                 };
