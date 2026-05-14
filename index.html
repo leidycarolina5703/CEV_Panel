@@ -207,7 +207,6 @@
 
         <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <div class="flex flex-col sm:flex-row gap-4 items-end">
-                <!-- Se amplió el ancho a 3/4 al quitar la cantidad -->
                 <div class="w-full sm:w-3/4">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
                     
@@ -229,7 +228,6 @@
                     </div>
                 </div>
                 
-                <!-- Botón Agregar adaptado -->
                 <div class="w-full sm:w-1/4 flex gap-2">
                     <button onclick="addOrderRow()" class="w-full bg-green-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-plus"></i> Agregar
@@ -258,7 +256,6 @@
                     <tr class="border-b-2 border-gray-800">
                         <th class="py-2 text-sm font-bold text-gray-800 w-12 text-center">N°</th>
                         <th class="py-2 text-sm font-bold text-gray-800">Descripción del Insumo</th>
-                        <!-- Se quitó la columna Cantidad -->
                         <th class="py-2 text-sm text-center w-12"></th>
                     </tr>
                 </thead>
@@ -897,15 +894,12 @@
                 }
             }
 
-            // AHORA SOLO AGREGAMOS EL NOMBRE, NO HAY CANTIDAD
             const index = pedidoActual.findIndex(item => item.name.toLowerCase() === itemName.toLowerCase());
             
             if (index !== -1) {
-                // Si ya está en la lista, mostramos un error y no dejamos agregarlo
                 showToast("Este insumo ya está en el pedido actual.", true);
                 return;
             } else {
-                // Si no está, lo agregamos (ya no necesitamos qty)
                 pedidoActual.push({ name: itemName });
             }
 
@@ -948,7 +942,7 @@
             let total = 0;
 
             pedidoActual.forEach((item, index) => {
-                total++; // Cada fila es 1 ítem
+                total++;
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-100";
                 tr.innerHTML = `
@@ -978,17 +972,17 @@
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
-                let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n`;
-                textoPlano += `📅 Fecha: ${fechaBonita}\n\n`;
+                // AQUÍ QUITAMOS LA FECHA DEL TEXTO QUE SE ENVÍA POR WHATSAPP
+                let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n\n`;
                 
                 pedidoActual.forEach((item, i) => {
-                    textoPlano += `${i+1}. ${item.name}\n`; // Modificado para enviar solo el nombre
+                    textoPlano += `${i+1}. ${item.name}\n`;
                 });
                 
                 textoPlano += `\n_Enviado desde el sistema de control de insumos._`;
 
                 const datosGuardar = {
-                    fecha: fechaBonita,
+                    fecha: fechaBonita, // Se guarda en la nube para el historial visual
                     timestamp: parseInt(timestamp),
                     textoEnviado: textoPlano 
                 };
@@ -1060,7 +1054,6 @@
                     } else if (pedido.items) {
                         textoFormateado = `<b>Pedido antiguo (${pedido.fecha})</b><br>`;
                         pedido.items.forEach((it, idx) => {
-                            // Compatibilidad con pedidos muy antiguos que sí tenían cantidad
                             if (it.qty) {
                                 textoFormateado += `${idx+1}. ${it.name} ➡️ Cant: <b>${it.qty}</b><br>`;
                             } else {
