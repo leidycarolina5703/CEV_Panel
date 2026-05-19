@@ -131,25 +131,35 @@
         </header>
 
         <div class="mt-8">
-            <div class="bg-purple-50 border-l-4 border-purple-600 p-3 mb-4 rounded-r-lg">
-                <h2 class="text-lg font-bold text-purple-800 flex items-center gap-2">
-                    <i class="fa-solid fa-prescription-bottle-medical"></i> Subítem: Farmacia
-                </h2>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pl-2 sm:pl-4">
-                <a href="REABASTECIMIENTO_GABINETE_CEV_2026.pdf" target="_blank" class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:border-purple-500 transition-all flex flex-col items-center text-center gap-4 group">
-                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl group-hover:bg-red-500 group-hover:text-white transition-colors shadow-sm">
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-gray-800 text-lg leading-tight mb-1">Reabastecimiento Gabinete CEV</h3>
-                        <p class="text-xs text-gray-500">REABASTECIMIENTO_GABINETE_CEV_2026.pdf</p>
-                    </div>
-                    <span class="mt-2 text-sm font-semibold text-purple-600 group-hover:text-purple-700 flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir documento
-                    </span>
-                </a>
+            <button onclick="toggleFarmaciaDocs()" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex items-center gap-4 group w-full sm:w-80 text-left">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-2xl sm:text-3xl group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 group-hover:text-purple-700 transition-colors">Farmacia</h2>
+                    <p class="text-xs sm:text-sm text-gray-500">Clic para ver documentos</p>
+                </div>
+                <div class="ml-auto text-gray-400 group-hover:text-purple-600">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </button>
+
+            <div id="farmacia-docs" class="hidden mt-4 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-inner">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-300 pb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-red-400"></i> Archivos Disponibles
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <a href="REABASTECIMIENTO_GABINETE_CEV_2026.pdf" target="_blank" class="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md hover:border-red-400 transition-all flex flex-col items-center text-center gap-3 group">
+                        <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-2xl group-hover:bg-red-500 group-hover:text-white transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm leading-tight mb-1">Reabastecimiento Gabinete CEV</h4>
+                            <p class="text-xs text-gray-400">PDF - 2026</p>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -389,6 +399,9 @@
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
             document.getElementById('documentation-screen').classList.remove('hidden');
+            
+            // Asegurarse de que las carpetas estén cerradas al entrar
+            document.getElementById('farmacia-docs').classList.add('hidden');
         };
 
         window.goToDashboard = function() {
@@ -397,6 +410,12 @@
             document.getElementById('history-screen').classList.add('hidden');
             document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
+        };
+
+        // --- NUEVA FUNCIÓN PARA ABRIR/CERRAR LA CARPETA FARMACIA ---
+        window.toggleFarmaciaDocs = function() {
+            const docsDiv = document.getElementById('farmacia-docs');
+            docsDiv.classList.toggle('hidden');
         };
 
         // --- AUTENTICACIÓN ---
