@@ -983,7 +983,7 @@
                 await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
 
                 // Configuración del correo electrónico
-                const emailDestino = "facturacioncemascotas@gmail.com";
+                const emailDestino = "servicioalclientecevmascotas@gmail.com";
                 const asunto = encodeURIComponent(`Pedido de Insumos Farmacia CEV - ${fechaBonita.split(' - ')[0]}`);
                 const cuerpoCorreo = encodeURIComponent(textoPlano);
                 
@@ -1063,7 +1063,7 @@
                     
                     const textoParaReenviar = encodeURIComponent(pedido.textoEnviado || "Reenviando pedido");
                     const asuntoReenvio = encodeURIComponent(`Reenvío: Pedido de Insumos Farmacia CEV - ${pedido.fecha.split(' - ')[0]}`);
-                    const mailtoUrl = `mailto:facturacioncemascotas@gmail.com?subject=${asuntoReenvio}&body=${textoParaReenviar}`;
+                    const mailtoUrl = `mailto:servicioalclientecevmascotas@gmail.com?subject=${asuntoReenvio}&body=${textoParaReenviar}`;
 
                     card.innerHTML = `
                         <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
