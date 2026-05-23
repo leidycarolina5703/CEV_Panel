@@ -84,7 +84,7 @@
             </button>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-4xl mx-auto">
             <button onclick="openInventory()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-clipboard-check"></i>
@@ -102,65 +102,6 @@
                     <p class="text-gray-500 text-center">Solicita insumos y guarda el mensaje de WhatsApp.</p>
                 </div>
             </button>
-
-            <button onclick="openDocumentation()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
-                <div class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-folder-open"></i>
-                </div>
-                <div class="text-center">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Documentación</h2>
-                    <p class="text-gray-500 text-center">Manuales, protocolos y guías del sistema.</p>
-                </div>
-            </button>
-        </div>
-    </div>
-
-    <div id="documentation-screen" class="hidden max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pt-10 pb-12">
-        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
-            <div class="flex items-center gap-4 w-full sm:w-auto">
-                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-purple-600 flex items-center gap-2">
-                        Documentación
-                    </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Biblioteca de recursos CEV</p>
-                </div>
-            </div>
-        </header>
-
-        <div class="mt-8">
-            <button onclick="toggleFarmaciaDocs()" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex items-center gap-4 group w-full sm:w-80 text-left">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-2xl sm:text-3xl group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0">
-                    <i class="fa-solid fa-folder-open"></i>
-                </div>
-                <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 group-hover:text-purple-700 transition-colors">Farmacia</h2>
-                    <p class="text-xs sm:text-sm text-gray-500">Clic para ver documentos</p>
-                </div>
-                <div class="ml-auto text-gray-400 group-hover:text-purple-600">
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-            </button>
-
-            <div id="farmacia-docs" class="hidden mt-4 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-inner">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-300 pb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf text-red-400"></i> Archivos Disponibles
-                </h3>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <a href="REABASTECIMIENTO_GABINETE_CEV_2026.pdf" target="_blank" class="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md hover:border-red-400 transition-all flex flex-col items-center text-center gap-3 group">
-                        <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-2xl group-hover:bg-red-500 group-hover:text-white transition-colors shadow-sm">
-                            <i class="fa-solid fa-file-pdf"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-sm leading-tight mb-1">Reabastecimiento Gabinete CEV</h4>
-                            <p class="text-xs text-gray-400">PDF - 2026</p>
-                        </div>
-                    </a>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -379,7 +320,6 @@
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.remove('hidden');
             initInventoryApp();
         };
@@ -388,34 +328,15 @@
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.remove('hidden');
             initOrders();
-        };
-
-        window.openDocumentation = function() {
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('inventory-screen').classList.add('hidden');
-            document.getElementById('orders-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('documentation-screen').classList.remove('hidden');
-            
-            // Asegurarse de que las carpetas estén cerradas al entrar
-            document.getElementById('farmacia-docs').classList.add('hidden');
         };
 
         window.goToDashboard = function() {
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('documentation-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
-        };
-
-        // --- NUEVA FUNCIÓN PARA ABRIR/CERRAR LA CARPETA FARMACIA ---
-        window.toggleFarmaciaDocs = function() {
-            const docsDiv = document.getElementById('farmacia-docs');
-            docsDiv.classList.toggle('hidden');
         };
 
         // --- AUTENTICACIÓN ---
@@ -443,7 +364,6 @@
                 document.getElementById('inventory-screen').classList.add('hidden');
                 document.getElementById('orders-screen').classList.add('hidden');
                 document.getElementById('history-screen').classList.add('hidden');
-                document.getElementById('documentation-screen').classList.add('hidden');
             }
         });
 
