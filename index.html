@@ -93,13 +93,13 @@
                 <p class="text-gray-500 text-center">Gestión, conteo y control diario del inventario clínico.</p>
             </button>
 
-            <button onclick="openOrders()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-green-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
-                <div class="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-green-600 group-hover:text-white transition-colors">
+            <button onclick="openOrders()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fa-solid fa-cart-plus"></i>
                 </div>
                 <div class="text-center">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
-                    <p class="text-gray-500 text-center">Solicita insumos y guarda el mensaje de WhatsApp.</p>
+                    <p class="text-gray-500 text-center">Solicita insumos y envía el pedido por correo.</p>
                 </div>
             </button>
         </div>
@@ -189,15 +189,15 @@
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-green-600 flex items-center justify-center sm:justify-start gap-2">
+                    <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center justify-center sm:justify-start gap-2">
                         Pedido a Farmacia
                     </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala por WhatsApp</p>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala por correo</p>
                 </div>
             </div>
             
-            <button onclick="openHistory()" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-green-200 w-full sm:w-auto justify-center shadow-sm">
-                <i class="fa-brands fa-whatsapp"></i> Ver Mensajes Enviados
+            <button onclick="openHistory()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center shadow-sm">
+                <i class="fa-solid fa-envelope"></i> Ver Pedidos Enviados
             </button>
         </header>
 
@@ -208,7 +208,7 @@
                     
                     <div id="select-container" class="flex flex-col gap-1 w-full">
                         <div class="flex items-center gap-2 w-full">
-                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
+                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
                                 <option value="">Seleccione...</option>
                             </select>
                             
@@ -220,12 +220,12 @@
                     </div>
 
                     <div id="input-container" class="hidden">
-                        <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm">
+                        <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
                     </div>
                 </div>
                 
                 <div class="w-full sm:w-1/4 flex gap-2">
-                    <button onclick="addOrderRow()" class="w-full bg-green-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2">
+                    <button onclick="addOrderRow()" class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-plus"></i> Agregar
                     </button>
                 </div>
@@ -237,7 +237,7 @@
             </div>
         </div>
 
-        <div id="ticket-container" class="bg-white rounded-xl shadow-lg border-t-8 border-t-green-600 p-6 sm:p-8 relative">
+        <div id="ticket-container" class="bg-white rounded-xl shadow-lg border-t-8 border-t-blue-600 p-6 sm:p-8 relative">
             <div id="loading-draft" class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 hidden rounded-xl">
                 <div class="loader"></div>
             </div>
@@ -267,9 +267,9 @@
             </div>
         </div>
 
-        <button onclick="generarYEnviarWhatsApp()" class="w-full py-4 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-colors shadow-lg flex justify-center items-center gap-3 text-lg">
-            <i class="fa-brands fa-whatsapp text-2xl"></i>
-            Enviar a WhatsApp y Guardar Texto
+        <button onclick="generarYEnviarCorreo()" class="w-full py-4 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors shadow-lg flex justify-center items-center gap-3 text-lg">
+            <i class="fa-solid fa-envelope text-2xl"></i>
+            Enviar por Correo y Guardar
         </button>
     </div>
 
@@ -280,7 +280,7 @@
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-green-600 flex items-center gap-2">
+                    <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center gap-2">
                         Mensajes Enviados a Farmacia
                     </h1>
                     <p class="text-gray-500 text-xs sm:text-sm mt-1">Aquí verás el texto exacto de lo que se envió</p>
@@ -954,8 +954,8 @@
             totalItems.textContent = total;
         }
 
-        // --- ENVIAR A WHATSAPP Y GUARDAR EL TEXTO EXACTO ---
-        window.generarYEnviarWhatsApp = async function() {
+        // --- ENVIAR POR CORREO Y GUARDAR EL TEXTO EXACTO ---
+        window.generarYEnviarCorreo = async function() {
             if (pedidoActual.length === 0) {
                 showToast("El pedido está vacío.", true);
                 return;
@@ -966,11 +966,11 @@
                 const fechaTextoCompleto = document.getElementById('ticket-date').textContent;
                 const fechaBonita = fechaTextoCompleto.replace('Fecha: ', '');
                 
-                // AQUÍ SE QUITARON LOS NÚMEROS Y LOS GUIONES, SOLO QUEDA EL NOMBRE DEL INSUMO
-                let textoPlano = `*📋 PEDIDO DE INSUMOS FARMACIA CEV*\n\n`;
+                // Formato del mensaje para el correo
+                let textoPlano = `📋 PEDIDO DE INSUMOS FARMACIA CEV\n\nFecha: ${fechaBonita}\n\nDetalle del pedido:\n`;
                 
-                pedidoActual.forEach((item) => {
-                    textoPlano += `${item.name}\n`;
+                pedidoActual.forEach((item, index) => {
+                    textoPlano += `${index + 1}. ${item.name}\n`;
                 });
 
                 const datosGuardar = {
@@ -982,18 +982,22 @@
                 showToast("Guardando mensaje en historial...");
                 await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
 
-                const textoWhatsAppUrl = encodeURIComponent(textoPlano);
-                const numeroWhatsApp = "573235834349"; 
-                const waUrl = `https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${textoWhatsAppUrl}`;
+                // Configuración del correo electrónico
+                const emailDestino = "facturacioncemascotas@gmail.com";
+                const asunto = encodeURIComponent(`Pedido de Insumos Farmacia CEV - ${fechaBonita.split(' - ')[0]}`);
+                const cuerpoCorreo = encodeURIComponent(textoPlano);
                 
-                showToast("¡Mensaje guardado! Abriendo WhatsApp...");
+                const mailtoUrl = `mailto:${emailDestino}?subject=${asunto}&body=${cuerpoCorreo}`;
+                
+                showToast("¡Pedido guardado! Abriendo tu correo...");
                 
                 pedidoActual = [];
                 await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: [] });
                 document.getElementById('draft-badge').classList.add('hidden');
                 renderOrderTable();
 
-                setTimeout(() => { window.open(waUrl, '_blank'); }, 1200);
+                // Abrir la aplicación de correo
+                setTimeout(() => { window.location.href = mailtoUrl; }, 1200);
 
             } catch (error) {
                 console.error("Error al guardar el historial:", error);
@@ -1001,7 +1005,7 @@
             }
         }
 
-        // --- HISTORIAL ESTILO CHAT DE WHATSAPP ---
+        // --- HISTORIAL ESTILO CHAT DE CORREO ---
         window.openHistory = function() {
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.remove('hidden');
@@ -1030,7 +1034,7 @@
                 pedidosGuardados.sort((a, b) => b.timestamp - a.timestamp);
                 
                 if (pedidosGuardados.length === 0) {
-                    container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-comment-slash text-4xl mb-3 opacity-50"></i><br>Aún no hay mensajes enviados a farmacia.</div>';
+                    container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-comment-slash text-4xl mb-3 opacity-50"></i><br>Aún no hay pedidos enviados a farmacia.</div>';
                     return;
                 }
                 
@@ -1055,20 +1059,22 @@
                     }
 
                     const card = document.createElement('div');
-                    card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-green-200 mb-4 hover:shadow-lg transition-shadow";
+                    card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-blue-200 mb-4 hover:shadow-lg transition-shadow";
                     
                     const textoParaReenviar = encodeURIComponent(pedido.textoEnviado || "Reenviando pedido");
+                    const asuntoReenvio = encodeURIComponent(`Reenvío: Pedido de Insumos Farmacia CEV - ${pedido.fecha.split(' - ')[0]}`);
+                    const mailtoUrl = `mailto:facturacioncemascotas@gmail.com?subject=${asuntoReenvio}&body=${textoParaReenviar}`;
 
                     card.innerHTML = `
                         <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
                             <div class="font-bold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
-                                <i class="fa-brands fa-whatsapp text-green-500 text-lg"></i> Enviado el ${pedido.fecha.split(' - ')[0]}
+                                <i class="fa-solid fa-envelope text-blue-500 text-lg"></i> Enviado el ${pedido.fecha.split(' - ')[0]}
                             </div>
-                            <a href="https://api.whatsapp.com/send?phone=573235834349&text=${textoParaReenviar}" target="_blank" class="text-xs sm:text-sm font-bold bg-green-100 text-green-700 px-3 py-1.5 rounded-full uppercase tracking-wide border border-green-200 hover:bg-green-200 transition-colors flex items-center gap-1">
+                            <a href="${mailtoUrl}" class="text-xs sm:text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full uppercase tracking-wide border border-blue-200 hover:bg-blue-200 transition-colors flex items-center gap-1">
                                 <i class="fa-solid fa-share"></i> Reenviar
                             </a>
                         </div>
-                        <div class="bg-green-50 p-3 sm:p-4 rounded-lg text-sm text-gray-700 font-mono shadow-inner border border-green-100">
+                        <div class="bg-blue-50 p-3 sm:p-4 rounded-lg text-sm text-gray-700 font-mono shadow-inner border border-blue-100">
                             ${textoFormateado}
                         </div>
                     `;
