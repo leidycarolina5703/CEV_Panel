@@ -2,377 +2,296 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#154390">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control Diario de Insumos CEV</title>
-
-    <!-- Tailwind + íconos + Excel -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            DEFAULT: '#154390',
-                            50:'#eef3fb',100:'#d6e3f6',200:'#aec6ec',300:'#7ba2dc',
-                            400:'#4d7cc9',500:'#2a5bb4',600:'#1d4a9f',700:'#154390',
-                            800:'#123875',900:'#0f2c5b'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"','system-ui','sans-serif']
-                    },
-                    boxShadow: {
-                        soft: '0 1px 2px rgba(16,24,40,.04), 0 6px 20px rgba(16,24,40,.05)',
-                        lift: '0 10px 34px rgba(21,67,144,.14)'
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <style>
-        :root { --brand:#154390; }
-
-        html { -webkit-text-size-adjust: 100%; }
-        body {
-            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-            background:
-                radial-gradient(900px 500px at 100% -10%, #e8f0fc 0%, transparent 60%),
-                radial-gradient(700px 420px at -10% 0%, #eef3fb 0%, transparent 55%),
-                #f4f6fb;
-            min-height: 100dvh;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #c2cad6; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9aa6b5; }
-
-        /* Quitar flechas en inputs numéricos */
-        input[type=number]::-webkit-inner-spin-button,
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-
-        /* Spinner */
         .loader {
-            border: 3px solid #e6ebf3; border-radius: 50%;
-            border-top-color: var(--brand);
-            width: 22px; height: 22px;
-            animation: spin .8s linear infinite;
+            border: 3px solid #f3f3f3; border-radius: 50%;
+            border-top: 3px solid #154390; width: 20px; height: 20px;
+            -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Entrada de pantallas */
-        .fade-up { animation: fadeUp .35s cubic-bezier(.22,.61,.36,1) both; }
-        @keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform:none; } }
-
-        /* Tarjetas táctiles */
-        .tap { transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease; }
-        .tap:active { transform: scale(.98); }
-
-        /* Inputs base coherentes */
-        .field {
-            width:100%; background:#f8fafc; border:1px solid #dde3ec; border-radius:.75rem;
-            transition: border-color .15s, box-shadow .15s, background .15s;
-        }
-        .field:focus { outline:none; background:#fff; border-color: var(--brand); box-shadow: 0 0 0 4px rgba(21,67,144,.12); }
-
-        /* Área segura iOS */
-        .safe-pb { padding-bottom: max(2.5rem, env(safe-area-inset-bottom)); }
-        .min-touch { min-height: 44px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-slate-800 antialiased selection:bg-brand/20">
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
 
-    <!-- ============ LOGIN ============ -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center px-4 transition-opacity duration-300"
-         style="background:
-            radial-gradient(800px 400px at 80% -10%, #2a5bb4 0%, transparent 60%),
-            linear-gradient(160deg, #154390 0%, #0f2c5b 100%);">
-        <div class="bg-white/95 backdrop-blur p-7 sm:p-9 rounded-3xl shadow-2xl w-full max-w-md fade-up">
+    <div id="login-screen" class="fixed inset-0 bg-[#154390] flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div class="text-center mb-8">
                 <img src="Logo.png" alt="Logo CEV" class="h-20 sm:h-24 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
-                <h2 class="text-2xl font-extrabold text-brand tracking-tight">Acceso Seguro</h2>
-                <p class="text-slate-500 text-sm mt-2">Ingresa tus credenciales para continuar</p>
+                <h2 class="text-2xl font-bold text-[#154390]">Acceso Seguro</h2>
+                <p class="text-gray-500 text-sm mt-2">Ingresa tus credenciales para continuar</p>
             </div>
-
+            
             <form id="login-form" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-600 mb-1.5">Correo electrónico</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Correo Electrónico</label>
                     <div class="relative">
-                        <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="email" id="email-input" autocomplete="email" required
-                               class="field pl-11 pr-4 py-3 min-touch" placeholder="usuario@clinica.com">
+                        <i class="fa-solid fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                        <input type="email" id="email-input" required class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent bg-gray-50" placeholder="usuario@clinica.com">
                     </div>
                 </div>
-
+                
                 <div>
-                    <label class="block text-sm font-semibold text-slate-600 mb-1.5">Contraseña</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Contraseña</label>
                     <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="password" id="password-input" autocomplete="current-password" required
-                               class="field pl-11 pr-11 py-3 min-touch" placeholder="••••••••">
-                        <button type="button" id="toggle-password"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                        <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
+                        <input type="password" id="password-input" required class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent bg-gray-50" placeholder="••••••••">
+                        <button type="button" id="toggle-password" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none">
                             <i class="fa-solid fa-eye" id="toggle-icon"></i>
                         </button>
                     </div>
                 </div>
 
-                <label class="flex items-center gap-2 select-none cursor-pointer">
-                    <input type="checkbox" id="remember-me" class="w-4 h-4 accent-brand rounded">
-                    <span class="text-sm text-slate-700">Recordar sesión en este equipo</span>
-                </label>
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember-me" class="w-4 h-4 text-[#154390] border-gray-300 rounded focus:ring-[#154390]">
+                    <label for="remember-me" class="ml-2 block text-sm text-gray-700">Recordar sesión en este equipo</label>
+                </div>
 
-                <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-xl flex items-center gap-2 border border-red-100">
+                <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
                     <i class="fa-solid fa-circle-exclamation"></i>
                     <span id="login-error-text">Credenciales incorrectas</span>
                 </div>
 
-                <button type="submit" id="btn-login"
-                        class="tap w-full py-3.5 bg-brand text-white rounded-xl font-bold hover:bg-brand-800 transition-colors shadow-lift flex justify-center items-center gap-2 min-touch">
-                    <span>Ingresar al sistema</span>
+                <button type="submit" id="btn-login" class="w-full py-2.5 bg-[#154390] text-white rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-md flex justify-center items-center gap-2">
+                    <span>Ingresar al Sistema</span>
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- ============ DASHBOARD ============ -->
-    <div id="dashboard-screen" class="hidden max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-10 safe-pb space-y-6">
-        <header class="bg-white/90 backdrop-blur rounded-2xl shadow-soft p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-slate-100">
+    <div id="dashboard-screen" class="hidden max-w-6xl mx-auto p-4 sm:p-6 space-y-6 pt-10">
+        <header class="bg-white rounded-xl shadow-md p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex items-center gap-4">
                 <img src="Logo.png" alt="Logo CEV" class="h-14 sm:h-16 w-auto object-contain" onerror="this.style.display='none'">
                 <div>
-                    <h1 class="text-2xl font-extrabold text-brand tracking-tight">Panel de Control CEV</h1>
-                    <p class="text-slate-500 text-sm mt-0.5">Selecciona un módulo para comenzar</p>
+                    <h1 class="text-2xl font-bold text-[#154390]">Panel de Control CEV</h1>
+                    <p class="text-gray-500 text-sm mt-1">Selecciona un módulo para comenzar</p>
                 </div>
             </div>
-            <button onclick="logoutUser()"
-                    class="tap px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-semibold flex items-center gap-2 border border-red-100 min-touch">
-                <i class="fa-solid fa-power-off"></i> Cerrar sesión
+            <button onclick="logoutUser()" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-red-200">
+                <i class="fa-solid fa-power-off"></i> Cerrar Sesión
             </button>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
-            <button onclick="openInventory()"
-                    class="tap bg-white p-8 rounded-2xl shadow-soft hover:shadow-lift hover:border-brand transition-all border border-slate-100 flex flex-col items-center gap-4 group">
-                <div class="w-20 h-20 bg-brand-50 text-brand rounded-2xl grid place-items-center text-4xl group-hover:bg-brand group-hover:text-white transition-colors">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-4xl mx-auto">
+            <button onclick="openInventory()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
-                <h2 class="text-xl font-bold text-slate-800 text-center">Registro de Insumos</h2>
-                <p class="text-slate-500 text-center text-sm">Gestión, conteo y control diario del inventario clínico.</p>
+                <h2 class="text-2xl font-bold text-gray-800 text-center">Registro de Insumos</h2>
+                <p class="text-gray-500 text-center">Gestión, conteo y control diario del inventario clínico.</p>
             </button>
 
-            <button onclick="openOrders()"
-                    class="tap bg-white p-8 rounded-2xl shadow-soft hover:shadow-lift hover:border-brand transition-all border border-slate-100 flex flex-col items-center gap-4 group">
-                <div class="w-20 h-20 bg-brand-50 text-brand rounded-2xl grid place-items-center text-4xl group-hover:bg-brand group-hover:text-white transition-colors">
+            <button onclick="openOrders()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fa-solid fa-cart-plus"></i>
                 </div>
-                <h2 class="text-xl font-bold text-slate-800 text-center">Pedido de Insumos</h2>
-                <p class="text-slate-500 text-center text-sm">Solicita insumos y envía el pedido por Gmail.</p>
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
+                    <p class="text-gray-500 text-center">Solicita insumos y envía el pedido por Gmail.</p>
+                </div>
             </button>
         </div>
     </div>
 
-    <!-- ============ INVENTARIO ============ -->
-    <div id="inventory-screen" class="hidden max-w-3xl mx-auto px-3 sm:px-6 pt-6 pb-10 safe-pb space-y-4">
-        <header class="bg-white/90 backdrop-blur rounded-2xl shadow-soft p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-center gap-4 border border-slate-100">
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-                <button onclick="goToDashboard()" class="tap w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 grid place-items-center text-slate-600 shrink-0">
+    <div id="inventory-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 class="text-lg sm:text-2xl font-extrabold text-brand tracking-tight">Control de Insumos</h1>
-                    <p class="text-slate-500 text-xs sm:text-sm mt-0.5 flex items-center gap-1.5">
-                        <i class="fa-solid fa-cloud text-brand"></i> Nube activa
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#154390] flex items-center justify-center sm:justify-start gap-2">Control de Insumos</h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1 flex items-center justify-center sm:justify-start gap-1">
+                        <i class="fa-solid fa-cloud text-[#154390]"></i> Nube Activa
                     </p>
                 </div>
             </div>
-            <div class="flex flex-col items-stretch sm:items-end w-full sm:w-auto gap-2">
-                <label for="report-date" class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden sm:block">Fecha del registro</label>
-                <div class="flex items-center gap-2 justify-between sm:justify-end">
-                    <span id="festivo-badge" class="hidden bg-amber-100 text-amber-800 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200 whitespace-nowrap">
-                        <i class="fa-solid fa-calendar-exclamation"></i> Día post-festivo
-                    </span>
-                    <div id="loading-spinner" class="loader hidden"></div>
-                    <input type="date" id="report-date"
-                           class="field px-3 py-2 text-brand font-bold cursor-pointer min-touch text-sm w-full sm:w-auto">
+            <div class="flex flex-col items-center sm:items-end w-full sm:w-auto gap-3">
+                <div class="w-full sm:w-auto flex flex-col items-center sm:items-end">
+                    <label for="report-date" class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1 hidden sm:block">Fecha del registro</label>
+                    <div class="flex items-center gap-2 w-full justify-center sm:justify-end">
+                        <span id="festivo-badge" class="hidden bg-yellow-100 text-yellow-800 text-[10px] sm:text-xs font-bold px-2 py-1 rounded border border-yellow-300 whitespace-nowrap shadow-sm">
+                            <i class="fa-solid fa-calendar-exclamation"></i> Día Post-Festivo
+                        </span>
+                        <div id="loading-spinner" class="loader hidden"></div>
+                        <input type="date" id="report-date" class="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-[#154390] font-bold shadow-sm cursor-pointer hover:bg-gray-200 transition-colors text-sm">
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Buscador -->
-        <div class="bg-white/90 backdrop-blur rounded-2xl shadow-soft p-3 border border-slate-100 flex flex-col sm:flex-row gap-3 items-center sticky top-2 z-20">
-            <div class="relative w-full sm:flex-1">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="search-input" placeholder="Buscar insumo…" class="field pl-10 pr-3 py-2.5 text-sm min-touch">
+        <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 border border-gray-200 flex flex-col sm:flex-row gap-3 justify-between items-center sticky top-0 z-10">
+            <div class="relative w-full sm:w-1/2">
+                <i class="fa-solid fa-search absolute left-3 top-2.5 sm:top-3.5 text-gray-400"></i>
+                <input type="text" id="search-input" placeholder="Buscar insumo..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent transition-all bg-gray-50 text-sm">
             </div>
-            <button onclick="clearAll()"
-                    class="tap w-full sm:w-auto px-4 py-2.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 min-touch shrink-0">
-                <i class="fa-solid fa-trash-can"></i> Limpiar día
-            </button>
+            <div class="flex w-full sm:w-auto">
+                <button onclick="clearAll()" class="w-full sm:w-auto px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Limpiar Día
+                </button>
+            </div>
         </div>
 
-        <!-- Tabla -->
-        <div class="bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
-            <div class="overflow-y-auto max-h-[62vh]">
-                <table class="w-full text-left border-collapse">
-                    <thead class="sticky top-0 z-10">
-                        <tr class="bg-slate-50/95 backdrop-blur border-b border-slate-200">
-                            <th class="p-3 sm:p-4 text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-wide whitespace-nowrap">Insumo</th>
-                            <th class="px-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-slate-500 text-center w-12 sm:w-16 uppercase tracking-wide">Ideal</th>
-                            <th class="px-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-brand text-center w-16 sm:w-24 uppercase tracking-wide">Stock</th>
-                            <th class="px-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-slate-600 text-center w-16 sm:w-20 uppercase tracking-wide">Reponer</th>
-                            <th class="w-full"></th>
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                <table class="w-full text-left border-collapse relative">
+                    <thead class="sticky top-0 z-20 shadow-sm">
+                        <tr class="bg-gray-200 border-b border-gray-300">
+                            <th class="p-2 sm:p-4 text-xs sm:text-base font-semibold text-gray-700">Insumo</th>
+                            <th class="p-2 sm:p-4 text-xs sm:text-base font-semibold text-gray-700 text-center w-12 sm:w-20">Ideal</th>
+                            <th class="p-2 sm:p-4 text-xs sm:text-base font-bold text-[#154390] text-center w-20 sm:w-28">Stock</th>
+                            <th class="p-2 sm:p-4 text-xs sm:text-base font-semibold text-gray-700 text-center w-16 sm:w-24">Reponer</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body"></tbody>
+                    <tbody id="table-body" class="divide-y divide-gray-200"></tbody>
                 </table>
-            </div>
-            <div id="empty-inventory" class="hidden text-center py-10 text-slate-400 italic text-sm">
-                <i class="fa-solid fa-box-open text-3xl mb-2 opacity-50 block"></i>
-                No hay insumos que coincidan con la búsqueda.
             </div>
         </div>
 
-        <!-- Exportar -->
-        <div class="bg-white rounded-2xl shadow-soft border border-slate-100 p-5">
-            <h2 class="text-base sm:text-lg font-bold text-brand mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-file-excel text-emerald-600"></i> Exportar a Excel
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 sm:mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-file-excel text-green-600"></i> Exportar a Excel
             </h2>
             <div class="flex flex-col sm:flex-row items-end gap-3">
-                <div class="w-full sm:flex-1">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Inicio</label>
-                    <input type="date" id="export-start" class="field px-3 py-2.5 text-sm text-slate-700 min-touch">
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Inicio</label>
+                    <input type="date" id="export-start" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-gray-700 text-sm">
                 </div>
-                <div class="w-full sm:flex-1">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Fin</label>
-                    <input type="date" id="export-end" class="field px-3 py-2.5 text-sm text-slate-700 min-touch">
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
+                    <input type="date" id="export-end" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-gray-700 text-sm">
                 </div>
-                <button onclick="generarExcel()"
-                        class="tap w-full sm:w-auto px-5 py-2.5 text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold shadow-soft flex items-center justify-center gap-2 min-touch shrink-0">
-                    <i class="fa-solid fa-download"></i> Descargar
-                </button>
+                <div class="w-full sm:w-1/3">
+                    <button onclick="generarExcel()" class="w-full px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Descargar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ============ PEDIDOS ============ -->
-    <div id="orders-screen" class="hidden max-w-3xl mx-auto px-3 sm:px-6 pt-6 pb-10 safe-pb space-y-4">
-        <header class="bg-white/90 backdrop-blur rounded-2xl shadow-soft p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-center gap-4 border border-slate-100">
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-                <button onclick="goToDashboard()" class="tap w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 grid place-items-center text-slate-600 shrink-0">
+    <div id="orders-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 class="text-lg sm:text-2xl font-extrabold text-brand tracking-tight">Pedido a Farmacia</h1>
-                    <p class="text-slate-500 text-xs sm:text-sm mt-0.5">Crea tu lista y envíala por Gmail</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center justify-center sm:justify-start gap-2">
+                        Pedido a Farmacia
+                    </h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala por Gmail</p>
                 </div>
             </div>
-            <button onclick="openHistory()"
-                    class="tap px-4 py-2.5 bg-brand-50 text-brand hover:bg-brand-100 rounded-xl font-semibold flex items-center gap-2 border border-brand-100 w-full sm:w-auto justify-center min-touch">
-                <i class="fa-solid fa-envelope"></i> Ver pedidos enviados
+            
+            <button onclick="openHistory()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center shadow-sm">
+                <i class="fa-solid fa-envelope"></i> Ver Pedidos Enviados
             </button>
         </header>
 
-        <!-- Selector -->
-        <div class="bg-white rounded-2xl shadow-soft p-4 sm:p-5 border border-slate-100">
-            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Seleccionar insumo</label>
-            <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
-                <div class="w-full sm:flex-1">
-                    <div id="select-container" class="flex flex-col gap-1.5 w-full">
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <div class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="w-full sm:w-3/4">
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
+                    
+                    <div id="select-container" class="flex flex-col gap-1 w-full">
                         <div class="flex items-center gap-2 w-full">
-                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="field px-3 py-2.5 text-sm min-touch">
-                                <option value="">Seleccione…</option>
+                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
+                                <option value="">Seleccione...</option>
                             </select>
-                            <button type="button" id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()"
-                                    class="hidden tap text-white bg-red-500 hover:bg-red-600 px-3 py-2.5 rounded-xl border border-red-600 shrink-0 flex items-center gap-1 text-sm font-bold min-touch"
-                                    title="Eliminar este insumo de la memoria permanentemente">
-                                <i class="fa-solid fa-trash-can"></i>
+                            
+                            <button type="button" id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()" class="hidden text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors border border-red-600 shrink-0 flex items-center justify-center gap-1 text-sm font-bold shadow-sm" title="Eliminar este insumo de la memoria permanentemente">
+                                <i class="fa-solid fa-trash-can"></i> Borrar
                             </button>
                         </div>
-                        <p id="custom-item-help" class="hidden text-xs text-red-500 font-semibold italic">
-                            <i class="fa-solid fa-circle-info"></i> Insumo agregado por ti. Puedes borrarlo si lo escribiste mal.
-                        </p>
+                        <p id="custom-item-help" class="hidden text-xs text-red-500 font-semibold italic"><i class="fa-solid fa-circle-info"></i> Insumo agregado por ti. Puedes borrarlo de la lista si lo escribiste mal.</p>
                     </div>
+
                     <div id="input-container" class="hidden">
-                        <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo…" class="field px-3 py-2.5 text-sm min-touch">
+                        <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
                     </div>
                 </div>
-                <button onclick="addOrderRow()"
-                        class="tap w-full sm:w-auto bg-brand text-white rounded-xl px-5 py-2.5 font-bold hover:bg-brand-800 text-sm flex items-center justify-center gap-2 min-touch shrink-0">
-                    <i class="fa-solid fa-plus"></i> Agregar
-                </button>
+                
+                <div class="w-full sm:w-1/4 flex gap-2">
+                    <button onclick="addOrderRow()" class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Agregar
+                    </button>
+                </div>
             </div>
             <div class="mt-3 text-right">
-                <button onclick="toggleCustomItem()" id="btn-toggle-custom"
-                        class="text-sm text-brand hover:underline font-semibold inline-flex items-center gap-1">
+                <button onclick="toggleCustomItem()" id="btn-toggle-custom" class="text-sm text-[#154390] hover:underline font-semibold flex items-center gap-1 justify-end w-full">
                     <i class="fa-solid fa-pencil"></i> ¿No está en la lista? Ingresar manual
                 </button>
             </div>
         </div>
 
-        <!-- Ticket -->
-        <div id="ticket-container" class="bg-white rounded-2xl shadow-soft border-t-4 border-t-brand p-6 sm:p-8 relative">
-            <div id="loading-draft" class="absolute inset-0 bg-white/80 grid place-items-center z-10 hidden rounded-2xl">
+        <div id="ticket-container" class="bg-white rounded-xl shadow-lg border-t-8 border-t-blue-600 p-6 sm:p-8 relative">
+            <div id="loading-draft" class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 hidden rounded-xl">
                 <div class="loader"></div>
             </div>
-            <div class="text-center mb-6 border-b-2 border-dashed border-slate-200 pb-4">
-                <h2 class="text-2xl font-extrabold text-slate-800 uppercase tracking-widest">Ticket de Pedido</h2>
-                <h3 class="text-base font-bold text-slate-500 mt-1">Farmacia CEV</h3>
-                <p id="draft-badge" class="hidden text-amber-600 text-xs font-bold mt-2"><i class="fa-solid fa-cloud-arrow-down"></i> Borrador recuperado de la nube</p>
+            <div class="text-center mb-6 border-b-2 border-dashed border-gray-300 pb-4">
+                <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wider">TICKET DE PEDIDO</h2>
+                <h3 class="text-lg font-bold text-gray-600 mt-1">Farmacia CEV</h3>
+                <p id="draft-badge" class="hidden text-yellow-600 text-xs font-bold mt-2"><i class="fa-solid fa-cloud-arrow-down"></i> Borrador recuperado de la nube</p>
             </div>
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b-2 border-slate-800">
-                        <th class="py-2 text-sm font-bold text-slate-800 w-12 text-center">N°</th>
-                        <th class="py-2 text-sm font-bold text-slate-800">Descripción del insumo</th>
-                        <th class="py-2 w-12"></th>
+                    <tr class="border-b-2 border-gray-800">
+                        <th class="py-2 text-sm font-bold text-gray-800 w-12 text-center">N°</th>
+                        <th class="py-2 text-sm font-bold text-gray-800">Descripción del Insumo</th>
+                        <th class="py-2 text-sm text-center w-12"></th>
                     </tr>
                 </thead>
-                <tbody id="order-table-body"></tbody>
+                <tbody id="order-table-body">
+                </tbody>
             </table>
-            <div id="empty-order-msg" class="text-center py-8 text-slate-400 italic text-sm">
+            <div id="empty-order-msg" class="text-center py-8 text-gray-400 italic text-sm">
                 Aún no hay insumos en el pedido.
             </div>
-            <div class="mt-8 border-t-2 border-dashed border-slate-200 pt-4 flex justify-between items-center text-sm font-bold text-slate-500">
-                <span>Total de ítems: <span id="ticket-total-items" class="text-slate-800">0</span></span>
+            <div class="mt-8 border-t-2 border-dashed border-gray-300 pt-4 flex justify-between items-center text-sm font-bold text-gray-500">
+                <span>Total de Ítems: <span id="ticket-total-items" class="text-gray-800">0</span></span>
                 <span>Generado desde App</span>
             </div>
         </div>
 
-        <button onclick="generarYEnviarCorreo()"
-                class="tap w-full py-4 bg-brand text-white rounded-2xl font-bold hover:bg-brand-800 shadow-lift flex justify-center items-center gap-3 text-lg min-touch">
-            <i class="fa-brands fa-google text-2xl"></i> Enviar por Gmail y guardar
+        <button onclick="generarYEnviarCorreo()" class="w-full py-4 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors shadow-lg flex justify-center items-center gap-3 text-lg">
+            <i class="fa-brands fa-google text-2xl"></i>
+            Enviar por Gmail y Guardar
         </button>
     </div>
 
-    <!-- ============ HISTORIAL ============ -->
-    <div id="history-screen" class="hidden max-w-3xl mx-auto px-3 sm:px-6 pt-6 pb-10 safe-pb space-y-4">
-        <header class="bg-white/90 backdrop-blur rounded-2xl shadow-soft p-4 sm:p-5 flex items-center gap-3 border border-slate-100">
-            <button onclick="closeHistory()" class="tap w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 grid place-items-center text-slate-600 shrink-0">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <div>
-                <h1 class="text-lg sm:text-2xl font-extrabold text-brand tracking-tight">Pedidos Enviados</h1>
-                <p class="text-slate-500 text-xs sm:text-sm mt-0.5">Aquí verás los pedidos enviados por correo</p>
+    <div id="history-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <button onclick="closeHistory()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center gap-2">
+                        Pedidos Enviados
+                    </h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Aquí verás los pedidos enviados por correo</p>
+                </div>
             </div>
         </header>
-        <div id="history-container" class="space-y-4"></div>
+        <div id="history-container" class="space-y-4">
+        </div>
     </div>
 
-    <!-- ============ TOAST ============ -->
-    <div id="toast" class="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:left-auto bg-brand text-white px-5 py-3 rounded-xl shadow-lift translate-y-24 opacity-0 transition-all duration-300 z-[60] flex items-center gap-2 text-sm sm:text-base sm:max-w-sm">
-        <i class="fa-solid fa-circle-check" id="toast-icon"></i>
+    <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
+        <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
         <span id="toast-msg">Mensaje</span>
     </div>
 
@@ -395,126 +314,216 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Atajo y referencias rápidas
-        const $ = (id) => document.getElementById(id);
-        const SCREENS = ['login-screen','dashboard-screen','inventory-screen','orders-screen','history-screen'];
+        // --- NAVEGACIÓN ---
+        window.openInventory = function() {
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.remove('hidden');
+            initInventoryApp();
+        };
 
-        // --- NAVEGACIÓN (un único punto de control) ---
-        function showScreen(activeId) {
-            SCREENS.forEach(id => $(id).classList.add('hidden'));
-            const el = $(activeId);
-            el.classList.remove('hidden');
-            el.classList.remove('fade-up');
-            void el.offsetWidth;          // reinicia la animación
-            el.classList.add('fade-up');
-        }
+        window.openOrders = function() {
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.remove('hidden');
+            initOrders();
+        };
 
-        window.openInventory  = () => { showScreen('inventory-screen'); initInventoryApp(); };
-        window.openOrders     = () => { showScreen('orders-screen');    initOrders(); };
-        window.goToDashboard  = () => showScreen('dashboard-screen');
+        window.goToDashboard = function() {
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+        };
 
         // --- AUTENTICACIÓN ---
-        $('toggle-password').addEventListener('click', () => {
-            const input = $('password-input'), icon = $('toggle-icon');
-            const show = input.type === 'password';
-            input.type = show ? 'text' : 'password';
-            icon.classList.toggle('fa-eye', !show);
-            icon.classList.toggle('fa-eye-slash', show);
+        document.getElementById('toggle-password').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password-input');
+            const toggleIcon = document.getElementById('toggle-icon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
         });
-
+        
         onAuthStateChanged(auth, (user) => {
-            if (user) showScreen('dashboard-screen');
-            else      showScreen('login-screen');
+            const loginScreen = document.getElementById('login-screen');
+            const dashboardScreen = document.getElementById('dashboard-screen');
+            if (user) {
+                loginScreen.classList.add('hidden');
+                dashboardScreen.classList.remove('hidden');
+            } else {
+                loginScreen.classList.remove('hidden');
+                dashboardScreen.classList.add('hidden');
+                document.getElementById('inventory-screen').classList.add('hidden');
+                document.getElementById('orders-screen').classList.add('hidden');
+                document.getElementById('history-screen').classList.add('hidden');
+            }
         });
 
-        $('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = $('email-input').value;
-            const password = $('password-input').value;
-            const errorBox = $('login-error');
-            const btn = $('btn-login');
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            const errorBox = document.getElementById('login-error');
+            const btnLogin = document.getElementById('btn-login');
 
             errorBox.classList.add('hidden');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando…';
-            btn.disabled = true;
+            btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
+            btnLogin.disabled = true;
 
             try {
-                const persistence = $('remember-me').checked ? browserLocalPersistence : browserSessionPersistence;
-                await setPersistence(auth, persistence);
+                const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+                await setPersistence(auth, persistenceType);
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
                 errorBox.classList.remove('hidden');
-                $('login-error-text').innerText = "Correo o contraseña incorrectos.";
+                document.getElementById('login-error-text').innerText = "Correo o contraseña incorrectos.";
             } finally {
-                btn.innerHTML = '<span>Ingresar al sistema</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
-                btn.disabled = false;
+                btnLogin.innerHTML = '<span>Ingresar al Sistema</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
+                btnLogin.disabled = false;
             }
         });
 
         window.logoutUser = () => {
             signOut(auth).then(() => {
-                $('email-input').value = '';
-                $('password-input').value = '';
-                $('password-input').type = 'password';
+                document.getElementById('email-input').value = '';
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').type = 'password';
             });
         };
 
         // ==========================================
-        // 1. CONTROL DE INSUMOS
+        // 1. SISTEMA ORIGINAL DE CONTROL DE INSUMOS
         // ==========================================
+
+        // ─────────────────────────────────────────────────────────────────────
+        // defaultData — actualizado según REABASTECIMIENTO_GABINETE_CEV_2026
+        //
+        // AGREGADOS:  Catéter 18, Catéter 16, Catéter 14
+        //             Vestido XS, Vestido S, Vestido M, Vestido L, Vestido XL
+        //
+        // ELIMINADOS: Silimarina, Amoxicilina,
+        //             Lata EN, Lata ID Felino, Lata AD,
+        //             Fortiflora Canino, Fortiflora Felino
+        //
+        // POST-FESTIVO (sin cambios — ya estaban correctos):
+        //   Jeringa 1 mL 20→30 | Jeringa 3 mL 20→30 | Jeringa 5 mL 20→30
+        //   Hartmann 500 mL 10→15 | Solución Hartmann 1 L 5→10
+        // ─────────────────────────────────────────────────────────────────────
         const defaultData = [
             // Stand 1 — Catéteres
-            { name: "Catéter 24", ideal: 20 }, { name: "Catéter 22", ideal: 20 }, { name: "Catéter 20", ideal: 20 },
-            { name: "Catéter 18", ideal: 5 }, { name: "Catéter 16", ideal: 5 }, { name: "Catéter 14", ideal: 5 },
-            { name: "Llave 3 vías", ideal: 5 }, { name: "Tapones", ideal: 15 },
-            { name: "Pericraneal pequeño", ideal: 5 }, { name: "Pericraneal grueso", ideal: 5 },
-            // Stand 2 — Venoclisis / nebulización
-            { name: "Microgoteo", ideal: 15 }, { name: "Macrogoteo", ideal: 15 }, { name: "Buretrol", ideal: 5 },
-            { name: "Venobomba", ideal: 10 }, { name: "Máscara de nebulización", ideal: 5 },
-            { name: "Sonda gato", ideal: 5 }, { name: "Extensiones", ideal: 10 },
+            { name: "Catéter 24", ideal: 20 },
+            { name: "Catéter 22", ideal: 20 },
+            { name: "Catéter 20", ideal: 20 },
+            { name: "Catéter 18", ideal: 5 },
+            { name: "Catéter 16", ideal: 5 },
+            { name: "Catéter 14", ideal: 5 },
+            { name: "Llave 3 vías", ideal: 5 },
+            { name: "Tapones", ideal: 15 },
+            { name: "Pericraneal pequeño", ideal: 5 },
+            { name: "Pericraneal grueso", ideal: 5 },
+
+            // Stand 2 — Equipos de venoclisis / nebulización
+            { name: "Microgoteo", ideal: 15 },
+            { name: "Macrogoteo", ideal: 15 },
+            { name: "Buretrol", ideal: 5 },
+            { name: "Venobomba", ideal: 10 },
+            { name: "Máscara de nebulización", ideal: 5 },
+            { name: "Sonda gato", ideal: 5 },
+            { name: "Extensiones", ideal: 10 },
+
             // Stand 3 — Sondas
-            { name: "Sonda 5", ideal: 5 }, { name: "Sonda 6", ideal: 5 }, { name: "Sonda 8", ideal: 5 },
-            { name: "Sonda 10", ideal: 3 }, { name: "Sonda 12", ideal: 3 }, { name: "Sonda 14", ideal: 3 },
-            { name: "Sonda 16", ideal: 3 }, { name: "Sonda 18", ideal: 3 },
+            { name: "Sonda 5", ideal: 5 },
+            { name: "Sonda 6", ideal: 5 },
+            { name: "Sonda 8", ideal: 5 },
+            { name: "Sonda 10", ideal: 3 },
+            { name: "Sonda 12", ideal: 3 },
+            { name: "Sonda 14", ideal: 3 },
+            { name: "Sonda 16", ideal: 3 },
+            { name: "Sonda 18", ideal: 3 },
+
             // Vestidos
-            { name: "Vestido XS", ideal: 1 }, { name: "Vestido S", ideal: 1 }, { name: "Vestido M", ideal: 1 },
-            { name: "Vestido L", ideal: 1 }, { name: "Vestido XL", ideal: 1 },
-            // Tabletas / cápsulas
-            { name: "Metronidazol", ideal: 5 }, { name: "Pregabalina 75 mg", ideal: 15 }, { name: "Trimetoprim", ideal: 5 },
-            { name: "Esomeprazol", ideal: 5 }, { name: "Bladuvil", ideal: 5 }, { name: "Mirtazapina", ideal: 5 },
-            { name: "Ursacol", ideal: 5 }, { name: "Flunarizina", ideal: 5 }, { name: "Cefalexina", ideal: 5 },
-            { name: "Sulfadiazina", ideal: 5 }, { name: "Trazodona", ideal: 10 }, { name: "Pregabalina 25 mg", ideal: 15 },
-            { name: "Tramadol", ideal: 20 }, { name: "Domperidona (Domevoro)", ideal: 5 },
+            { name: "Vestido XS", ideal: 1 },
+            { name: "Vestido S", ideal: 1 },
+            { name: "Vestido M", ideal: 1 },
+            { name: "Vestido L", ideal: 1 },
+            { name: "Vestido XL", ideal: 1 },
+
+            // Caja organizadora — Tabletas / cápsulas
+            { name: "Metronidazol", ideal: 5 },
+            { name: "Pregabalina 75 mg", ideal: 15 },
+            { name: "Trimetoprim", ideal: 5 },
+            { name: "Esomeprazol", ideal: 5 },
+            { name: "Bladuvil", ideal: 5 },
+            { name: "Mirtazapina", ideal: 5 },
+            { name: "Ursacol", ideal: 5 },
+            { name: "Flunarizina", ideal: 5 },
+            { name: "Cefalexina", ideal: 5 },
+            { name: "Sulfadiazina", ideal: 5 },
+            { name: "Trazodona", ideal: 10 },
+            { name: "Pregabalina 25 mg", ideal: 15 },
+            { name: "Tramadol", ideal: 20 },
+            { name: "Domperidona (Domevoro)", ideal: 5 },
+
             // Ampollas e inyectables
-            { name: "Metronidazol vial 100 mg", ideal: 2 }, { name: "Ampicilina", ideal: 4 }, { name: "Ceftriaxona", ideal: 4 },
-            { name: "Omeprazol inyectable", ideal: 5 }, { name: "Ampicilina + sulbactam", ideal: 5 }, { name: "Cefalotina", ideal: 5 },
-            { name: "Gluconato de calcio", ideal: 4 }, { name: "Cloruro de potasio", ideal: 5 }, { name: "Ginkgo biloba", ideal: 5 },
-            { name: "Melatonina", ideal: 5 }, { name: "Omega 3", ideal: 5 }, { name: "Vitamina C", ideal: 5 },
-            { name: "Vitamina E", ideal: 5 }, { name: "Ampolla de metilprednisolona", ideal: 2 }, { name: "Ondansetrón", ideal: 5 },
-            { name: "Ampolla Fluimucil", ideal: 5 }, { name: "Complejo B", ideal: 3 }, { name: "Tiamina", ideal: 3 },
+            { name: "Metronidazol vial 100 mg", ideal: 2 },
+            { name: "Ampicilina", ideal: 4 },
+            { name: "Ceftriaxona", ideal: 4 },
+            { name: "Omeprazol inyectable", ideal: 5 },
+            { name: "Ampicilina + sulbactam", ideal: 5 },
+            { name: "Cefalotina", ideal: 5 },
+            { name: "Gluconato de calcio", ideal: 4 },
+            { name: "Cloruro de potasio", ideal: 5 },
+            { name: "Ginkgo biloba", ideal: 5 },
+            { name: "Melatonina", ideal: 5 },
+            { name: "Omega 3", ideal: 5 },
+            { name: "Vitamina C", ideal: 5 },
+            { name: "Vitamina E", ideal: 5 },
+            { name: "Ampolla de metilprednisolona", ideal: 2 },
+            { name: "Ondansetrón", ideal: 5 },
+            { name: "Ampolla Fluimucil", ideal: 5 },
+            { name: "Complejo B", ideal: 3 },
+            { name: "Tiamina", ideal: 3 },
             { name: "Cloruro de sodio (ampolla)", ideal: 10 },
-            // Vendajes y perfusoras
-            { name: "Vendaje Koban", ideal: 3 }, { name: "Vendaje de gasa", ideal: 3 }, { name: "Vendaje Algodón", ideal: 3 },
-            { name: "Perfusora de 50", ideal: 2 }, { name: "Perfusora de 20", ideal: 2 },
-            // Jeringas (post-festivo: 1/3/5 mL → 30)
-            { name: "Jeringa de 1mL", ideal: 20 }, { name: "Jeringa de 3mL", ideal: 20 }, { name: "Jeringa de 5mL", ideal: 20 },
-            { name: "Jeringa de 10mL", ideal: 10 }, { name: "Jeringa de 20mL", ideal: 5 }, { name: "Jeringa de 50mL", ideal: 2 },
+
+            // Stand 2 — Vendajes y perfusoras
+            { name: "Vendaje Koban", ideal: 3 },
+            { name: "Vendaje de gasa", ideal: 3 },
+            { name: "Vendaje Algodón", ideal: 3 },
+            { name: "Perfusora de 50", ideal: 2 },
+            { name: "Perfusora de 20", ideal: 2 },
+
+            // Caja de jeringas  (post-festivo: 1/3/5 mL → 30)
+            { name: "Jeringa de 1mL", ideal: 20 },
+            { name: "Jeringa de 3mL", ideal: 20 },
+            { name: "Jeringa de 5mL", ideal: 20 },
+            { name: "Jeringa de 10mL", ideal: 10 },
+            { name: "Jeringa de 20mL", ideal: 5 },
+            { name: "Jeringa de 50mL", ideal: 2 },
             { name: "Jeringa de 60mL", ideal: 2 },
-            // Sueros (post-festivo: Hartmann 500 mL → 15)
-            { name: "Hartmann 500 mL", ideal: 10 }, { name: "Solución salina 500mL", ideal: 5 },
-            { name: "Solución salina 250mL", ideal: 5 }, { name: "Solución salina 100mL", ideal: 5 },
-            // Stand 4 (post-festivo: Hartmann 1 L → 10)
-            { name: "Solución Hartmann 1 L", ideal: 5 }, { name: "Gelofusine", ideal: 1 }, { name: "Agua estéril", ideal: 1 },
-            { name: "Libra I/D Canino", ideal: 3 }, { name: "Libra I/D Gato", ideal: 3 }, { name: "Arena gato", ideal: 4 },
+
+            // Stand 3 — Sueros  (post-festivo: Hartmann 500 mL → 15)
+            { name: "Hartmann 500 mL", ideal: 10 },
+            { name: "Solución salina 500mL", ideal: 5 },
+            { name: "Solución salina 250mL", ideal: 5 },
+            { name: "Solución salina 100mL", ideal: 5 },
+
+            // Stand 4  (post-festivo: Hartmann 1 L → 10)
+            { name: "Solución Hartmann 1 L", ideal: 5 },
+            { name: "Gelofusine", ideal: 1 },
+            { name: "Agua estéril", ideal: 1 },
+            { name: "Libra I/D Canino", ideal: 3 },
+            { name: "Libra I/D Gato", ideal: 3 },
+            { name: "Arena gato", ideal: 4 },
             { name: "Tapetes", ideal: 3 }
         ];
-
-        // Cantidades especiales aplicables el día posterior a un festivo
-        const POST_FESTIVO_IDEAL = {
-            "Jeringa de 1mL": 30, "Jeringa de 3mL": 30, "Jeringa de 5mL": 30,
-            "Hartmann 500 mL": 15, "Solución Hartmann 1 L": 10
-        };
-        const defaultMap = new Map(defaultData.map(d => [d.name, d.ideal]));
 
         let inventory = [];
         let saveTimeout = null;
@@ -522,104 +531,133 @@
         async function initInventoryApp() {
             setFechasIniciales();
             await loadDataFromFirebase();
+            
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                renderInventoryTable(e.target.value.toLowerCase());
+            });
 
-            const search = $('search-input');
-            // (re)asignar listeners una sola vez
-            search.oninput = (e) => renderInventoryTable(e.target.value.toLowerCase());
-            $('report-date').onchange = () => loadDataFromFirebase();
+            document.getElementById('report-date').addEventListener('change', async () => {
+                await loadDataFromFirebase();
+            });
         }
 
-        const toggleLoader = (show) => $('loading-spinner').classList.toggle('hidden', !show);
-
-        function fechaISO(d) {
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        function toggleLoader(show) {
+            const spinner = document.getElementById('loading-spinner');
+            if(show) spinner.classList.remove('hidden');
+            else spinner.classList.add('hidden');
         }
 
         function setFechasIniciales() {
-            const hoy = fechaISO(new Date());
-            ['report-date','export-start','export-end'].forEach(id => { if (!$(id).value) $(id).value = hoy; });
+            const dateInput = document.getElementById('report-date');
+            const exportStart = document.getElementById('export-start');
+            const exportEnd = document.getElementById('export-end');
+            const d = new Date();
+            const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            
+            if(!dateInput.value) dateInput.value = todayStr;
+            if(!exportStart.value) exportStart.value = todayStr;
+            if(!exportEnd.value) exportEnd.value = todayStr;
         }
 
-        // Festivos memorizados por año (evita recálculos)
-        const holidayCache = {};
         function getHolidays(year) {
-            if (holidayCache[year]) return holidayCache[year];
-
             const holidays = [];
             const addDays = (d, days) => new Date(d.getTime() + days * 86400000);
             const moveToMonday = (d) => {
                 const day = d.getDay();
-                if (day !== 1) { const diff = (8 - day) % 7; return addDays(d, diff === 0 ? 7 : diff); }
+                if (day !== 1) {
+                    const diff = (8 - day) % 7;
+                    return addDays(d, diff === 0 ? 7 : diff);
+                }
                 return d;
             };
-            const push = (d) => holidays.push(fechaISO(d));
+            const pushDate = (d) => { holidays.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`); };
 
-            push(new Date(year, 0, 1)); push(new Date(year, 4, 1)); push(new Date(year, 6, 20));
-            push(new Date(year, 7, 7)); push(new Date(year, 11, 8)); push(new Date(year, 11, 25));
-            push(moveToMonday(new Date(year, 0, 6)));  push(moveToMonday(new Date(year, 2, 19)));
-            push(moveToMonday(new Date(year, 5, 29))); push(moveToMonday(new Date(year, 7, 15)));
-            push(moveToMonday(new Date(year, 9, 12))); push(moveToMonday(new Date(year, 10, 1)));
-            push(moveToMonday(new Date(year, 10, 11)));
+            pushDate(new Date(year, 0, 1)); pushDate(new Date(year, 4, 1)); pushDate(new Date(year, 6, 20)); 
+            pushDate(new Date(year, 7, 7)); pushDate(new Date(year, 11, 8)); pushDate(new Date(year, 11, 25)); 
+            pushDate(moveToMonday(new Date(year, 0, 6))); pushDate(moveToMonday(new Date(year, 2, 19))); 
+            pushDate(moveToMonday(new Date(year, 5, 29))); pushDate(moveToMonday(new Date(year, 7, 15))); 
+            pushDate(moveToMonday(new Date(year, 9, 12))); pushDate(moveToMonday(new Date(year, 10, 1))); 
+            pushDate(moveToMonday(new Date(year, 10, 11))); 
 
-            // Semana Santa y festivos móviles (algoritmo de Pascua)
             const a = year % 19, b = Math.floor(year / 100), c = year % 100;
-            const dM = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
-            const h = (19 * a + b - dM - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
+            const dMath = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+            const h = (19 * a + b - dMath - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
             const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
             const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
             const day = ((h + l - 7 * m + 114) % 31) + 1;
             const easter = new Date(year, month, day);
 
-            push(addDays(easter, -3)); push(addDays(easter, -2));
-            push(moveToMonday(addDays(easter, 39))); push(moveToMonday(addDays(easter, 60))); push(moveToMonday(addDays(easter, 68)));
+            pushDate(addDays(easter, -3)); pushDate(addDays(easter, -2)); pushDate(moveToMonday(addDays(easter, 39))); 
+            pushDate(moveToMonday(addDays(easter, 60))); pushDate(moveToMonday(addDays(easter, 68))); 
 
-            holidayCache[year] = holidays;
             return holidays;
         }
 
         function isYesterdayHoliday(dateString) {
             const [y, m, d] = dateString.split('-').map(Number);
-            const yesterday = new Date(new Date(y, m - 1, d).getTime() - 86400000);
-            return getHolidays(yesterday.getFullYear()).includes(fechaISO(yesterday));
+            const currentDate = new Date(y, m - 1, d);
+            const yesterday = new Date(currentDate.getTime() - 86400000); 
+            const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+            
+            const holidays = getHolidays(yesterday.getFullYear());
+            if (yesterday.getMonth() === 11 && yesterday.getDate() === 31) {
+                 const prevHolidays = getHolidays(yesterday.getFullYear());
+                 return prevHolidays.includes(yesterdayStr);
+            }
+            return holidays.includes(yesterdayStr);
         }
 
         async function loadDataFromFirebase() {
             toggleLoader(true);
-            const fecha = $('report-date').value;
-
+            const fechaActual = document.getElementById('report-date').value;
+            
             try {
-                const snap = await getDoc(doc(db, "inventarios", fecha));
+                const docRef = doc(db, "inventarios", fechaActual);
+                const docSnap = await getDoc(docRef);
 
-                if (snap.exists()) {
-                    const cloud = snap.data().items;
-                    inventory = cloud.filter(c => defaultMap.has(c.name));
-                    defaultData.forEach(def => {
-                        if (!inventory.find(i => i.name === def.name)) inventory.push({ ...def, actual: '' });
+                if (docSnap.exists()) {
+                    let cloudData = docSnap.data().items;
+                    inventory = cloudData.filter(cloudItem => defaultData.some(defaultItem => defaultItem.name === cloudItem.name));
+                    defaultData.forEach(defaultItem => {
+                        if (!inventory.find(i => i.name === defaultItem.name)) {
+                            inventory.push({...defaultItem, actual: ''});
+                        }
                     });
                 } else {
                     inventory = defaultData.map(item => ({ ...item, actual: '' }));
                 }
 
-                const wasHoliday = isYesterdayHoliday(fecha);
-                $('festivo-badge').classList.toggle('hidden', !wasHoliday);
+                const wasHoliday = isYesterdayHoliday(fechaActual);
+                const badge = document.getElementById('festivo-badge');
+                if(wasHoliday) badge.classList.remove('hidden');
+                else badge.classList.add('hidden');
 
+                // Ajuste post-festivo: aplicar cantidades especiales del documento 2026
                 inventory.forEach(item => {
-                    const base = defaultMap.get(item.name);
-                    item.ideal = (wasHoliday && POST_FESTIVO_IDEAL[item.name]) ? POST_FESTIVO_IDEAL[item.name] : base;
+                    let idealFinal = defaultData.find(d => d.name === item.name).ideal;
+                    if (wasHoliday) {
+                        if (item.name === "Jeringa de 1mL")        idealFinal = 30;
+                        if (item.name === "Jeringa de 3mL")        idealFinal = 30;
+                        if (item.name === "Jeringa de 5mL")        idealFinal = 30;
+                        if (item.name === "Hartmann 500 mL")       idealFinal = 15;
+                        if (item.name === "Solución Hartmann 1 L") idealFinal = 10;
+                    }
+                    item.ideal = idealFinal; 
                 });
 
             } catch (error) {
                 showToast("Error al cargar inventario", true);
             } finally {
-                renderInventoryTable($('search-input').value.toLowerCase());
+                renderInventoryTable(document.getElementById('search-input').value.toLowerCase());
                 toggleLoader(false);
             }
         }
 
         async function saveDataToFirebase() {
+            const fechaActual = document.getElementById('report-date').value;
             toggleLoader(true);
             try {
-                await setDoc(doc(db, "inventarios", $('report-date').value), { items: inventory });
+                await setDoc(doc(db, "inventarios", fechaActual), { items: inventory });
             } catch (error) {
                 showToast("Error al guardar.", true);
             } finally {
@@ -627,364 +665,517 @@
             }
         }
 
-        // Badge coloreado para la columna "Reponer"
-        function reponerBadge(hasValue, reponer) {
-            if (!hasValue) return '<span class="text-slate-300 font-bold">—</span>';
-            if (reponer > 0)
-                return `<span class="inline-flex items-center justify-center min-w-[2.25rem] px-2.5 py-1 rounded-full bg-red-50 text-red-600 font-bold text-sm border border-red-100">${reponer}</span>`;
-            return '<span class="inline-flex items-center justify-center min-w-[2.25rem] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-bold text-sm border border-emerald-100"><i class="fa-solid fa-check"></i></span>';
-        }
-
         function renderInventoryTable(filter = '') {
-            const tbody = $('table-body');
-            const frag = document.createDocumentFragment();
-            let visibles = 0;
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
 
             inventory.forEach((item, index) => {
-                if (!item.name.toLowerCase().includes(filter)) return;
-                visibles++;
+                if (item.name.toLowerCase().includes(filter)) {
+                    const actualValue = item.actual !== '' ? parseInt(item.actual) : '';
+                    let reponerValue = '';
+                    let rowClass = 'hover:bg-gray-100 transition-colors';
+                    let reponerClass = 'text-gray-400';
 
-                const hasValue = item.actual !== '';
-                const actual = hasValue ? parseInt(item.actual) : '';
-                const reponer = hasValue ? Math.max(0, item.ideal - actual) : '';
+                    if (actualValue !== '') {
+                        reponerValue = Math.max(0, item.ideal - actualValue);
+                        if (reponerValue > 0) {
+                            reponerClass = 'text-red-600 font-bold';
+                            rowClass = 'bg-gray-50 hover:bg-gray-100 transition-colors';
+                        } else {
+                            reponerClass = 'text-green-600 font-bold';
+                            rowClass = 'bg-gray-50 hover:bg-gray-100 transition-colors';
+                        }
+                    }
 
-                const tr = document.createElement('tr');
-                tr.className = (hasValue ? 'bg-slate-50/60 ' : '') + 'hover:bg-brand-50/40 transition-colors';
-                tr.innerHTML = `
-                    <td class="p-3 border-b border-slate-100 font-semibold text-slate-700 text-sm sm:text-base leading-tight">${item.name}</td>
-                    <td class="px-1 py-3 border-b border-slate-100 text-center font-bold text-slate-400 text-sm sm:text-base">${item.ideal}</td>
-                    <td class="px-1 py-3 border-b border-slate-100 text-center">
-                        <input type="number" min="0" inputmode="numeric" value="${item.actual}"
-                            oninput="window.updateItem(${index}, this.value)"
-                            class="field w-16 sm:w-20 text-center py-2 font-bold text-brand text-sm sm:text-base"
-                            placeholder="–">
-                    </td>
-                    <td class="px-1 py-3 border-b border-slate-100 text-center" id="reponer-${index}">
-                        ${reponerBadge(hasValue, reponer)}
-                    </td>
-                    <td class="border-b border-slate-100"></td>`;
-                frag.appendChild(tr);
+                    const tr = document.createElement('tr');
+                    tr.className = rowClass;
+                    tr.innerHTML = `
+                        <td class="p-2 sm:p-3 border-b border-gray-200 font-medium text-gray-700 text-xs sm:text-base leading-tight">${item.name}</td>
+                        <td class="p-2 sm:p-3 border-b border-gray-200 text-center font-bold text-gray-500 text-xs sm:text-base">${item.ideal}</td>
+                        <td class="p-2 sm:p-3 border-b border-gray-200 text-center">
+                            <input type="number" min="0" 
+                                value="${item.actual}" 
+                                oninput="window.updateItem(${index}, this.value)"
+                                class="w-14 sm:w-20 text-center py-1 sm:py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white shadow-sm font-bold text-[#154390] text-sm sm:text-base"
+                                placeholder="-"
+                            >
+                        </td>
+                        <td class="p-2 sm:p-3 border-b border-gray-200 text-center ${reponerClass} text-sm sm:text-lg" id="reponer-${index}">
+                            ${actualValue !== '' ? reponerValue : '-'}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
             });
-
-            tbody.replaceChildren(frag);
-            $('empty-inventory').classList.toggle('hidden', visibles !== 0);
         }
 
         window.updateItem = function(index, value) {
             if (value !== '' && parseInt(value) < 0) value = '0';
             inventory[index].actual = value;
+            
+            const actualValue = value !== '' ? parseInt(value) : '';
+            const reponerCell = document.getElementById(`reponer-${index}`);
+            const row = reponerCell.parentElement;
 
-            const hasValue = value !== '';
-            const reponer = hasValue ? Math.max(0, inventory[index].ideal - parseInt(value)) : '';
-            const cell = $(`reponer-${index}`);
-            cell.innerHTML = reponerBadge(hasValue, reponer);
-            cell.parentElement.className = (hasValue ? 'bg-slate-50/60 ' : '') + 'hover:bg-brand-50/40 transition-colors';
+            if (actualValue !== '') {
+                const reponerValue = Math.max(0, inventory[index].ideal - actualValue);
+                reponerCell.textContent = reponerValue;
+                
+                if (reponerValue > 0) {
+                    reponerCell.className = 'p-2 sm:p-3 border-b border-gray-200 text-center text-red-600 font-bold text-sm sm:text-lg';
+                    row.className = 'bg-gray-50 hover:bg-gray-100 transition-colors';
+                } else {
+                    reponerCell.className = 'p-2 sm:p-3 border-b border-gray-200 text-center text-green-600 font-bold text-sm sm:text-lg';
+                    row.className = 'bg-gray-50 hover:bg-gray-100 transition-colors';
+                }
+            } else {
+                reponerCell.textContent = '-';
+                reponerCell.className = 'p-2 sm:p-3 border-b border-gray-200 text-center text-gray-400 text-sm sm:text-lg';
+                row.className = 'hover:bg-gray-100 transition-colors';
+            }
 
             clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(saveDataToFirebase, 1000);
-        };
+            saveTimeout = setTimeout(() => { saveDataToFirebase(); }, 1000);
+        }
 
         window.clearAll = async function() {
-            const fecha = $('report-date').value;
-            if (!confirm(`¿Deseas borrar de la nube todos los datos del día ${fecha}?`)) return;
-            inventory = inventory.map(item => ({ ...item, actual: '' }));
-            $('search-input').value = '';
-            renderInventoryTable();
-            await saveDataToFirebase();
-            showToast("Día limpiado en la nube");
-        };
+            const fechaActual = document.getElementById('report-date').value;
+            if(confirm(`¿Deseas borrar de la nube todos los datos del día ${fechaActual}?`)) {
+                inventory = inventory.map(item => ({ ...item, actual: '' }));
+                renderInventoryTable();
+                await saveDataToFirebase();
+                document.getElementById('search-input').value = '';
+                showToast("Día limpiado en la nube");
+            }
+        }
 
         window.generarExcel = async function() {
-            const start = $('export-start').value, end = $('export-end').value;
-            if (!start || !end)  return showToast("Selecciona fecha de inicio y fin", true);
-            if (start > end)     return showToast("La fecha de inicio debe ser anterior a la de fin", true);
+            const start = document.getElementById('export-start').value;
+            const end = document.getElementById('export-end').value;
 
-            showToast("Consultando a la nube…");
+            if (!start || !end) { showToast("Selecciona fecha de inicio y fin", true); return; }
+            if (start > end) { showToast("La fecha de inicio debe ser anterior a la de fin", true); return; }
+
+            showToast("Consultando a la nube...");
             toggleLoader(true);
 
             try {
                 const q = query(collection(db, "inventarios"), where("__name__", ">=", start), where("__name__", "<=", end));
-                const snap = await getDocs(q);
-                if (snap.empty) { alert("No se encontraron registros en la nube para estas fechas."); return; }
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    alert("No se encontraron registros en la nube para estas fechas.");
+                    toggleLoader(false); return;
+                }
 
-                const filas = [];
-                snap.forEach((d) => {
-                    d.data().items.forEach(item => {
-                        if (item.actual === '') return;
-                        const actual = parseInt(item.actual);
-                        filas.push({
-                            "Fecha": d.id, "Insumo": item.name, "Stock Ideal": item.ideal,
-                            "Stock Contado": actual, "Repuesto (Faltante)": Math.max(0, item.ideal - actual)
-                        });
+                const datosParaExcel = [];
+                querySnapshot.forEach((doc) => {
+                    const fecha = doc.id;
+                    const items = doc.data().items;
+                    items.forEach(item => {
+                        if (item.actual !== '') {
+                            const actual = parseInt(item.actual);
+                            const reponer = Math.max(0, item.ideal - actual);
+                            datosParaExcel.push({
+                                "Fecha": fecha, "Insumo": item.name, "Stock Ideal": item.ideal,
+                                "Stock Contado": actual, "Repuesto (Faltante)": reponer
+                            });
+                        }
                     });
                 });
 
-                if (filas.length === 0) { alert("Se encontraron fechas en la nube, pero no hay datos numéricos."); return; }
+                if (datosParaExcel.length === 0) {
+                    alert("Se encontraron fechas en la nube, pero no hay datos numéricos.");
+                    toggleLoader(false); return;
+                }
 
-                const hoja = XLSX.utils.json_to_sheet(filas);
+                const hoja = XLSX.utils.json_to_sheet(datosParaExcel);
                 const libro = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(libro, hoja, "Insumos");
                 XLSX.writeFile(libro, `Control_Insumos_CEV_${start}_al_${end}.xlsx`);
                 showToast("Excel descargado correctamente");
+
             } catch (error) {
                 alert("Hubo un problema al descargar los datos de la nube.");
             } finally {
                 toggleLoader(false);
             }
-        };
+        }
+
 
         // ==========================================
-        // 2. PEDIDOS A FARMACIA
+        // 2. SISTEMA DE PEDIDOS A FARMACIA
         // ==========================================
         let listaInsumosFarmacia = [
-            "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)",
-            "Arena", "Atropina", "Bladuril", "Buretrol", "Carbón activado", "Catéter", "Cefalexina 500 mg",
-            "Cefalotina 1 mL", "Ceftriaxona ampolla x 10 mL", "Cerenia 1 mL iny.", "Cloruro de sodio",
-            "Cobán (vendaje vet)", "Complejo B", "Compresas", "Dexametasona", "Dextrosa", "Dipirona 1 mL",
-            "Ditopax", "Enalapril", "Enema", "Euthanex 1 mL", "Extensión", "Flunarizina",
-            "Fluimucil ampolla x 3 mL", "Fortiflora", "Gluconato de calcio", "Guante estéril (cirugía)",
-            "Guantes par (examen)", "Hartman 1 L", "Hartman 500 mL (suero)", "Hidromorfona 1 mL",
-            "Jeringa 1-3-5 mL", "Jeringa 10-20-60 mL", "Kit de nebulización", "Lidocaína 1 mL", "Lyrica",
-            "Llave 3 vías", "Lípidos", "Meloxicam 1 mL iny.", "Metilprednisolona ampolla x 10 mL",
-            "Nebulización", "Neuroprotección (vitamina A, E, C, Omega, Ginkgo)", "Nutra Life (1 cucharada = 11 g)",
-            "Omeprazol 1 mL iny.", "Ondansetrón ampolla x 4 mL", "Pañal o tapete", "Perfusora 20/50",
-            "Periactín", "Potasio", "Pregabalina 25", "Pregabalina 75", "Pregabalina mL", "Propofol 1 mL",
-            "Sonda", "Sulfazalazina", "Sutura absorbible", "Tapón", "Tiamina", "Tramadol 1 mL",
-            "Trazodona tableta", "Trihepat", "Venda de algodón", "Venobomba", "Venoclisis", "Vestido L",
-            "Vestido M", "Vestido S", "Vestido XL", "Vestido XS", "Vestido XXL", "Vitamina K (Kavitex)",
+            "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)", 
+            "Arena", "Atropina", "Bladuril", "Buretrol", "Carbón activado", "Catéter", "Cefalexina 500 mg", 
+            "Cefalotina 1 mL", "Ceftriaxona ampolla x 10 mL", "Cerenia 1 mL iny.", "Cloruro de sodio", 
+            "Cobán (vendaje vet)", "Complejo B", "Compresas", "Dexametasona", "Dextrosa", "Dipirona 1 mL", 
+            "Ditopax", "Enalapril", "Enema", "Euthanex 1 mL", "Extensión", "Flunarizina", 
+            "Fluimucil ampolla x 3 mL", "Fortiflora", "Gluconato de calcio", "Guante estéril (cirugía)", 
+            "Guantes par (examen)", "Hartman 1 L", "Hartman 500 mL (suero)", "Hidromorfona 1 mL", 
+            "Jeringa 1-3-5 mL", "Jeringa 10-20-60 mL", "Kit de nebulización", "Lidocaína 1 mL", "Lyrica", 
+            "Llave 3 vías", "Lípidos", "Meloxicam 1 mL iny.", "Metilprednisolona ampolla x 10 mL", 
+            "Nebulización", "Neuroprotección (vitamina A, E, C, Omega, Ginkgo)", "Nutra Life (1 cucharada = 11 g)", 
+            "Omeprazol 1 mL iny.", "Ondansetrón ampolla x 4 mL", "Pañal o tapete", "Perfusora 20/50", 
+            "Periactín", "Potasio", "Pregabalina 25", "Pregabalina 75", "Pregabalina mL", "Propofol 1 mL", 
+            "Sonda", "Sulfazalazina", "Sutura absorbible", "Tapón", "Tiamina", "Tramadol 1 mL", 
+            "Trazodona tableta", "Trihepat", "Venda de algodón", "Venobomba", "Venoclisis", "Vestido L", 
+            "Vestido M", "Vestido S", "Vestido XL", "Vestido XS", "Vestido XXL", "Vitamina K (Kavitex)", 
             "Xilasina 1 mL"
         ];
 
         let pedidoActual = [];
         let modoManual = false;
-        const getExtra = () => JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
-        const setExtra = (arr) => localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(arr));
 
         async function guardarBorradorEnNube() {
-            try { await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: pedidoActual }); }
-            catch (error) { console.error("Error guardando borrador:", error); }
+            try {
+                await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: pedidoActual });
+            } catch (error) {
+                console.error("Error guardando borrador en la nube:", error);
+            }
         }
 
         window.actualizarSelectInsumos = function() {
-            const select = $('order-item-select');
-            select.innerHTML = '<option value="">Seleccione un insumo…</option>' +
-                listaInsumosFarmacia.map(i => `<option value="${i}">${i}</option>`).join('');
-            $('btn-delete-custom-list').classList.add('hidden');
-            $('custom-item-help').classList.add('hidden');
-        };
+            const select = document.getElementById('order-item-select');
+            select.innerHTML = '<option value="">Seleccione un insumo...</option>';
+            listaInsumosFarmacia.forEach(insumo => {
+                const opt = document.createElement('option');
+                opt.value = insumo;
+                opt.textContent = insumo;
+                select.appendChild(opt);
+            });
+            document.getElementById('btn-delete-custom-list').classList.add('hidden');
+            const helpText = document.getElementById('custom-item-help');
+            if (helpText) helpText.classList.add('hidden');
+        }
 
         window.verificarInsumoPersonalizado = function() {
-            const value = $('order-item-select').value;
-            const esExtra = value !== "" && getExtra().includes(value);
-            $('btn-delete-custom-list').classList.toggle('hidden', !esExtra);
-            $('custom-item-help').classList.toggle('hidden', !esExtra);
-        };
+            const select = document.getElementById('order-item-select');
+            const btnDelete = document.getElementById('btn-delete-custom-list');
+            const helpText = document.getElementById('custom-item-help');
+            const selectedValue = select.value;
+
+            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+
+            if (selectedValue !== "" && extraInsumos.includes(selectedValue)) {
+                btnDelete.classList.remove('hidden'); 
+                if (helpText) helpText.classList.remove('hidden'); 
+            } else {
+                btnDelete.classList.add('hidden'); 
+                if (helpText) helpText.classList.add('hidden');
+            }
+        }
 
         window.eliminarInsumoPersonalizado = function() {
-            const insumo = $('order-item-select').value;
-            if (!insumo) return;
-            setExtra(getExtra().filter(i => i !== insumo));
-            listaInsumosFarmacia = listaInsumosFarmacia.filter(i => i !== insumo);
+            const select = document.getElementById('order-item-select');
+            const insumoAEliminar = select.value;
+
+            if (!insumoAEliminar) return;
+
+            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+            extraInsumos = extraInsumos.filter(item => item !== insumoAEliminar);
+            localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
+
+            listaInsumosFarmacia = listaInsumosFarmacia.filter(item => item !== insumoAEliminar);
+
             actualizarSelectInsumos();
-            showToast(`"${insumo}" fue eliminado permanentemente.`);
-        };
+            showToast(`¡Listo! "${insumoAEliminar}" fue eliminado permanentemente.`);
+        }
 
         window.initOrders = async function() {
-            getExtra().forEach(i => { if (!listaInsumosFarmacia.includes(i)) listaInsumosFarmacia.push(i); });
-            listaInsumosFarmacia.sort((a, b) => a.localeCompare(b, 'es'));
+            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+            extraInsumos.forEach(insumo => {
+                if (!listaInsumosFarmacia.includes(insumo)) {
+                    listaInsumosFarmacia.push(insumo);
+                }
+            });
+            listaInsumosFarmacia.sort();
+            
             actualizarSelectInsumos();
 
-            const loader = $('loading-draft');
-            loader.classList.remove('hidden');
+            const loaderBorrador = document.getElementById('loading-draft');
+            const badgeBorrador = document.getElementById('draft-badge');
+            loaderBorrador.classList.remove('hidden');
+
             try {
-                const snap = await getDoc(doc(db, "pedidos_farmacia", "borrador_actual"));
-                const items = snap.exists() ? (snap.data().items || []) : [];
-                pedidoActual = items;
-                $('draft-badge').classList.toggle('hidden', items.length === 0);
+                const docSnap = await getDoc(doc(db, "pedidos_farmacia", "borrador_actual"));
+                if (docSnap.exists() && docSnap.data().items && docSnap.data().items.length > 0) {
+                    pedidoActual = docSnap.data().items;
+                    badgeBorrador.classList.remove('hidden');
+                } else {
+                    pedidoActual = [];
+                    badgeBorrador.classList.add('hidden');
+                }
             } catch (e) {
-                console.error("No se pudo cargar el borrador:", e);
+                console.error("No se pudo cargar el borrador de la nube", e);
                 pedidoActual = [];
             } finally {
-                loader.classList.add('hidden');
+                loaderBorrador.classList.add('hidden');
                 renderOrderTable();
             }
-        };
+        }
 
         window.toggleCustomItem = function() {
             modoManual = !modoManual;
-            const btn = $('btn-toggle-custom');
-            $('select-container').classList.toggle('hidden', modoManual);
-            $('input-container').classList.toggle('hidden', !modoManual);
+            const selectCont = document.getElementById('select-container');
+            const inputCont = document.getElementById('input-container');
+            const btn = document.getElementById('btn-toggle-custom');
 
             if (modoManual) {
-                $('order-item-select').value = "";
+                selectCont.classList.add('hidden');
+                inputCont.classList.remove('hidden');
+                document.getElementById('order-item-select').value = "";
                 btn.innerHTML = '<i class="fa-solid fa-list"></i> Seleccionar de la lista';
             } else {
-                $('order-item-input').value = "";
+                selectCont.classList.remove('hidden');
+                inputCont.classList.add('hidden');
+                document.getElementById('order-item-input').value = "";
                 btn.innerHTML = '<i class="fa-solid fa-pencil"></i> ¿No está en la lista? Ingresar manual';
-                $('btn-delete-custom-list').classList.add('hidden');
-                $('custom-item-help').classList.add('hidden');
+                document.getElementById('btn-delete-custom-list').classList.add('hidden');
+                const helpText = document.getElementById('custom-item-help');
+                if (helpText) helpText.classList.add('hidden');
             }
-        };
+        }
 
         window.addOrderRow = async function() {
             let itemName = "";
-
+            
             if (modoManual) {
-                itemName = $('order-item-input').value.trim();
-                if (itemName === "") return showToast("Por favor escribe un insumo.", true);
+                itemName = document.getElementById('order-item-input').value.trim();
+                
+                if (itemName === "") {
+                    showToast("Por favor escribe un insumo.", true);
+                    return;
+                }
 
-                const inicial = itemName.charAt(0);
-                if (inicial !== inicial.toUpperCase() || !/[A-ZÁÉÍÓÚÑ]/.test(inicial))
-                    return showToast("Requisito: la primera letra debe ser MAYÚSCULA.", true);
+                const primeraLetra = itemName.charAt(0);
+                if (primeraLetra !== primeraLetra.toUpperCase() || !/[A-ZÁÉÍÓÚÑ]/.test(primeraLetra)) {
+                    showToast("Requisito: La primera letra debe ser MAYÚSCULA.", true);
+                    return;
+                }
 
                 if (!listaInsumosFarmacia.includes(itemName)) {
                     listaInsumosFarmacia.push(itemName);
-                    listaInsumosFarmacia.sort((a, b) => a.localeCompare(b, 'es'));
-                    const extra = getExtra();
-                    if (!extra.includes(itemName)) { extra.push(itemName); setExtra(extra); }
+                    listaInsumosFarmacia.sort();
+                    
+                    let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
+                    if (!extraInsumos.includes(itemName)) {
+                        extraInsumos.push(itemName);
+                        localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
+                    }
+                    
                     actualizarSelectInsumos();
                 }
+
             } else {
-                itemName = $('order-item-select').value;
-                if (itemName === "") return showToast("Por favor selecciona un insumo de la lista.", true);
+                itemName = document.getElementById('order-item-select').value;
+                if (itemName === "") {
+                    showToast("Por favor selecciona un insumo de la lista.", true);
+                    return;
+                }
             }
 
-            if (pedidoActual.some(i => i.name.toLowerCase() === itemName.toLowerCase()))
-                return showToast("Este insumo ya está en el pedido actual.", true);
+            const index = pedidoActual.findIndex(item => item.name.toLowerCase() === itemName.toLowerCase());
+            
+            if (index !== -1) {
+                showToast("Este insumo ya está en el pedido actual.", true);
+                return;
+            } else {
+                pedidoActual.push({ name: itemName });
+            }
 
-            pedidoActual.push({ name: itemName });
             await guardarBorradorEnNube();
-            $('draft-badge').classList.remove('hidden');
+            document.getElementById('draft-badge').classList.remove('hidden');
 
-            $(modoManual ? 'order-item-input' : 'order-item-select').value = "";
-            $('btn-delete-custom-list').classList.add('hidden');
-            $('custom-item-help').classList.add('hidden');
+            if (modoManual) document.getElementById('order-item-input').value = "";
+            else document.getElementById('order-item-select').value = "";
+            
+            document.getElementById('btn-delete-custom-list').classList.add('hidden');
+            const helpText = document.getElementById('custom-item-help');
+            if (helpText) helpText.classList.add('hidden');
 
             renderOrderTable();
             showToast("Insumo agregado a la lista");
-        };
+        }
 
         window.removeOrderRow = async function(index) {
             pedidoActual.splice(index, 1);
             await guardarBorradorEnNube();
-            if (pedidoActual.length === 0) $('draft-badge').classList.add('hidden');
+            if (pedidoActual.length === 0) {
+                document.getElementById('draft-badge').classList.add('hidden');
+            }
             renderOrderTable();
-        };
+        }
 
         window.renderOrderTable = function() {
-            const tbody = $('order-table-body');
+            const tbody = document.getElementById('order-table-body');
+            const msgEmpty = document.getElementById('empty-order-msg');
+            const totalItems = document.getElementById('ticket-total-items');
             tbody.innerHTML = '';
-            $('empty-order-msg').classList.toggle('hidden', pedidoActual.length !== 0);
-            $('ticket-total-items').textContent = pedidoActual.length;
 
-            const frag = document.createDocumentFragment();
+            if (pedidoActual.length === 0) {
+                msgEmpty.classList.remove('hidden');
+                totalItems.textContent = "0";
+                return;
+            }
+
+            msgEmpty.classList.add('hidden');
+            let total = 0;
+
             pedidoActual.forEach((item, index) => {
+                total++;
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-100";
+                tr.className = "border-b border-gray-100";
                 tr.innerHTML = `
-                    <td class="py-3 text-center text-slate-400 font-bold text-sm">${index + 1}</td>
-                    <td class="py-3 text-slate-800 font-medium text-sm sm:text-base">${item.name}</td>
+                    <td class="py-3 text-center text-gray-500 font-bold text-sm">${index + 1}</td>
+                    <td class="py-3 text-gray-800 font-medium text-sm sm:text-base">${item.name}</td>
                     <td class="py-3 text-center">
-                        <button onclick="removeOrderRow(${index})" class="text-red-400 hover:text-red-600 w-9 h-9 grid place-items-center rounded-lg hover:bg-red-50 transition-colors mx-auto">
-                            <i class="fa-solid fa-xmark"></i>
+                        <button onclick="removeOrderRow(${index})" class="text-red-500 hover:text-red-700 p-1">
+                            <i class="fa-solid fa-times-circle"></i>
                         </button>
-                    </td>`;
-                frag.appendChild(tr);
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
-            tbody.appendChild(frag);
-        };
 
+            totalItems.textContent = total;
+        }
+
+        // --- ENVIAR POR GMAIL Y GUARDAR EL TEXTO EXACTO ---
         window.generarYEnviarCorreo = async function() {
-            if (pedidoActual.length === 0) return showToast("El pedido está vacío.", true);
+            if (pedidoActual.length === 0) {
+                showToast("El pedido está vacío.", true);
+                return;
+            }
 
             try {
-                const timestamp = Date.now().toString();
-                let texto = `📋 PEDIDO DE INSUMOS FARMACIA CEV\n\nDetalle del pedido:\n`;
-                pedidoActual.forEach((item, i) => { texto += `${i + 1}. ${item.name}\n`; });
+                const timestamp = new Date().getTime().toString();
+                
+                let textoPlano = `📋 PEDIDO DE INSUMOS FARMACIA CEV\n\nDetalle del pedido:\n`;
+                
+                pedidoActual.forEach((item, index) => {
+                    textoPlano += `${index + 1}. ${item.name}\n`;
+                });
 
-                showToast("Guardando mensaje en historial…");
-                await setDoc(doc(db, "pedidos_farmacia", timestamp), { timestamp: parseInt(timestamp), textoEnviado: texto });
+                const datosGuardar = {
+                    timestamp: parseInt(timestamp),
+                    textoEnviado: textoPlano 
+                };
 
-                const to = "servicioalclientecevmascotas@gmail.com";
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}` +
-                    `&su=${encodeURIComponent("Pedido de Insumos Farmacia CEV")}` +
-                    `&body=${encodeURIComponent(texto)}`;
+                showToast("Guardando mensaje en historial...");
+                await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
 
-                showToast("¡Pedido guardado! Abriendo Gmail…");
-
+                const emailDestino = "servicioalclientecevmascotas@gmail.com";
+                const asunto = encodeURIComponent(`Pedido de Insumos Farmacia CEV`);
+                const cuerpoCorreo = encodeURIComponent(textoPlano);
+                
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailDestino}&su=${asunto}&body=${cuerpoCorreo}`;
+                
+                showToast("¡Pedido guardado! Abriendo Gmail...");
+                
                 pedidoActual = [];
                 await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: [] });
-                $('draft-badge').classList.add('hidden');
+                document.getElementById('draft-badge').classList.add('hidden');
                 renderOrderTable();
 
-                setTimeout(() => window.open(gmailUrl, '_blank'), 1200);
+                setTimeout(() => { window.open(gmailUrl, '_blank'); }, 1200);
+
             } catch (error) {
                 console.error("Error al guardar el historial:", error);
                 showToast("Hubo un error al guardar. Revisa tu conexión a internet.", true);
             }
-        };
+        }
 
-        // --- HISTORIAL ---
-        window.openHistory  = () => { showScreen('history-screen'); cargarHistorialDeFirebase(); };
-        window.closeHistory = () => showScreen('orders-screen');
+        // --- HISTORIAL ESTILO CHAT DE CORREO ---
+        window.openHistory = function() {
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.remove('hidden');
+            cargarHistorialDeFirebase();
+        }
+
+        window.closeHistory = function() {
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.remove('hidden');
+        }
 
         window.cargarHistorialDeFirebase = async function() {
-            const container = $('history-container');
-            container.innerHTML = '<div class="text-center py-10"><div class="loader mx-auto mb-4"></div><p class="text-slate-500 font-semibold">Cargando registros…</p></div>';
-
+            const container = document.getElementById('history-container');
+            container.innerHTML = '<div class="text-center py-8"><div class="loader mx-auto mb-4"></div><p class="text-gray-500 font-semibold">Cargando registros...</p></div>';
+            
             try {
-                const snap = await getDocs(collection(db, "pedidos_farmacia"));
-                const pedidos = [];
-                snap.forEach((d) => { if (d.id !== "borrador_actual") pedidos.push({ id: d.id, ...d.data() }); });
-                pedidos.sort((a, b) => b.timestamp - a.timestamp);
-
-                if (pedidos.length === 0) {
-                    container.innerHTML = '<div class="text-center py-12 bg-white rounded-2xl shadow-soft border border-slate-100 text-slate-400 italic"><i class="fa-solid fa-comment-slash text-4xl mb-3 opacity-50 block"></i>Aún no hay pedidos enviados a farmacia.</div>';
+                const querySnapshot = await getDocs(collection(db, "pedidos_farmacia"));
+                let pedidosGuardados = [];
+                
+                querySnapshot.forEach((doc) => {
+                    if (doc.id !== "borrador_actual") {
+                        pedidosGuardados.push({ id: doc.id, ...doc.data() });
+                    }
+                });
+                
+                pedidosGuardados.sort((a, b) => b.timestamp - a.timestamp);
+                
+                if (pedidosGuardados.length === 0) {
+                    container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-comment-slash text-4xl mb-3 opacity-50"></i><br>Aún no hay pedidos enviados a farmacia.</div>';
                     return;
                 }
-
+                
                 container.innerHTML = '';
-                const frag = document.createDocumentFragment();
-                pedidos.forEach((pedido) => {
-                    const texto = pedido.textoEnviado
-                        ? pedido.textoEnviado.replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, '<b>$1</b>')
-                        : "Mensaje antiguo.";
-                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=servicioalclientecevmascotas@gmail.com&su=${encodeURIComponent("Reenvío Pedido Insumos")}&body=${encodeURIComponent(pedido.textoEnviado || "Reenviar pedido")}`;
+                
+                pedidosGuardados.forEach((pedido) => {
+                    let textoFormateado = "Mensaje antiguo.";
+                    
+                    if (pedido.textoEnviado) {
+                        textoFormateado = pedido.textoEnviado
+                            .replace(/\n/g, '<br>')
+                            .replace(/\*(.*?)\*/g, '<b>$1</b>');
+                    }
 
                     const card = document.createElement('div');
-                    card.className = "bg-white p-4 sm:p-5 rounded-2xl shadow-soft border border-brand-100 hover:shadow-lift transition-shadow";
+                    card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-blue-200 mb-4 hover:shadow-lg transition-shadow";
+                    
+                    const textoParaReenviar = encodeURIComponent(pedido.textoEnviado || "Reenviar pedido");
+                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=servicioalclientecevmascotas@gmail.com&su=Reenvío Pedido Insumos&body=${textoParaReenviar}`;
+
                     card.innerHTML = `
-                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
-                            <div class="font-bold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
-                                <i class="fa-solid fa-envelope text-brand text-lg"></i> Registro guardado
+                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
+                            <div class="font-bold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
+                                <i class="fa-solid fa-envelope text-blue-500 text-lg"></i> Registro guardado
                             </div>
-                            <a href="${gmailUrl}" target="_blank" class="tap text-xs sm:text-sm font-bold bg-brand-50 text-brand px-3 py-1.5 rounded-full uppercase tracking-wide border border-brand-100 hover:bg-brand-100 transition-colors flex items-center gap-1">
+                            <a href="${gmailUrl}" target="_blank" class="text-xs sm:text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full uppercase tracking-wide border border-blue-200 hover:bg-blue-200 transition-colors flex items-center gap-1">
                                 <i class="fa-solid fa-share"></i> Reenviar
                             </a>
                         </div>
-                        <div class="bg-brand-50/60 p-4 rounded-xl text-sm text-slate-700 font-mono border border-brand-100">${texto}</div>`;
-                    frag.appendChild(card);
+                        <div class="bg-blue-50 p-3 sm:p-4 rounded-lg text-sm text-gray-700 font-mono shadow-inner border border-blue-100">
+                            ${textoFormateado}
+                        </div>
+                    `;
+                    container.appendChild(card);
                 });
-                container.appendChild(frag);
+                
             } catch (error) {
-                container.innerHTML = '<div class="text-center py-10 text-red-500 bg-red-50 rounded-2xl border border-red-100"><i class="fa-solid fa-triangle-exclamation text-3xl mb-2 block"></i><b>Error al cargar historial</b></div>';
+                container.innerHTML = '<div class="text-center py-8 text-red-500 bg-red-50 rounded-xl border border-red-200"><i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i><br><b>Error al cargar historial</b></div>';
             }
-        };
+        }
 
-        // --- TOAST ---
+        // --- SISTEMA DE NOTIFICACIONES ---
         window.showToast = function(message, isError = false) {
-            const toast = $('toast'), icon = $('toast-icon');
-            $('toast-msg').textContent = message;
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            
+            document.getElementById('toast-msg').textContent = message;
+            
+            if(isError) {
+                toast.classList.replace('bg-[#154390]', 'bg-red-600');
+                icon.className = 'fa-solid fa-triangle-exclamation text-gray-100';
+            } else {
+                toast.classList.replace('bg-red-600', 'bg-[#154390]');
+                icon.className = 'fa-solid fa-check-circle text-gray-200';
+            }
 
-            toast.classList.toggle('bg-brand', !isError);
-            toast.classList.toggle('bg-red-600', isError);
-            icon.className = isError ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check';
-
-            toast.classList.remove('translate-y-24', 'opacity-0');
-            clearTimeout(toast._t);
-            toast._t = setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 3000);
-        };
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
     </script>
 </body>
 </html>
