@@ -3,1179 +3,549 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Diario de Insumos CEV</title>
+    <title>Control de Insumos · CEV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f3f4f6; }
-        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .loader {
-            border: 3px solid #f3f3f3; border-radius: 50%;
-            border-top: 3px solid #154390; width: 20px; height: 20px;
-            -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite;
+        :root {
+            --cev-primary: #1a4fa0;
+            --cev-primary-dark: #0f3170;
+            --cev-primary-light: #e8f0fc;
+            --cev-accent: #2563eb;
+            --cev-surface: #f7f9fc;
+            --cev-border: #e2e8f0;
+            --cev-text: #1e293b;
+            --cev-muted: #64748b;
+            --cev-success: #16a34a;
+            --cev-danger: #dc2626;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--cev-surface);
+            color: var(--cev-text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Scrollbars ── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ── Hide number spinners ── */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+        /* ── Spinner ── */
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid #e2e8f0;
+            border-top-color: var(--cev-primary);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Screen transitions ── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ── Login ── */
+        #login-screen {
+            display: flex;
+            position: fixed; inset: 0;
+            background: linear-gradient(145deg, #0f3170 0%, #1a4fa0 50%, #2563eb 100%);
+            align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        #login-screen.hidden { display: none; }
+
+        .login-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%; max-width: 400px;
+            margin: 1rem;
+            box-shadow: 0 25px 60px rgba(15,49,112,.25);
+        }
+
+        /* ── Form inputs ── */
+        .form-input {
+            width: 100%;
+            padding: .625rem .75rem .625rem 2.5rem;
+            border: 1.5px solid var(--cev-border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: .9rem;
+            background: #f8fafc;
+            color: var(--cev-text);
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--cev-accent);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+            background: #fff;
+        }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            padding: .7rem 1.25rem;
+            background: var(--cev-primary);
+            color: #fff;
+            border: none; border-radius: 10px;
+            font-family: inherit; font-size: .9rem; font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .1s, box-shadow .2s;
+            text-decoration: none;
+        }
+        .btn-primary:hover { background: var(--cev-primary-dark); box-shadow: 0 4px 14px rgba(26,79,160,.3); }
+        .btn-primary:active { transform: scale(.98); }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            padding: .6rem 1rem;
+            background: transparent;
+            color: var(--cev-muted);
+            border: 1.5px solid var(--cev-border); border-radius: 10px;
+            font-family: inherit; font-size: .875rem; font-weight: 500;
+            cursor: pointer;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+        .btn-secondary:hover { background: #f1f5f9; color: var(--cev-text); border-color: #cbd5e1; }
+        .btn-secondary:active { transform: scale(.98); }
+
+        .btn-danger {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            padding: .6rem 1rem;
+            background: #fef2f2; color: var(--cev-danger);
+            border: 1.5px solid #fecaca; border-radius: 10px;
+            font-family: inherit; font-size: .875rem; font-weight: 600;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .btn-danger:hover { background: #fee2e2; }
+
+        .btn-success {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            padding: .6rem 1.25rem;
+            background: var(--cev-success); color: #fff;
+            border: none; border-radius: 10px;
+            font-family: inherit; font-size: .875rem; font-weight: 600;
+            cursor: pointer;
+            transition: background .15s, box-shadow .2s;
+        }
+        .btn-success:hover { background: #15803d; box-shadow: 0 4px 12px rgba(22,163,74,.25); }
+
+        /* ── Cards ── */
+        .card {
+            background: #fff;
+            border: 1px solid var(--cev-border);
+            border-radius: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+
+        /* ── Dashboard module cards ── */
+        .module-card {
+            background: #fff;
+            border: 1.5px solid var(--cev-border);
+            border-radius: 18px;
+            padding: 2rem 1.5rem;
+            display: flex; flex-direction: column; align-items: center; gap: 1rem;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s, transform .2s;
+            text-align: center;
+        }
+        .module-card:hover {
+            border-color: var(--cev-accent);
+            box-shadow: 0 8px 28px rgba(26,79,160,.12);
+            transform: translateY(-3px);
+        }
+        .module-icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.75rem;
+            transition: background .2s, color .2s;
+        }
+        .module-card:hover .module-icon { background: var(--cev-primary); color: #fff; }
+
+        /* ── Table ── */
+        .inventory-table th {
+            background: #f1f5f9;
+            font-size: .8rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .04em;
+            color: var(--cev-muted);
+            padding: .75rem 1rem;
+        }
+        .inventory-table td {
+            padding: .625rem .875rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: .9rem;
+        }
+        .inventory-table tr:hover td { background: #f8fafc; }
+        .inventory-table tr:last-child td { border-bottom: none; }
+
+        .stock-input {
+            width: 70px;
+            text-align: center;
+            padding: .375rem .5rem;
+            border: 1.5px solid var(--cev-border);
+            border-radius: 8px;
+            font-family: inherit; font-size: .9rem; font-weight: 600;
+            color: var(--cev-primary);
+            background: #fff;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+        .stock-input:focus {
+            border-color: var(--cev-accent);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+        }
+
+        /* ── Badges ── */
+        .badge-festivo {
+            display: inline-flex; align-items: center; gap: .35rem;
+            background: #fffbeb; color: #92400e;
+            border: 1px solid #fde68a;
+            border-radius: 20px;
+            padding: .3rem .75rem;
+            font-size: .75rem; font-weight: 600;
+        }
+
+        /* ── Toast ── */
+        #toast {
+            position: fixed; bottom: 1.25rem; right: 1.25rem;
+            display: flex; align-items: center; gap: .625rem;
+            padding: .75rem 1.25rem;
+            border-radius: 12px;
+            font-size: .875rem; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+            z-index: 999;
+            transform: translateY(6rem);
+            opacity: 0;
+            transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+            pointer-events: none;
+            max-width: calc(100vw - 2.5rem);
+        }
+        #toast.show { transform: translateY(0); opacity: 1; }
+
+        /* ── Sticky header ── */
+        .sticky-toolbar {
+            position: sticky; top: 0; z-index: 20;
+            background: rgba(255,255,255,.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* ── Ticket ── */
+        .ticket-border-top { border-top: 6px solid var(--cev-accent); border-radius: 0 0 16px 16px; }
+
+        /* ── Search ── */
+        .search-wrap { position: relative; }
+        .search-wrap i { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: .85rem; }
+        .search-wrap input { padding-left: 2.375rem; }
+
+        /* ── History cards ── */
+        .history-card {
+            background: #fff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid var(--cev-accent);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* ── Mobile touches ── */
+        @media (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .btn-success { min-height: 44px; }
+            .stock-input { width: 58px; }
+            .module-card { padding: 1.5rem 1rem; }
+        }
+
+        /* ── Logo fallback ── */
+        .logo-img { display: block; }
+        .logo-img[data-broken="true"] { display: none; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+<body>
 
-    <div id="login-screen" class="fixed inset-0 bg-[#154390] flex items-center justify-center z-50 transition-opacity duration-300">
-        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
-            <div class="text-center mb-8">
-                <img src="Logo.png" alt="Logo CEV" class="h-20 sm:h-24 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
-                <h2 class="text-2xl font-bold text-[#154390]">Acceso Seguro</h2>
-                <p class="text-gray-500 text-sm mt-2">Ingresa tus credenciales para continuar</p>
-            </div>
-            
-            <form id="login-form" class="space-y-5">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Correo Electrónico</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                        <input type="email" id="email-input" required class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent bg-gray-50" placeholder="usuario@clinica.com">
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Contraseña</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
-                        <input type="password" id="password-input" required class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent bg-gray-50" placeholder="••••••••">
-                        <button type="button" id="toggle-password" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none">
-                            <i class="fa-solid fa-eye" id="toggle-icon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="flex items-center">
-                    <input type="checkbox" id="remember-me" class="w-4 h-4 text-[#154390] border-gray-300 rounded focus:ring-[#154390]">
-                    <label for="remember-me" class="ml-2 block text-sm text-gray-700">Recordar sesión en este equipo</label>
-                </div>
-
-                <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    <span id="login-error-text">Credenciales incorrectas</span>
-                </div>
-
-                <button type="submit" id="btn-login" class="w-full py-2.5 bg-[#154390] text-white rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-md flex justify-center items-center gap-2">
-                    <span>Ingresar al Sistema</span>
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div id="dashboard-screen" class="hidden max-w-6xl mx-auto p-4 sm:p-6 space-y-6 pt-10">
-        <header class="bg-white rounded-xl shadow-md p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
-            <div class="flex items-center gap-4">
-                <img src="Logo.png" alt="Logo CEV" class="h-14 sm:h-16 w-auto object-contain" onerror="this.style.display='none'">
-                <div>
-                    <h1 class="text-2xl font-bold text-[#154390]">Panel de Control CEV</h1>
-                    <p class="text-gray-500 text-sm mt-1">Selecciona un módulo para comenzar</p>
-                </div>
-            </div>
-            <button onclick="logoutUser()" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-red-200">
-                <i class="fa-solid fa-power-off"></i> Cerrar Sesión
-            </button>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-4xl mx-auto">
-            <button onclick="openInventory()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
-                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-clipboard-check"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 text-center">Registro de Insumos</h2>
-                <p class="text-gray-500 text-center">Gestión, conteo y control diario del inventario clínico.</p>
-            </button>
-
-            <button onclick="openOrders()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
-                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-cart-plus"></i>
-                </div>
-                <div class="text-center">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
-                    <p class="text-gray-500 text-center">Solicita insumos y envía el pedido por Gmail.</p>
-                </div>
-            </button>
-        </div>
-    </div>
-
-    <div id="inventory-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
-        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
-            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
-                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-[#154390] flex items-center justify-center sm:justify-start gap-2">Control de Insumos</h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1 flex items-center justify-center sm:justify-start gap-1">
-                        <i class="fa-solid fa-cloud text-[#154390]"></i> Nube Activa
-                    </p>
-                </div>
-            </div>
-            <div class="flex flex-col items-center sm:items-end w-full sm:w-auto gap-3">
-                <div class="w-full sm:w-auto flex flex-col items-center sm:items-end">
-                    <label for="report-date" class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1 hidden sm:block">Fecha del registro</label>
-                    <div class="flex items-center gap-2 w-full justify-center sm:justify-end">
-                        <span id="festivo-badge" class="hidden bg-yellow-100 text-yellow-800 text-[10px] sm:text-xs font-bold px-2 py-1 rounded border border-yellow-300 whitespace-nowrap shadow-sm">
-                            <i class="fa-solid fa-calendar-exclamation"></i> Día Post-Festivo
-                        </span>
-                        <div id="loading-spinner" class="loader hidden"></div>
-                        <input type="date" id="report-date" class="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-[#154390] font-bold shadow-sm cursor-pointer hover:bg-gray-200 transition-colors text-sm">
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 border border-gray-200 flex flex-col sm:flex-row gap-3 justify-between items-center sticky top-0 z-10">
-            <div class="relative w-full sm:w-1/2">
-                <i class="fa-solid fa-search absolute left-3 top-2.5 sm:top-3.5 text-gray-400"></i>
-                <input type="text" id="search-input" placeholder="Buscar insumo..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent transition-all bg-gray-50 text-sm">
-            </div>
-            <div class="flex w-full sm:w-auto">
-                <button onclick="clearAll()" class="w-full sm:w-auto px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-trash-can"></i> Limpiar Día
-                </button>
-            </div>
+<!-- ════════════════════════════════════════
+     LOGIN
+═════════════════════════════════════════ -->
+<div id="login-screen">
+    <div class="login-card">
+        <div style="text-align:center; margin-bottom:2rem">
+            <img id="login-logo" src="Logo.png" alt="CEV" class="logo-img"
+                 style="height:72px; margin:0 auto 1rem; object-fit:contain;"
+                 onerror="this.dataset.broken='true'">
+            <h1 style="font-size:1.5rem; font-weight:700; color:var(--cev-primary); margin:0 0 .25rem">Acceso Seguro</h1>
+            <p style="font-size:.875rem; color:var(--cev-muted); margin:0">Ingresa tus credenciales para continuar</p>
         </div>
 
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
-                <table class="w-full text-left border-collapse relative">
-                    <thead class="sticky top-0 z-20 shadow-sm">
-                        <tr class="bg-gray-200 border-b border-gray-300">
-                            <th class="p-2 sm:p-4 text-xs sm:text-base font-semibold text-gray-700">Insumo</th>
-                            <th class="p-2 sm:p-4 text-xs sm:text-base font-semibold text-gray-700 text-center w-12 sm:w-20">Ideal</th>
-                            <th class="p-2 sm:p-4 text-xs sm:text-base font-bold text-[#154390] text-center w-20 sm:w-28">Stock</th>
-                            <th class="p-2 sm:p-4 text-xs sm:text-base font-semibold text-gray-700 text-center w-16 sm:w-24">Reponer</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-gray-200"></tbody>
-                </table>
+        <form id="login-form" style="display:flex; flex-direction:column; gap:1rem">
+            <div>
+                <label for="email-input" style="display:block; font-size:.8rem; font-weight:600; color:var(--cev-muted); margin-bottom:.375rem; text-transform:uppercase; letter-spacing:.04em">Correo electrónico</label>
+                <div class="search-wrap">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="email-input" required class="form-input"
+                           placeholder="usuario@clinica.com" autocomplete="email">
+                </div>
             </div>
-        </div>
 
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
-            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 sm:mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
-                <i class="fa-solid fa-file-excel text-green-600"></i> Exportar a Excel
-            </h2>
-            <div class="flex flex-col sm:flex-row items-end gap-3">
-                <div class="w-full sm:w-1/3">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Inicio</label>
-                    <input type="date" id="export-start" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-gray-700 text-sm">
-                </div>
-                <div class="w-full sm:w-1/3">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
-                    <input type="date" id="export-end" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-gray-700 text-sm">
-                </div>
-                <div class="w-full sm:w-1/3">
-                    <button onclick="generarExcel()" class="w-full px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Descargar
+            <div>
+                <label for="password-input" style="display:block; font-size:.8rem; font-weight:600; color:var(--cev-muted); margin-bottom:.375rem; text-transform:uppercase; letter-spacing:.04em">Contraseña</label>
+                <div style="position:relative">
+                    <i class="fa-solid fa-lock" style="position:absolute; left:.875rem; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:.85rem;"></i>
+                    <input type="password" id="password-input" required class="form-input"
+                           style="padding-right:2.75rem"
+                           placeholder="••••••••" autocomplete="current-password">
+                    <button type="button" id="toggle-password" aria-label="Mostrar contraseña"
+                            style="position:absolute; right:.75rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#94a3b8; padding:.25rem; line-height:1">
+                        <i class="fa-solid fa-eye" id="toggle-icon" style="font-size:.875rem"></i>
                     </button>
                 </div>
             </div>
+
+            <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer; font-size:.875rem; color:var(--cev-muted)">
+                <input type="checkbox" id="remember-me"
+                       style="width:16px; height:16px; accent-color:var(--cev-primary); cursor:pointer">
+                Recordar sesión en este equipo
+            </label>
+
+            <div id="login-error" class="hidden"
+                 style="display:flex; align-items:center; gap:.5rem; background:#fef2f2; color:var(--cev-danger); border:1px solid #fecaca; border-radius:10px; padding:.75rem 1rem; font-size:.875rem">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="login-error-text">Credenciales incorrectas</span>
+            </div>
+
+            <button type="submit" id="btn-login" class="btn-primary" style="margin-top:.25rem; width:100%; height:46px">
+                <span>Ingresar al sistema</span>
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     DASHBOARD
+═════════════════════════════════════════ -->
+<div id="dashboard-screen" class="screen" style="max-width:860px; margin:0 auto; padding:1.5rem 1rem 3rem">
+    <header class="card" style="padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap">
+        <div style="display:flex; align-items:center; gap:1rem">
+            <img src="Logo.png" alt="CEV" class="logo-img"
+                 style="height:52px; object-fit:contain"
+                 onerror="this.dataset.broken='true'">
+            <div>
+                <h1 style="font-size:1.25rem; font-weight:700; color:var(--cev-primary); margin:0">Panel de Control CEV</h1>
+                <p style="font-size:.8rem; color:var(--cev-muted); margin:.125rem 0 0">Selecciona un módulo para comenzar</p>
+            </div>
+        </div>
+        <button onclick="logoutUser()" class="btn-danger" style="white-space:nowrap; min-height:40px">
+            <i class="fa-solid fa-power-off"></i> Cerrar sesión
+        </button>
+    </header>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:1.25rem; max-width:640px; margin:0 auto">
+        <div class="module-card" onclick="showScreen('inventory'); initInventoryApp()">
+            <div class="module-icon" style="background:var(--cev-primary-light); color:var(--cev-primary)">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <div>
+                <h2 style="font-size:1.1rem; font-weight:700; margin:0 0 .375rem; color:var(--cev-text)">Registro de Insumos</h2>
+                <p style="font-size:.85rem; color:var(--cev-muted); margin:0; line-height:1.5">Gestión, conteo y control diario del inventario clínico.</p>
+            </div>
+        </div>
+
+        <div class="module-card" onclick="showScreen('orders'); initOrders()" style="--hover-accent:#2563eb">
+            <div class="module-icon" style="background:#eff6ff; color:#2563eb">
+                <i class="fa-solid fa-cart-plus"></i>
+            </div>
+            <div>
+                <h2 style="font-size:1.1rem; font-weight:700; margin:0 0 .375rem; color:var(--cev-text)">Pedido de Insumos</h2>
+                <p style="font-size:.85rem; color:var(--cev-muted); margin:0; line-height:1.5">Solicita insumos y envía el pedido por Gmail.</p>
+            </div>
         </div>
     </div>
+</div>
 
-    <div id="orders-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
-        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
-            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
-                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center justify-center sm:justify-start gap-2">
-                        Pedido a Farmacia
-                    </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala por Gmail</p>
-                </div>
-            </div>
-            
-            <button onclick="openHistory()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center shadow-sm">
-                <i class="fa-solid fa-envelope"></i> Ver Pedidos Enviados
+<!-- ════════════════════════════════════════
+     INVENTORY
+═════════════════════════════════════════ -->
+<div id="inventory-screen" class="screen" style="max-width:760px; margin:0 auto; padding:1rem 1rem 4rem">
+
+    <!-- Header -->
+    <header class="card" style="padding:1rem 1.25rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap">
+        <div style="display:flex; align-items:center; gap:.875rem">
+            <button onclick="showScreen('dashboard')" class="btn-secondary" aria-label="Volver al panel"
+                    style="width:40px; height:40px; padding:0; border-radius:50%; flex-shrink:0">
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
-        </header>
-
-        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-            <div class="flex flex-col sm:flex-row gap-4 items-end">
-                <div class="w-full sm:w-3/4">
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
-                    
-                    <div id="select-container" class="flex flex-col gap-1 w-full">
-                        <div class="flex items-center gap-2 w-full">
-                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
-                                <option value="">Seleccione...</option>
-                            </select>
-                            
-                            <button type="button" id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()" class="hidden text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors border border-red-600 shrink-0 flex items-center justify-center gap-1 text-sm font-bold shadow-sm" title="Eliminar este insumo de la memoria permanentemente">
-                                <i class="fa-solid fa-trash-can"></i> Borrar
-                            </button>
-                        </div>
-                        <p id="custom-item-help" class="hidden text-xs text-red-500 font-semibold italic"><i class="fa-solid fa-circle-info"></i> Insumo agregado por ti. Puedes borrarlo de la lista si lo escribiste mal.</p>
-                    </div>
-
-                    <div id="input-container" class="hidden">
-                        <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
-                    </div>
-                </div>
-                
-                <div class="w-full sm:w-1/4 flex gap-2">
-                    <button onclick="addOrderRow()" class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Agregar
-                    </button>
-                </div>
-            </div>
-            <div class="mt-3 text-right">
-                <button onclick="toggleCustomItem()" id="btn-toggle-custom" class="text-sm text-[#154390] hover:underline font-semibold flex items-center gap-1 justify-end w-full">
-                    <i class="fa-solid fa-pencil"></i> ¿No está en la lista? Ingresar manual
-                </button>
+            <div>
+                <h1 style="font-size:1.125rem; font-weight:700; color:var(--cev-primary); margin:0">Control de Insumos</h1>
+                <p style="font-size:.75rem; color:var(--cev-muted); margin:.125rem 0 0; display:flex; align-items:center; gap:.3rem">
+                    <i class="fa-solid fa-cloud" style="color:var(--cev-primary); font-size:.7rem"></i> Sincronización activa
+                </p>
             </div>
         </div>
 
-        <div id="ticket-container" class="bg-white rounded-xl shadow-lg border-t-8 border-t-blue-600 p-6 sm:p-8 relative">
-            <div id="loading-draft" class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 hidden rounded-xl">
-                <div class="loader"></div>
-            </div>
-            <div class="text-center mb-6 border-b-2 border-dashed border-gray-300 pb-4">
-                <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wider">TICKET DE PEDIDO</h2>
-                <h3 class="text-lg font-bold text-gray-600 mt-1">Farmacia CEV</h3>
-                <p id="draft-badge" class="hidden text-yellow-600 text-xs font-bold mt-2"><i class="fa-solid fa-cloud-arrow-down"></i> Borrador recuperado de la nube</p>
-            </div>
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b-2 border-gray-800">
-                        <th class="py-2 text-sm font-bold text-gray-800 w-12 text-center">N°</th>
-                        <th class="py-2 text-sm font-bold text-gray-800">Descripción del Insumo</th>
-                        <th class="py-2 text-sm text-center w-12"></th>
-                    </tr>
-                </thead>
-                <tbody id="order-table-body">
-                </tbody>
-            </table>
-            <div id="empty-order-msg" class="text-center py-8 text-gray-400 italic text-sm">
-                Aún no hay insumos en el pedido.
-            </div>
-            <div class="mt-8 border-t-2 border-dashed border-gray-300 pt-4 flex justify-between items-center text-sm font-bold text-gray-500">
-                <span>Total de Ítems: <span id="ticket-total-items" class="text-gray-800">0</span></span>
-                <span>Generado desde App</span>
+        <div style="display:flex; align-items:center; gap:.625rem; flex-wrap:wrap; justify-content:flex-end">
+            <span id="festivo-badge" class="badge-festivo hidden">
+                <i class="fa-solid fa-calendar-exclamation"></i> Día post-festivo
+            </span>
+            <div id="loading-spinner" class="spinner hidden"></div>
+            <div>
+                <label for="report-date" class="sr-only">Fecha del registro</label>
+                <input type="date" id="report-date"
+                       style="border:1.5px solid var(--cev-border); border-radius:10px; padding:.45rem .875rem; font-family:inherit; font-size:.875rem; font-weight:600; color:var(--cev-primary); background:#f8fafc; cursor:pointer; outline:none; transition:border-color .2s"
+                       onfocus="this.style.borderColor='var(--cev-accent)'" onblur="this.style.borderColor='var(--cev-border)'">
             </div>
         </div>
+    </header>
 
-        <button onclick="generarYEnviarCorreo()" class="w-full py-4 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors shadow-lg flex justify-center items-center gap-3 text-lg">
-            <i class="fa-brands fa-google text-2xl"></i>
-            Enviar por Gmail y Guardar
+    <!-- Toolbar -->
+    <div class="card sticky-toolbar" style="padding:.875rem 1.25rem; margin-bottom:1rem; display:flex; gap:.75rem; align-items:center">
+        <div class="search-wrap" style="flex:1">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="search-input" placeholder="Buscar insumo…" class="form-input" style="padding-left:2.375rem">
+        </div>
+        <button onclick="clearAll()" class="btn-secondary" style="white-space:nowrap; flex-shrink:0">
+            <i class="fa-solid fa-trash-can"></i>
+            <span class="hidden sm:inline">Limpiar día</span>
         </button>
     </div>
 
-    <div id="history-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
-        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
-            <div class="flex items-center gap-4 w-full sm:w-auto">
-                <button onclick="closeHistory()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center gap-2">
-                        Pedidos Enviados
-                    </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Aquí verás los pedidos enviados por correo</p>
-                </div>
-            </div>
-        </header>
-        <div id="history-container" class="space-y-4">
+    <!-- Table -->
+    <div class="card" style="overflow:hidden; margin-bottom:1rem">
+        <div style="overflow-x:auto; max-height:58vh; overflow-y:auto">
+            <table class="inventory-table" style="width:100%; border-collapse:collapse">
+                <thead style="position:sticky; top:0; z-index:10">
+                    <tr>
+                        <th style="text-align:left; width:auto">Insumo</th>
+                        <th style="text-align:center; width:64px">Ideal</th>
+                        <th style="text-align:center; width:88px; color:var(--cev-primary)">Stock</th>
+                        <th style="text-align:center; width:72px">Reponer</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
-        <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
-        <span id="toast-msg">Mensaje</span>
+    <!-- Export -->
+    <div class="card" style="padding:1.25rem 1.5rem">
+        <h2 style="font-size:1rem; font-weight:700; color:var(--cev-text); margin:0 0 1rem; display:flex; align-items:center; gap:.5rem">
+            <i class="fa-solid fa-file-excel" style="color:#16a34a"></i> Exportar a Excel
+        </h2>
+        <div style="display:flex; gap:.75rem; align-items:flex-end; flex-wrap:wrap">
+            <div style="flex:1; min-width:130px">
+                <label for="export-start" style="display:block; font-size:.75rem; font-weight:600; color:var(--cev-muted); margin-bottom:.375rem; text-transform:uppercase; letter-spacing:.04em">Inicio</label>
+                <input type="date" id="export-start"
+                       style="width:100%; border:1.5px solid var(--cev-border); border-radius:10px; padding:.5rem .75rem; font-family:inherit; font-size:.875rem; background:#f8fafc; color:var(--cev-text); outline:none; transition:border-color .2s"
+                       onfocus="this.style.borderColor='var(--cev-accent)'" onblur="this.style.borderColor='var(--cev-border)'">
+            </div>
+            <div style="flex:1; min-width:130px">
+                <label for="export-end" style="display:block; font-size:.75rem; font-weight:600; color:var(--cev-muted); margin-bottom:.375rem; text-transform:uppercase; letter-spacing:.04em">Fin</label>
+                <input type="date" id="export-end"
+                       style="width:100%; border:1.5px solid var(--cev-border); border-radius:10px; padding:.5rem .75rem; font-family:inherit; font-size:.875rem; background:#f8fafc; color:var(--cev-text); outline:none; transition:border-color .2s"
+                       onfocus="this.style.borderColor='var(--cev-accent)'" onblur="this.style.borderColor='var(--cev-border)'">
+            </div>
+            <button onclick="generarExcel()" class="btn-success" style="white-space:nowrap; min-height:42px; flex-shrink:0">
+                <i class="fa-solid fa-download"></i> Descargar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ORDERS
+═════════════════════════════════════════ -->
+<div id="orders-screen" class="screen" style="max-width:760px; margin:0 auto; padding:1rem 1rem 4rem">
+
+    <header class="card" style="padding:1rem 1.25rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap">
+        <div style="display:flex; align-items:center; gap:.875rem">
+            <button onclick="showScreen('dashboard')" class="btn-secondary" aria-label="Volver al panel"
+                    style="width:40px; height:40px; padding:0; border-radius:50%; flex-shrink:0">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 style="font-size:1.125rem; font-weight:700; color:#2563eb; margin:0">Pedido a Farmacia</h1>
+                <p style="font-size:.75rem; color:var(--cev-muted); margin:.125rem 0 0">Crea tu lista y envíala por Gmail</p>
+            </div>
+        </div>
+        <button onclick="openHistory()" class="btn-secondary" style="white-space:nowrap; min-height:40px">
+            <i class="fa-solid fa-envelope"></i> Pedidos enviados
+        </button>
+    </header>
+
+    <!-- Add item -->
+    <div class="card" style="padding:1.25rem 1.5rem; margin-bottom:1rem">
+        <div style="display:flex; gap:.75rem; align-items:flex-end; flex-wrap:wrap">
+            <div style="flex:1; min-width:200px">
+                <label style="display:block; font-size:.75rem; font-weight:600; color:var(--cev-muted); margin-bottom:.375rem; text-transform:uppercase; letter-spacing:.04em">Seleccionar insumo</label>
+                <div id="select-container">
+                    <div style="display:flex; gap:.5rem">
+                        <select id="order-item-select" onchange="verificarInsumoPersonalizado()"
+                                style="flex:1; border:1.5px solid var(--cev-border); border-radius:10px; padding:.5rem .875rem; font-family:inherit; font-size:.875rem; background:#f8fafc; color:var(--cev-text); outline:none; cursor:pointer; transition:border-color .2s"
+                                onfocus="this.style.borderColor='var(--cev-accent)'" onblur="this.style.borderColor='var(--cev-border)'">
+                            <option value="">Seleccione un insumo…</option>
+                        </select>
+                        <button type="button" id="btn-delete-custom-list" onclick="eliminarInsumoPersonalizado()"
+                                class="btn-danger hidden" style="min-height:40px; white-space:nowrap" title="Eliminar de la lista permanentemente">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <p id="custom-item-help" class="hidden"
+                       style="font-size:.75rem; color:var(--cev-danger); margin:.375rem 0 0; font-style:italic">
+                        <i class="fa-solid fa-circle-info"></i> Insumo agregado por ti. Puedes borrarlo si lo escribiste mal.
+                    </p>
+                </div>
+                <div id="input-container" class="hidden">
+                    <input type="text" id="order-item-input" placeholder="Escribe el nombre del insumo…"
+                           style="width:100%; border:1.5px solid var(--cev-border); border-radius:10px; padding:.5rem .875rem; font-family:inherit; font-size:.875rem; background:#f8fafc; color:var(--cev-text); outline:none; transition:border-color .2s"
+                           onfocus="this.style.borderColor='var(--cev-accent)'" onblur="this.style.borderColor='var(--cev-border)'">
+                </div>
+            </div>
+            <button onclick="addOrderRow()" class="btn-primary" style="min-height:42px; white-space:nowrap; flex-shrink:0">
+                <i class="fa-solid fa-plus"></i> Agregar
+            </button>
+        </div>
+        <div style="margin-top:.875rem; text-align:right">
+            <button onclick="toggleCustomItem()" id="btn-toggle-custom"
+                    style="background:none; border:none; font-family:inherit; font-size:.8rem; font-weight:600; color:var(--cev-primary); cursor:pointer; display:inline-flex; align-items:center; gap:.375rem; padding:.25rem 0">
+                <i class="fa-solid fa-pencil" style="font-size:.75rem"></i> ¿No está en la lista? Ingresar manual
+            </button>
+        </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBSzvWwy61Zexsy4dBSCJZtCChBLge7Nlk",
-            authDomain: "cev-registro-insumos-diarios.firebaseapp.com",
-            projectId: "cev-registro-insumos-diarios",
-            storageBucket: "cev-registro-insumos-diarios.firebasestorage.app",
-            messagingSenderId: "413989996861",
-            appId: "1:413989996861:web:fc3803b16ea1a998b51d54",
-            measurementId: "G-47QTZXMHSB"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // --- NAVEGACIÓN ---
-        window.openInventory = function() {
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('orders-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('inventory-screen').classList.remove('hidden');
-            initInventoryApp();
-        };
-
-        window.openOrders = function() {
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('inventory-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('orders-screen').classList.remove('hidden');
-            initOrders();
-        };
-
-        window.goToDashboard = function() {
-            document.getElementById('inventory-screen').classList.add('hidden');
-            document.getElementById('orders-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('dashboard-screen').classList.remove('hidden');
-        };
-
-        // --- AUTENTICACIÓN ---
-        document.getElementById('toggle-password').addEventListener('click', function () {
-            const passwordInput = document.getElementById('password-input');
-            const toggleIcon = document.getElementById('toggle-icon');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
-        });
-        
-        onAuthStateChanged(auth, (user) => {
-            const loginScreen = document.getElementById('login-screen');
-            const dashboardScreen = document.getElementById('dashboard-screen');
-            if (user) {
-                loginScreen.classList.add('hidden');
-                dashboardScreen.classList.remove('hidden');
-            } else {
-                loginScreen.classList.remove('hidden');
-                dashboardScreen.classList.add('hidden');
-                document.getElementById('inventory-screen').classList.add('hidden');
-                document.getElementById('orders-screen').classList.add('hidden');
-                document.getElementById('history-screen').classList.add('hidden');
-            }
-        });
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('password-input').value;
-            const rememberMe = document.getElementById('remember-me').checked;
-            const errorBox = document.getElementById('login-error');
-            const btnLogin = document.getElementById('btn-login');
-
-            errorBox.classList.add('hidden');
-            btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
-            btnLogin.disabled = true;
-
-            try {
-                const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-                await setPersistence(auth, persistenceType);
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                errorBox.classList.remove('hidden');
-                document.getElementById('login-error-text').innerText = "Correo o contraseña incorrectos.";
-            } finally {
-                btnLogin.innerHTML = '<span>Ingresar al Sistema</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
-                btnLogin.disabled = false;
-            }
-        });
-
-        window.logoutUser = () => {
-            signOut(auth).then(() => {
-                document.getElementById('email-input').value = '';
-                document.getElementById('password-input').value = '';
-                document.getElementById('password-input').type = 'password';
-            });
-        };
-
-        // ==========================================
-        // 1. SISTEMA ORIGINAL DE CONTROL DE INSUMOS
-        // ==========================================
-
-        // ─────────────────────────────────────────────────────────────────────
-        // defaultData — actualizado según REABASTECIMIENTO_GABINETE_CEV_2026
-        //
-        // AGREGADOS:  Catéter 18, Catéter 16, Catéter 14
-        //             Vestido XS, Vestido S, Vestido M, Vestido L, Vestido XL
-        //
-        // ELIMINADOS: Silimarina, Amoxicilina,
-        //             Lata EN, Lata ID Felino, Lata AD,
-        //             Fortiflora Canino, Fortiflora Felino
-        //
-        // POST-FESTIVO (sin cambios — ya estaban correctos):
-        //   Jeringa 1 mL 20→30 | Jeringa 3 mL 20→30 | Jeringa 5 mL 20→30
-        //   Hartmann 500 mL 10→15 | Solución Hartmann 1 L 5→10
-        // ─────────────────────────────────────────────────────────────────────
-        const defaultData = [
-            // Stand 1 — Catéteres
-            { name: "Catéter 24", ideal: 20 },
-            { name: "Catéter 22", ideal: 20 },
-            { name: "Catéter 20", ideal: 20 },
-            { name: "Catéter 18", ideal: 5 },
-            { name: "Catéter 16", ideal: 5 },
-            { name: "Catéter 14", ideal: 5 },
-            { name: "Llave 3 vías", ideal: 5 },
-            { name: "Tapones", ideal: 15 },
-            { name: "Pericraneal pequeño", ideal: 5 },
-            { name: "Pericraneal grueso", ideal: 5 },
-
-            // Stand 2 — Equipos de venoclisis / nebulización
-            { name: "Microgoteo", ideal: 15 },
-            { name: "Macrogoteo", ideal: 15 },
-            { name: "Buretrol", ideal: 5 },
-            { name: "Venobomba", ideal: 10 },
-            { name: "Máscara de nebulización", ideal: 5 },
-            { name: "Sonda gato", ideal: 5 },
-            { name: "Extensiones", ideal: 10 },
-
-            // Stand 3 — Sondas
-            { name: "Sonda 5", ideal: 5 },
-            { name: "Sonda 6", ideal: 5 },
-            { name: "Sonda 8", ideal: 5 },
-            { name: "Sonda 10", ideal: 3 },
-            { name: "Sonda 12", ideal: 3 },
-            { name: "Sonda 14", ideal: 3 },
-            { name: "Sonda 16", ideal: 3 },
-            { name: "Sonda 18", ideal: 3 },
-
-            // Vestidos
-            { name: "Vestido XS", ideal: 1 },
-            { name: "Vestido S", ideal: 1 },
-            { name: "Vestido M", ideal: 1 },
-            { name: "Vestido L", ideal: 1 },
-            { name: "Vestido XL", ideal: 1 },
-
-            // Caja organizadora — Tabletas / cápsulas
-            { name: "Metronidazol", ideal: 5 },
-            { name: "Pregabalina 75 mg", ideal: 15 },
-            { name: "Trimetoprim", ideal: 5 },
-            { name: "Esomeprazol", ideal: 5 },
-            { name: "Bladuvil", ideal: 5 },
-            { name: "Mirtazapina", ideal: 5 },
-            { name: "Ursacol", ideal: 5 },
-            { name: "Flunarizina", ideal: 5 },
-            { name: "Cefalexina", ideal: 5 },
-            { name: "Sulfadiazina", ideal: 5 },
-            { name: "Trazodona", ideal: 10 },
-            { name: "Pregabalina 25 mg", ideal: 15 },
-            { name: "Tramadol", ideal: 20 },
-            { name: "Domperidona (Domevoro)", ideal: 5 },
-
-            // Ampollas e inyectables
-            { name: "Metronidazol vial 100 mg", ideal: 2 },
-            { name: "Ampicilina", ideal: 4 },
-            { name: "Ceftriaxona", ideal: 4 },
-            { name: "Omeprazol inyectable", ideal: 5 },
-            { name: "Ampicilina + sulbactam", ideal: 5 },
-            { name: "Cefalotina", ideal: 5 },
-            { name: "Gluconato de calcio", ideal: 4 },
-            { name: "Cloruro de potasio", ideal: 5 },
-            { name: "Ginkgo biloba", ideal: 5 },
-            { name: "Melatonina", ideal: 5 },
-            { name: "Omega 3", ideal: 5 },
-            { name: "Vitamina C", ideal: 5 },
-            { name: "Vitamina E", ideal: 5 },
-            { name: "Ampolla de metilprednisolona", ideal: 2 },
-            { name: "Ondansetrón", ideal: 5 },
-            { name: "Ampolla Fluimucil", ideal: 5 },
-            { name: "Complejo B", ideal: 3 },
-            { name: "Tiamina", ideal: 3 },
-            { name: "Cloruro de sodio (ampolla)", ideal: 10 },
-
-            // Stand 2 — Vendajes y perfusoras
-            { name: "Vendaje Koban", ideal: 3 },
-            { name: "Vendaje de gasa", ideal: 3 },
-            { name: "Vendaje Algodón", ideal: 3 },
-            { name: "Perfusora de 50", ideal: 2 },
-            { name: "Perfusora de 20", ideal: 2 },
-
-            // Caja de jeringas  (post-festivo: 1/3/5 mL → 30)
-            { name: "Jeringa de 1mL", ideal: 20 },
-            { name: "Jeringa de 3mL", ideal: 20 },
-            { name: "Jeringa de 5mL", ideal: 20 },
-            { name: "Jeringa de 10mL", ideal: 10 },
-            { name: "Jeringa de 20mL", ideal: 5 },
-            { name: "Jeringa de 50mL", ideal: 2 },
-            { name: "Jeringa de 60mL", ideal: 2 },
-
-            // Stand 3 — Sueros  (post-festivo: Hartmann 500 mL → 15)
-            { name: "Hartmann 500 mL", ideal: 10 },
-            { name: "Solución salina 500mL", ideal: 5 },
-            { name: "Solución salina 250mL", ideal: 5 },
-            { name: "Solución salina 100mL", ideal: 5 },
-
-            // Stand 4  (post-festivo: Hartmann 1 L → 10)
-            { name: "Solución Hartmann 1 L", ideal: 5 },
-            { name: "Gelofusine", ideal: 1 },
-            { name: "Agua estéril", ideal: 1 },
-            { name: "Libra I/D Canino", ideal: 3 },
-            { name: "Libra I/D Gato", ideal: 3 },
-            { name: "Arena gato", ideal: 4 },
-            { name: "Tapetes", ideal: 3 }
-        ];
-
-        let inventory = [];
-        let saveTimeout = null;
-
-        async function initInventoryApp() {
-            setFechasIniciales();
-            await loadDataFromFirebase();
-            
-            document.getElementById('search-input').addEventListener('input', (e) => {
-                renderInventoryTable(e.target.value.toLowerCase());
-            });
-
-            document.getElementById('report-date').addEventListener('change', async () => {
-                await loadDataFromFirebase();
-            });
-        }
-
-        function toggleLoader(show) {
-            const spinner = document.getElementById('loading-spinner');
-            if(show) spinner.classList.remove('hidden');
-            else spinner.classList.add('hidden');
-        }
-
-        function setFechasIniciales() {
-            const dateInput = document.getElementById('report-date');
-            const exportStart = document.getElementById('export-start');
-            const exportEnd = document.getElementById('export-end');
-            const d = new Date();
-            const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            
-            if(!dateInput.value) dateInput.value = todayStr;
-            if(!exportStart.value) exportStart.value = todayStr;
-            if(!exportEnd.value) exportEnd.value = todayStr;
-        }
-
-        function getHolidays(year) {
-            const holidays = [];
-            const addDays = (d, days) => new Date(d.getTime() + days * 86400000);
-            const moveToMonday = (d) => {
-                const day = d.getDay();
-                if (day !== 1) {
-                    const diff = (8 - day) % 7;
-                    return addDays(d, diff === 0 ? 7 : diff);
-                }
-                return d;
-            };
-            const pushDate = (d) => { holidays.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`); };
-
-            pushDate(new Date(year, 0, 1)); pushDate(new Date(year, 4, 1)); pushDate(new Date(year, 6, 20)); 
-            pushDate(new Date(year, 7, 7)); pushDate(new Date(year, 11, 8)); pushDate(new Date(year, 11, 25)); 
-            pushDate(moveToMonday(new Date(year, 0, 6))); pushDate(moveToMonday(new Date(year, 2, 19))); 
-            pushDate(moveToMonday(new Date(year, 5, 29))); pushDate(moveToMonday(new Date(year, 7, 15))); 
-            pushDate(moveToMonday(new Date(year, 9, 12))); pushDate(moveToMonday(new Date(year, 10, 1))); 
-            pushDate(moveToMonday(new Date(year, 10, 11))); 
-
-            const a = year % 19, b = Math.floor(year / 100), c = year % 100;
-            const dMath = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
-            const h = (19 * a + b - dMath - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
-            const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
-            const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
-            const day = ((h + l - 7 * m + 114) % 31) + 1;
-            const easter = new Date(year, month, day);
-
-            pushDate(addDays(easter, -3)); pushDate(addDays(easter, -2)); pushDate(moveToMonday(addDays(easter, 39))); 
-            pushDate(moveToMonday(addDays(easter, 60))); pushDate(moveToMonday(addDays(easter, 68))); 
-
-            return holidays;
-        }
-
-        function isYesterdayHoliday(dateString) {
-            const [y, m, d] = dateString.split('-').map(Number);
-            const currentDate = new Date(y, m - 1, d);
-            const yesterday = new Date(currentDate.getTime() - 86400000); 
-            const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
-            
-            const holidays = getHolidays(yesterday.getFullYear());
-            if (yesterday.getMonth() === 11 && yesterday.getDate() === 31) {
-                 const prevHolidays = getHolidays(yesterday.getFullYear());
-                 return prevHolidays.includes(yesterdayStr);
-            }
-            return holidays.includes(yesterdayStr);
-        }
-
-        async function loadDataFromFirebase() {
-            toggleLoader(true);
-            const fechaActual = document.getElementById('report-date').value;
-            
-            try {
-                const docRef = doc(db, "inventarios", fechaActual);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    let cloudData = docSnap.data().items;
-                    inventory = cloudData.filter(cloudItem => defaultData.some(defaultItem => defaultItem.name === cloudItem.name));
-                    defaultData.forEach(defaultItem => {
-                        if (!inventory.find(i => i.name === defaultItem.name)) {
-                            inventory.push({...defaultItem, actual: ''});
-                        }
-                    });
-                } else {
-                    inventory = defaultData.map(item => ({ ...item, actual: '' }));
-                }
-
-                const wasHoliday = isYesterdayHoliday(fechaActual);
-                const badge = document.getElementById('festivo-badge');
-                if(wasHoliday) badge.classList.remove('hidden');
-                else badge.classList.add('hidden');
-
-                // Ajuste post-festivo: aplicar cantidades especiales del documento 2026
-                inventory.forEach(item => {
-                    let idealFinal = defaultData.find(d => d.name === item.name).ideal;
-                    if (wasHoliday) {
-                        if (item.name === "Jeringa de 1mL")        idealFinal = 30;
-                        if (item.name === "Jeringa de 3mL")        idealFinal = 30;
-                        if (item.name === "Jeringa de 5mL")        idealFinal = 30;
-                        if (item.name === "Hartmann 500 mL")       idealFinal = 15;
-                        if (item.name === "Solución Hartmann 1 L") idealFinal = 10;
-                    }
-                    item.ideal = idealFinal; 
-                });
-
-            } catch (error) {
-                showToast("Error al cargar inventario", true);
-            } finally {
-                renderInventoryTable(document.getElementById('search-input').value.toLowerCase());
-                toggleLoader(false);
-            }
-        }
-
-        async function saveDataToFirebase() {
-            const fechaActual = document.getElementById('report-date').value;
-            toggleLoader(true);
-            try {
-                await setDoc(doc(db, "inventarios", fechaActual), { items: inventory });
-            } catch (error) {
-                showToast("Error al guardar.", true);
-            } finally {
-                toggleLoader(false);
-            }
-        }
-
-        function renderInventoryTable(filter = '') {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-
-            inventory.forEach((item, index) => {
-                if (item.name.toLowerCase().includes(filter)) {
-                    const actualValue = item.actual !== '' ? parseInt(item.actual) : '';
-                    let reponerValue = '';
-                    let rowClass = 'hover:bg-gray-100 transition-colors';
-                    let reponerClass = 'text-gray-400';
-
-                    if (actualValue !== '') {
-                        reponerValue = Math.max(0, item.ideal - actualValue);
-                        if (reponerValue > 0) {
-                            reponerClass = 'text-red-600 font-bold';
-                            rowClass = 'bg-gray-50 hover:bg-gray-100 transition-colors';
-                        } else {
-                            reponerClass = 'text-green-600 font-bold';
-                            rowClass = 'bg-gray-50 hover:bg-gray-100 transition-colors';
-                        }
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.className = rowClass;
-                    tr.innerHTML = `
-                        <td class="p-2 sm:p-3 border-b border-gray-200 font-medium text-gray-700 text-xs sm:text-base leading-tight">${item.name}</td>
-                        <td class="p-2 sm:p-3 border-b border-gray-200 text-center font-bold text-gray-500 text-xs sm:text-base">${item.ideal}</td>
-                        <td class="p-2 sm:p-3 border-b border-gray-200 text-center">
-                            <input type="number" min="0" 
-                                value="${item.actual}" 
-                                oninput="window.updateItem(${index}, this.value)"
-                                class="w-14 sm:w-20 text-center py-1 sm:py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white shadow-sm font-bold text-[#154390] text-sm sm:text-base"
-                                placeholder="-"
-                            >
-                        </td>
-                        <td class="p-2 sm:p-3 border-b border-gray-200 text-center ${reponerClass} text-sm sm:text-lg" id="reponer-${index}">
-                            ${actualValue !== '' ? reponerValue : '-'}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            });
-        }
-
-        window.updateItem = function(index, value) {
-            if (value !== '' && parseInt(value) < 0) value = '0';
-            inventory[index].actual = value;
-            
-            const actualValue = value !== '' ? parseInt(value) : '';
-            const reponerCell = document.getElementById(`reponer-${index}`);
-            const row = reponerCell.parentElement;
-
-            if (actualValue !== '') {
-                const reponerValue = Math.max(0, inventory[index].ideal - actualValue);
-                reponerCell.textContent = reponerValue;
-                
-                if (reponerValue > 0) {
-                    reponerCell.className = 'p-2 sm:p-3 border-b border-gray-200 text-center text-red-600 font-bold text-sm sm:text-lg';
-                    row.className = 'bg-gray-50 hover:bg-gray-100 transition-colors';
-                } else {
-                    reponerCell.className = 'p-2 sm:p-3 border-b border-gray-200 text-center text-green-600 font-bold text-sm sm:text-lg';
-                    row.className = 'bg-gray-50 hover:bg-gray-100 transition-colors';
-                }
-            } else {
-                reponerCell.textContent = '-';
-                reponerCell.className = 'p-2 sm:p-3 border-b border-gray-200 text-center text-gray-400 text-sm sm:text-lg';
-                row.className = 'hover:bg-gray-100 transition-colors';
-            }
-
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => { saveDataToFirebase(); }, 1000);
-        }
-
-        window.clearAll = async function() {
-            const fechaActual = document.getElementById('report-date').value;
-            if(confirm(`¿Deseas borrar de la nube todos los datos del día ${fechaActual}?`)) {
-                inventory = inventory.map(item => ({ ...item, actual: '' }));
-                renderInventoryTable();
-                await saveDataToFirebase();
-                document.getElementById('search-input').value = '';
-                showToast("Día limpiado en la nube");
-            }
-        }
-
-        window.generarExcel = async function() {
-            const start = document.getElementById('export-start').value;
-            const end = document.getElementById('export-end').value;
-
-            if (!start || !end) { showToast("Selecciona fecha de inicio y fin", true); return; }
-            if (start > end) { showToast("La fecha de inicio debe ser anterior a la de fin", true); return; }
-
-            showToast("Consultando a la nube...");
-            toggleLoader(true);
-
-            try {
-                const q = query(collection(db, "inventarios"), where("__name__", ">=", start), where("__name__", "<=", end));
-                const querySnapshot = await getDocs(q);
-                
-                if (querySnapshot.empty) {
-                    alert("No se encontraron registros en la nube para estas fechas.");
-                    toggleLoader(false); return;
-                }
-
-                const datosParaExcel = [];
-                querySnapshot.forEach((doc) => {
-                    const fecha = doc.id;
-                    const items = doc.data().items;
-                    items.forEach(item => {
-                        if (item.actual !== '') {
-                            const actual = parseInt(item.actual);
-                            const reponer = Math.max(0, item.ideal - actual);
-                            datosParaExcel.push({
-                                "Fecha": fecha, "Insumo": item.name, "Stock Ideal": item.ideal,
-                                "Stock Contado": actual, "Repuesto (Faltante)": reponer
-                            });
-                        }
-                    });
-                });
-
-                if (datosParaExcel.length === 0) {
-                    alert("Se encontraron fechas en la nube, pero no hay datos numéricos.");
-                    toggleLoader(false); return;
-                }
-
-                const hoja = XLSX.utils.json_to_sheet(datosParaExcel);
-                const libro = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(libro, hoja, "Insumos");
-                XLSX.writeFile(libro, `Control_Insumos_CEV_${start}_al_${end}.xlsx`);
-                showToast("Excel descargado correctamente");
-
-            } catch (error) {
-                alert("Hubo un problema al descargar los datos de la nube.");
-            } finally {
-                toggleLoader(false);
-            }
-        }
-
-
-        // ==========================================
-        // 2. SISTEMA DE PEDIDOS A FARMACIA
-        // ==========================================
-        let listaInsumosFarmacia = [
-            "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)", 
-            "Arena", "Atropina", "Bladuril", "Buretrol", "Carbón activado", "Catéter", "Cefalexina 500 mg", 
-            "Cefalotina 1 mL", "Ceftriaxona ampolla x 10 mL", "Cerenia 1 mL iny.", "Cloruro de sodio", 
-            "Cobán (vendaje vet)", "Complejo B", "Compresas", "Dexametasona", "Dextrosa", "Dipirona 1 mL", 
-            "Ditopax", "Enalapril", "Enema", "Euthanex 1 mL", "Extensión", "Flunarizina", 
-            "Fluimucil ampolla x 3 mL", "Fortiflora", "Gluconato de calcio", "Guante estéril (cirugía)", 
-            "Guantes par (examen)", "Hartman 1 L", "Hartman 500 mL (suero)", "Hidromorfona 1 mL", 
-            "Jeringa 1-3-5 mL", "Jeringa 10-20-60 mL", "Kit de nebulización", "Lidocaína 1 mL", "Lyrica", 
-            "Llave 3 vías", "Lípidos", "Meloxicam 1 mL iny.", "Metilprednisolona ampolla x 10 mL", 
-            "Nebulización", "Neuroprotección (vitamina A, E, C, Omega, Ginkgo)", "Nutra Life (1 cucharada = 11 g)", 
-            "Omeprazol 1 mL iny.", "Ondansetrón ampolla x 4 mL", "Pañal o tapete", "Perfusora 20/50", 
-            "Periactín", "Potasio", "Pregabalina 25", "Pregabalina 75", "Pregabalina mL", "Propofol 1 mL", 
-            "Sonda", "Sulfazalazina", "Sutura absorbible", "Tapón", "Tiamina", "Tramadol 1 mL", 
-            "Trazodona tableta", "Trihepat", "Venda de algodón", "Venobomba", "Venoclisis", "Vestido L", 
-            "Vestido M", "Vestido S", "Vestido XL", "Vestido XS", "Vestido XXL", "Vitamina K (Kavitex)", 
-            "Xilasina 1 mL"
-        ];
-
-        let pedidoActual = [];
-        let modoManual = false;
-
-        async function guardarBorradorEnNube() {
-            try {
-                await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: pedidoActual });
-            } catch (error) {
-                console.error("Error guardando borrador en la nube:", error);
-            }
-        }
-
-        window.actualizarSelectInsumos = function() {
-            const select = document.getElementById('order-item-select');
-            select.innerHTML = '<option value="">Seleccione un insumo...</option>';
-            listaInsumosFarmacia.forEach(insumo => {
-                const opt = document.createElement('option');
-                opt.value = insumo;
-                opt.textContent = insumo;
-                select.appendChild(opt);
-            });
-            document.getElementById('btn-delete-custom-list').classList.add('hidden');
-            const helpText = document.getElementById('custom-item-help');
-            if (helpText) helpText.classList.add('hidden');
-        }
-
-        window.verificarInsumoPersonalizado = function() {
-            const select = document.getElementById('order-item-select');
-            const btnDelete = document.getElementById('btn-delete-custom-list');
-            const helpText = document.getElementById('custom-item-help');
-            const selectedValue = select.value;
-
-            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
-
-            if (selectedValue !== "" && extraInsumos.includes(selectedValue)) {
-                btnDelete.classList.remove('hidden'); 
-                if (helpText) helpText.classList.remove('hidden'); 
-            } else {
-                btnDelete.classList.add('hidden'); 
-                if (helpText) helpText.classList.add('hidden');
-            }
-        }
-
-        window.eliminarInsumoPersonalizado = function() {
-            const select = document.getElementById('order-item-select');
-            const insumoAEliminar = select.value;
-
-            if (!insumoAEliminar) return;
-
-            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
-            extraInsumos = extraInsumos.filter(item => item !== insumoAEliminar);
-            localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
-
-            listaInsumosFarmacia = listaInsumosFarmacia.filter(item => item !== insumoAEliminar);
-
-            actualizarSelectInsumos();
-            showToast(`¡Listo! "${insumoAEliminar}" fue eliminado permanentemente.`);
-        }
-
-        window.initOrders = async function() {
-            let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
-            extraInsumos.forEach(insumo => {
-                if (!listaInsumosFarmacia.includes(insumo)) {
-                    listaInsumosFarmacia.push(insumo);
-                }
-            });
-            listaInsumosFarmacia.sort();
-            
-            actualizarSelectInsumos();
-
-            const loaderBorrador = document.getElementById('loading-draft');
-            const badgeBorrador = document.getElementById('draft-badge');
-            loaderBorrador.classList.remove('hidden');
-
-            try {
-                const docSnap = await getDoc(doc(db, "pedidos_farmacia", "borrador_actual"));
-                if (docSnap.exists() && docSnap.data().items && docSnap.data().items.length > 0) {
-                    pedidoActual = docSnap.data().items;
-                    badgeBorrador.classList.remove('hidden');
-                } else {
-                    pedidoActual = [];
-                    badgeBorrador.classList.add('hidden');
-                }
-            } catch (e) {
-                console.error("No se pudo cargar el borrador de la nube", e);
-                pedidoActual = [];
-            } finally {
-                loaderBorrador.classList.add('hidden');
-                renderOrderTable();
-            }
-        }
-
-        window.toggleCustomItem = function() {
-            modoManual = !modoManual;
-            const selectCont = document.getElementById('select-container');
-            const inputCont = document.getElementById('input-container');
-            const btn = document.getElementById('btn-toggle-custom');
-
-            if (modoManual) {
-                selectCont.classList.add('hidden');
-                inputCont.classList.remove('hidden');
-                document.getElementById('order-item-select').value = "";
-                btn.innerHTML = '<i class="fa-solid fa-list"></i> Seleccionar de la lista';
-            } else {
-                selectCont.classList.remove('hidden');
-                inputCont.classList.add('hidden');
-                document.getElementById('order-item-input').value = "";
-                btn.innerHTML = '<i class="fa-solid fa-pencil"></i> ¿No está en la lista? Ingresar manual';
-                document.getElementById('btn-delete-custom-list').classList.add('hidden');
-                const helpText = document.getElementById('custom-item-help');
-                if (helpText) helpText.classList.add('hidden');
-            }
-        }
-
-        window.addOrderRow = async function() {
-            let itemName = "";
-            
-            if (modoManual) {
-                itemName = document.getElementById('order-item-input').value.trim();
-                
-                if (itemName === "") {
-                    showToast("Por favor escribe un insumo.", true);
-                    return;
-                }
-
-                const primeraLetra = itemName.charAt(0);
-                if (primeraLetra !== primeraLetra.toUpperCase() || !/[A-ZÁÉÍÓÚÑ]/.test(primeraLetra)) {
-                    showToast("Requisito: La primera letra debe ser MAYÚSCULA.", true);
-                    return;
-                }
-
-                if (!listaInsumosFarmacia.includes(itemName)) {
-                    listaInsumosFarmacia.push(itemName);
-                    listaInsumosFarmacia.sort();
-                    
-                    let extraInsumos = JSON.parse(localStorage.getItem('insumosFarmaciaExtra') || '[]');
-                    if (!extraInsumos.includes(itemName)) {
-                        extraInsumos.push(itemName);
-                        localStorage.setItem('insumosFarmaciaExtra', JSON.stringify(extraInsumos));
-                    }
-                    
-                    actualizarSelectInsumos();
-                }
-
-            } else {
-                itemName = document.getElementById('order-item-select').value;
-                if (itemName === "") {
-                    showToast("Por favor selecciona un insumo de la lista.", true);
-                    return;
-                }
-            }
-
-            const index = pedidoActual.findIndex(item => item.name.toLowerCase() === itemName.toLowerCase());
-            
-            if (index !== -1) {
-                showToast("Este insumo ya está en el pedido actual.", true);
-                return;
-            } else {
-                pedidoActual.push({ name: itemName });
-            }
-
-            await guardarBorradorEnNube();
-            document.getElementById('draft-badge').classList.remove('hidden');
-
-            if (modoManual) document.getElementById('order-item-input').value = "";
-            else document.getElementById('order-item-select').value = "";
-            
-            document.getElementById('btn-delete-custom-list').classList.add('hidden');
-            const helpText = document.getElementById('custom-item-help');
-            if (helpText) helpText.classList.add('hidden');
-
-            renderOrderTable();
-            showToast("Insumo agregado a la lista");
-        }
-
-        window.removeOrderRow = async function(index) {
-            pedidoActual.splice(index, 1);
-            await guardarBorradorEnNube();
-            if (pedidoActual.length === 0) {
-                document.getElementById('draft-badge').classList.add('hidden');
-            }
-            renderOrderTable();
-        }
-
-        window.renderOrderTable = function() {
-            const tbody = document.getElementById('order-table-body');
-            const msgEmpty = document.getElementById('empty-order-msg');
-            const totalItems = document.getElementById('ticket-total-items');
-            tbody.innerHTML = '';
-
-            if (pedidoActual.length === 0) {
-                msgEmpty.classList.remove('hidden');
-                totalItems.textContent = "0";
-                return;
-            }
-
-            msgEmpty.classList.add('hidden');
-            let total = 0;
-
-            pedidoActual.forEach((item, index) => {
-                total++;
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-gray-100";
-                tr.innerHTML = `
-                    <td class="py-3 text-center text-gray-500 font-bold text-sm">${index + 1}</td>
-                    <td class="py-3 text-gray-800 font-medium text-sm sm:text-base">${item.name}</td>
-                    <td class="py-3 text-center">
-                        <button onclick="removeOrderRow(${index})" class="text-red-500 hover:text-red-700 p-1">
-                            <i class="fa-solid fa-times-circle"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            totalItems.textContent = total;
-        }
-
-        // --- ENVIAR POR GMAIL Y GUARDAR EL TEXTO EXACTO ---
-        window.generarYEnviarCorreo = async function() {
-            if (pedidoActual.length === 0) {
-                showToast("El pedido está vacío.", true);
-                return;
-            }
-
-            try {
-                const timestamp = new Date().getTime().toString();
-                
-                let textoPlano = `📋 PEDIDO DE INSUMOS FARMACIA CEV\n\nDetalle del pedido:\n`;
-                
-                pedidoActual.forEach((item, index) => {
-                    textoPlano += `${index + 1}. ${item.name}\n`;
-                });
-
-                const datosGuardar = {
-                    timestamp: parseInt(timestamp),
-                    textoEnviado: textoPlano 
-                };
-
-                showToast("Guardando mensaje en historial...");
-                await setDoc(doc(db, "pedidos_farmacia", timestamp), datosGuardar);
-
-                const emailDestino = "servicioalclientecevmascotas@gmail.com";
-                const asunto = encodeURIComponent(`Pedido de Insumos Farmacia CEV`);
-                const cuerpoCorreo = encodeURIComponent(textoPlano);
-                
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailDestino}&su=${asunto}&body=${cuerpoCorreo}`;
-                
-                showToast("¡Pedido guardado! Abriendo Gmail...");
-                
-                pedidoActual = [];
-                await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: [] });
-                document.getElementById('draft-badge').classList.add('hidden');
-                renderOrderTable();
-
-                setTimeout(() => { window.open(gmailUrl, '_blank'); }, 1200);
-
-            } catch (error) {
-                console.error("Error al guardar el historial:", error);
-                showToast("Hubo un error al guardar. Revisa tu conexión a internet.", true);
-            }
-        }
-
-        // --- HISTORIAL ESTILO CHAT DE CORREO ---
-        window.openHistory = function() {
-            document.getElementById('orders-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.remove('hidden');
-            cargarHistorialDeFirebase();
-        }
-
-        window.closeHistory = function() {
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('orders-screen').classList.remove('hidden');
-        }
-
-        window.cargarHistorialDeFirebase = async function() {
-            const container = document.getElementById('history-container');
-            container.innerHTML = '<div class="text-center py-8"><div class="loader mx-auto mb-4"></div><p class="text-gray-500 font-semibold">Cargando registros...</p></div>';
-            
-            try {
-                const querySnapshot = await getDocs(collection(db, "pedidos_farmacia"));
-                let pedidosGuardados = [];
-                
-                querySnapshot.forEach((doc) => {
-                    if (doc.id !== "borrador_actual") {
-                        pedidosGuardados.push({ id: doc.id, ...doc.data() });
-                    }
-                });
-                
-                pedidosGuardados.sort((a, b) => b.timestamp - a.timestamp);
-                
-                if (pedidosGuardados.length === 0) {
-                    container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-comment-slash text-4xl mb-3 opacity-50"></i><br>Aún no hay pedidos enviados a farmacia.</div>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                
-                pedidosGuardados.forEach((pedido) => {
-                    let textoFormateado = "Mensaje antiguo.";
-                    
-                    if (pedido.textoEnviado) {
-                        textoFormateado = pedido.textoEnviado
-                            .replace(/\n/g, '<br>')
-                            .replace(/\*(.*?)\*/g, '<b>$1</b>');
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-blue-200 mb-4 hover:shadow-lg transition-shadow";
-                    
-                    const textoParaReenviar = encodeURIComponent(pedido.textoEnviado || "Reenviar pedido");
-                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=servicioalclientecevmascotas@gmail.com&su=Reenvío Pedido Insumos&body=${textoParaReenviar}`;
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
-                            <div class="font-bold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
-                                <i class="fa-solid fa-envelope text-blue-500 text-lg"></i> Registro guardado
-                            </div>
-                            <a href="${gmailUrl}" target="_blank" class="text-xs sm:text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full uppercase tracking-wide border border-blue-200 hover:bg-blue-200 transition-colors flex items-center gap-1">
-                                <i class="fa-solid fa-share"></i> Reenviar
-                            </a>
-                        </div>
-                        <div class="bg-blue-50 p-3 sm:p-4 rounded-lg text-sm text-gray-700 font-mono shadow-inner border border-blue-100">
-                            ${textoFormateado}
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-                
-            } catch (error) {
-                container.innerHTML = '<div class="text-center py-8 text-red-500 bg-red-50 rounded-xl border border-red-200"><i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i><br><b>Error al cargar historial</b></div>';
-            }
-        }
-
-        // --- SISTEMA DE NOTIFICACIONES ---
-        window.showToast = function(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
-            
-            document.getElementById('toast-msg').textContent = message;
-            
-            if(isError) {
-                toast.classList.replace('bg-[#154390]', 'bg-red-600');
-                icon.className = 'fa-solid fa-triangle-exclamation text-gray-100';
-            } else {
-                toast.classList.replace('bg-red-600', 'bg-[#154390]');
-                icon.className = 'fa-solid fa-check-circle text-gray-200';
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
-        }
-    </script>
-</body>
-</html>
+    <!-- Ticket -->
+    <div class="card ticket-border-top" style="padding:1.5rem; margin-bottom:1rem; position:relative">
+        <div id="loading-draft"
+             style="position:absolute; inset:0; background:rgba(255,255,255,.85); display:flex; align-items:center; justify-content:center; z-index:10; border-radius:16px; display:none">
+            <div class="spinner"></div>
+        </div>
+        <div style="text-align:center; margin-bottom:1.25rem; padding-bottom:1rem; border-bottom:2px dashed #e2e8f0">
+            <h2 style="font-size:1.125rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--cev-text); margin:0 0 .25rem">Ticket de Pedido</h2>
+            <h3 style="font-size:.875rem; font-weight:500; color:var(--cev-muted); margin:0">Farmacia CEV</h3>
+            <span id="draft-badge"
+                  style="display:none; margin-top:.5rem; font-size:.75rem; color:#92400e; font-weight:600">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Borrador recuperado de la nube
+            </span>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse">
+            <thead>
+                <tr style="border-bottom:2px solid var(--cev-text)">
+                    <th style="font-family:inherit; font-size:.8rem; font-weight:700; padding:.5rem 0; text-align:center; width:36px; color:var(--cev-text)">N°</th>
+                    <th style="font-family:inherit; font-size:.8rem; font-weight:700; padding:.5rem 0; text-align:left; color:var(--cev-text)">Descripción</th>
+                    <th style="width:36px"></th>
+                </tr>
+            </thead>
+            <tbody id="order-table-body"></tbody
