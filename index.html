@@ -228,10 +228,11 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="sticky top-0 z-10">
                         <tr class="bg-slate-50/95 backdrop-blur border-b border-slate-200">
-                            <th class="p-3 sm:p-4 text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-wide">Insumo</th>
-                            <th class="p-2 sm:p-4 text-xs sm:text-sm font-bold text-slate-500 text-center w-12 sm:w-20 uppercase tracking-wide">Ideal</th>
-                            <th class="p-2 sm:p-4 text-xs sm:text-sm font-bold text-brand text-center w-20 sm:w-28 uppercase tracking-wide">Stock</th>
-                            <th class="p-2 sm:p-4 text-xs sm:text-sm font-bold text-slate-600 text-center w-16 sm:w-24 uppercase tracking-wide">Reponer</th>
+                            <th class="p-3 sm:p-4 text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-wide whitespace-nowrap">Insumo</th>
+                            <th class="px-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-slate-500 text-center w-12 sm:w-16 uppercase tracking-wide">Ideal</th>
+                            <th class="px-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-brand text-center w-16 sm:w-24 uppercase tracking-wide">Stock</th>
+                            <th class="px-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-slate-600 text-center w-16 sm:w-20 uppercase tracking-wide">Reponer</th>
+                            <th class="w-full"></th>
                         </tr>
                     </thead>
                     <tbody id="table-body"></tbody>
@@ -651,16 +652,17 @@
                 tr.className = (hasValue ? 'bg-slate-50/60 ' : '') + 'hover:bg-brand-50/40 transition-colors';
                 tr.innerHTML = `
                     <td class="p-3 border-b border-slate-100 font-semibold text-slate-700 text-sm sm:text-base leading-tight">${item.name}</td>
-                    <td class="p-2 sm:p-3 border-b border-slate-100 text-center font-bold text-slate-400 text-sm sm:text-base">${item.ideal}</td>
-                    <td class="p-2 sm:p-3 border-b border-slate-100 text-center">
+                    <td class="px-1 py-3 border-b border-slate-100 text-center font-bold text-slate-400 text-sm sm:text-base">${item.ideal}</td>
+                    <td class="px-1 py-3 border-b border-slate-100 text-center">
                         <input type="number" min="0" inputmode="numeric" value="${item.actual}"
                             oninput="window.updateItem(${index}, this.value)"
                             class="field w-16 sm:w-20 text-center py-2 font-bold text-brand text-sm sm:text-base"
                             placeholder="–">
                     </td>
-                    <td class="p-2 sm:p-3 border-b border-slate-100 text-center" id="reponer-${index}">
+                    <td class="px-1 py-3 border-b border-slate-100 text-center" id="reponer-${index}">
                         ${reponerBadge(hasValue, reponer)}
-                    </td>`;
+                    </td>
+                    <td class="border-b border-slate-100"></td>`;
                 frag.appendChild(tr);
             });
 
