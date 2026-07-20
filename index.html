@@ -79,27 +79,42 @@
                     <p class="text-gray-500 text-sm mt-1">Selecciona un módulo para comenzar</p>
                 </div>
             </div>
-            <button onclick="logoutUser()" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-red-200">
-                <i class="fa-solid fa-power-off"></i> Cerrar Sesión
-            </button>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button id="btn-admin" onclick="openAdmin()" class="hidden px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200">
+                    <i class="fa-solid fa-user-gear"></i> Administración
+                </button>
+                <button onclick="logoutUser()" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-red-200">
+                    <i class="fa-solid fa-power-off"></i> Cerrar Sesión
+                </button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-4xl mx-auto">
-            <button onclick="openInventory()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 max-w-6xl mx-auto">
+            <button id="card-insumos" onclick="openInventory()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 text-center">Registro de Insumos</h2>
-                <p class="text-gray-500 text-center">Gestión, conteo y control diario del inventario clínico.</p>
+                <h2 class="text-xl font-bold text-gray-800 text-center">Registro de Insumos</h2>
+                <p class="text-gray-500 text-center text-sm">Gestión, conteo y control diario del inventario clínico.</p>
             </button>
 
-            <button onclick="openOrders()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+            <button id="card-pedidos" onclick="openOrders()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fa-solid fa-cart-plus"></i>
                 </div>
                 <div class="text-center">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
-                    <p class="text-gray-500 text-center">Solicita insumos y envía el pedido por Gmail.</p>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
+                    <p class="text-gray-500 text-center text-sm">Solicita insumos y envía el pedido por Gmail.</p>
+                </div>
+            </button>
+
+            <button id="card-verificacion" onclick="openChecklist()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-green-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-green-600 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Verificación Diaria</h2>
+                    <p class="text-gray-500 text-center text-sm">Ronda de orden y aseo por áreas del centro.</p>
                 </div>
             </button>
         </div>
@@ -290,15 +305,156 @@
         </div>
     </div>
 
+    <div id="checklist-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-green-700 flex items-center justify-center sm:justify-start gap-2">Verificación Diaria</h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1 flex items-center justify-center sm:justify-start gap-1">
+                        <i class="fa-solid fa-cloud text-green-600"></i> Guardado automático en la nube
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-col items-center sm:items-end w-full sm:w-auto gap-2">
+                <label for="verif-date" class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1 hidden sm:block">Fecha de la ronda</label>
+                <div class="flex items-center gap-2 w-full justify-center sm:justify-end">
+                    <div id="verif-spinner" class="loader hidden"></div>
+                    <input type="date" id="verif-date" class="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-green-700 font-bold shadow-sm cursor-pointer hover:bg-gray-200 transition-colors text-sm">
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200">
+            <div class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="w-full sm:w-2/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Responsable de la ronda</label>
+                    <input type="text" id="verif-responsable" list="verif-responsables-list" placeholder="Nombre de quien verifica" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm font-semibold text-gray-700">
+                    <datalist id="verif-responsables-list"></datalist>
+                </div>
+                <div class="w-full sm:w-1/3 text-center sm:text-right">
+                    <span class="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Cumplimiento del día</span>
+                    <span id="verif-pct" class="text-3xl font-black text-green-700">0%</span>
+                    <span id="verif-count" class="block text-xs text-gray-500 font-medium">0 de 0 ítems</span>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3 overflow-hidden">
+                <div id="verif-bar" class="bg-green-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 border border-gray-200 flex flex-col sm:flex-row gap-3 justify-between items-center sticky top-0 z-10">
+            <div class="relative w-full sm:w-1/2">
+                <i class="fa-solid fa-search absolute left-3 top-2.5 sm:top-3.5 text-gray-400"></i>
+                <input type="text" id="verif-search" placeholder="Buscar área o ítem..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all bg-gray-50 text-sm">
+            </div>
+            <div class="flex w-full sm:w-auto gap-2">
+                <button onclick="expandirTodo()" class="w-full sm:w-auto px-3 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-list"></i> Ver todo
+                </button>
+                <button onclick="limpiarVerificacion()" class="w-full sm:w-auto px-3 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Limpiar Día
+                </button>
+            </div>
+        </div>
+
+        <div id="checklist-container" class="space-y-3"></div>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-calendar-check"></i> Verificación Mensual
+            </h2>
+            <p class="text-gray-500 text-xs sm:text-sm mb-4 border-b border-gray-100 pb-2">Corresponde al mes de <span id="verif-mes-label" class="font-bold text-gray-700"></span></p>
+            <div id="mensual-container" class="space-y-4"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 sm:mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-file-excel text-green-600"></i> Exportar a Excel
+            </h2>
+            <div class="flex flex-col sm:flex-row items-end gap-3">
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Inicio</label>
+                    <input type="date" id="verif-export-start" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-gray-700 text-sm">
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
+                    <input type="date" id="verif-export-end" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-gray-700 text-sm">
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <button onclick="generarExcelVerificacion()" class="w-full px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Descargar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#154390] flex items-center gap-2">Administración</h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Usuarios y accesos a los módulos</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus"></i> Crear usuario
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Nombre</label>
+                    <input type="text" id="nuevo-nombre" placeholder="Nombre de la persona" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Correo</label>
+                    <input type="email" id="nuevo-correo" placeholder="usuario@clinica.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Contraseña inicial</label>
+                    <div class="relative">
+                        <input type="password" id="nuevo-clave" placeholder="Mínimo 6 caracteres" class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                        <button type="button" onclick="toggleNuevaClave()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
+                            <i class="fa-solid fa-eye" id="nuevo-clave-icon"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1 italic">La persona podrá cambiarla después con "¿Olvidó su contraseña?".</p>
+                </div>
+            </div>
+
+            <p class="text-xs font-semibold text-gray-600 mt-4 mb-2 uppercase tracking-wide">Acceso a módulos</p>
+            <div id="nuevo-permisos" class="flex flex-wrap gap-2"></div>
+
+            <button onclick="crearUsuario()" id="btn-crear-usuario" class="mt-5 w-full sm:w-auto px-5 py-2.5 bg-[#154390] text-white rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-md flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> Crear usuario
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-users"></i> Usuarios registrados
+            </h2>
+            <div id="usuarios-container" class="space-y-3"></div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
         <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
         <span id="toast-msg">Mensaje</span>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBSzvWwy61Zexsy4dBSCJZtCChBLge7Nlk",
@@ -314,29 +470,91 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // ==========================================
+        // CONFIGURACIÓN DE ADMINISTRACIÓN Y PERMISOS
+        // ==========================================
+        // ▸ Escribe aquí el correo de la administradora (en minúsculas).
+        //   Esa cuenta siempre tendrá acceso total y verá el módulo de Administración,
+        //   aunque todavía no tenga documento en la colección "usuarios".
+        const ADMIN_EMAILS = ["servicioalclientecevmascotas@gmail.com"];
+
+        // ▸ Módulos que se pueden asignar con casillas a cada usuario.
+        const MODULOS = [
+            { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos" },
+            { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos" },
+            { id: "verificacion", nombre: "Verificación Diaria",  icono: "fa-list-check",      card: "card-verificacion" }
+        ];
+
+        // ▸ MODO_ESTRICTO = false: si un usuario NO tiene documento en "usuarios",
+        //   entra con acceso completo (compatibilidad con las cuentas que ya usan la app).
+        //   Cámbialo a true cuando ya hayas creado el documento de todos y quieras
+        //   que nadie entre sin permisos explícitos.
+        const MODO_ESTRICTO = false;
+
+        let esAdmin = false;
+        let permisosActuales = {};
+
+        function correoEsAdmin(email) {
+            return ADMIN_EMAILS.map(e => e.toLowerCase()).includes((email || "").toLowerCase());
+        }
+
         // --- NAVEGACIÓN ---
         window.openInventory = function() {
+            if (!tienePermiso('insumos')) { showToast("No tienes acceso a este módulo.", true); return; }
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('checklist-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.remove('hidden');
             initInventoryApp();
         };
 
         window.openOrders = function() {
+            if (!tienePermiso('pedidos')) { showToast("No tienes acceso a este módulo.", true); return; }
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('checklist-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.remove('hidden');
             initOrders();
+        };
+
+        window.openChecklist = function() {
+            if (!tienePermiso('verificacion')) { showToast("No tienes acceso a este módulo.", true); return; }
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+            document.getElementById('checklist-screen').classList.remove('hidden');
+            initChecklistApp();
+        };
+
+        window.openAdmin = function() {
+            if (!esAdmin) { showToast("Solo la administradora puede entrar aquí.", true); return; }
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('checklist-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.remove('hidden');
+            initAdminApp();
         };
 
         window.goToDashboard = function() {
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('checklist-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
         };
+
+        function tienePermiso(modulo) {
+            return esAdmin || permisosActuales[modulo] === true;
+        }
 
         // --- AUTENTICACIÓN ---
         document.getElementById('toggle-password').addEventListener('click', function () {
@@ -351,20 +569,75 @@
             }
         });
         
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             const loginScreen = document.getElementById('login-screen');
             const dashboardScreen = document.getElementById('dashboard-screen');
             if (user) {
+                // Determinar rol y permisos antes de mostrar el panel
+                esAdmin = correoEsAdmin(user.email);
+                permisosActuales = {};
+
+                let datosUsuario = null;
+                try {
+                    const snap = await getDoc(doc(db, "usuarios", user.uid));
+                    if (snap.exists()) datosUsuario = snap.data();
+                } catch (e) {
+                    console.error("No se pudo leer el perfil del usuario", e);
+                }
+
+                if (datosUsuario && datosUsuario.admin === true) esAdmin = true;
+
+                // Interruptor activo/inactivo (no aplica a la administradora)
+                if (!esAdmin && datosUsuario && datosUsuario.activo === false) {
+                    await signOut(auth);
+                    mostrarErrorLogin("Tu acceso está desactivado. Contacta a la administradora.");
+                    return;
+                }
+
+                // Cálculo de permisos por módulo
+                if (esAdmin) {
+                    MODULOS.forEach(m => permisosActuales[m.id] = true);
+                } else if (datosUsuario) {
+                    MODULOS.forEach(m => permisosActuales[m.id] = datosUsuario[m.id] === true);
+                } else {
+                    // Sin documento: acceso completo salvo que MODO_ESTRICTO esté activo
+                    MODULOS.forEach(m => permisosActuales[m.id] = !MODO_ESTRICTO);
+                }
+
+                aplicarPermisosEnPanel();
+
                 loginScreen.classList.add('hidden');
                 dashboardScreen.classList.remove('hidden');
             } else {
+                esAdmin = false;
+                permisosActuales = {};
                 loginScreen.classList.remove('hidden');
                 dashboardScreen.classList.add('hidden');
                 document.getElementById('inventory-screen').classList.add('hidden');
                 document.getElementById('orders-screen').classList.add('hidden');
                 document.getElementById('history-screen').classList.add('hidden');
+                document.getElementById('checklist-screen').classList.add('hidden');
+                document.getElementById('admin-screen').classList.add('hidden');
             }
         });
+
+        function aplicarPermisosEnPanel() {
+            MODULOS.forEach(m => {
+                const card = document.getElementById(m.card);
+                if (!card) return;
+                if (permisosActuales[m.id]) card.classList.remove('hidden');
+                else card.classList.add('hidden');
+            });
+            const btnAdmin = document.getElementById('btn-admin');
+            if (esAdmin) btnAdmin.classList.remove('hidden');
+            else btnAdmin.classList.add('hidden');
+        }
+
+        function mostrarErrorLogin(msg) {
+            const errorBox = document.getElementById('login-error');
+            errorBox.classList.remove('hidden');
+            document.getElementById('login-error-text').innerText = msg;
+        }
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -461,7 +734,7 @@
             { name: "Pregabalina 75 mg", ideal: 15 },
             { name: "Trimetoprim", ideal: 5 },
             { name: "Esomeprazol", ideal: 5 },
-            { name: "Bladuvil", ideal: 5 },
+            { name: "Bladuril", ideal: 5 },
             { name: "Mirtazapina", ideal: 5 },
             { name: "Ursacol", ideal: 5 },
             { name: "Flunarizina", ideal: 5 },
@@ -822,7 +1095,7 @@
             "Sonda", "Sulfazalazina", "Sutura absorbible", "Tapón", "Tiamina", "Tramadol 1 mL", 
             "Trazodona tableta", "Trihepat", "Venda de algodón", "Venobomba", "Venoclisis", "Vestido L", 
             "Vestido M", "Vestido S", "Vestido XL", "Vestido XS", "Vestido XXL", "Vitamina K (Kavitex)", 
-            "Xilasina 1 mL"
+            "Xilacina 1 mL"
         ];
 
         let pedidoActual = [];
@@ -1157,6 +1430,641 @@
                 container.innerHTML = '<div class="text-center py-8 text-red-500 bg-red-50 rounded-xl border border-red-200"><i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i><br><b>Error al cargar historial</b></div>';
             }
         }
+
+        // ==========================================
+        // 3. VERIFICACIÓN DIARIA (ORDEN Y ASEO)
+        // ==========================================
+        // Colecciones en Firestore:
+        //   verificaciones/{YYYY-MM-DD}  → ronda diaria
+        //   verificaciones_mensuales/{YYYY-MM} → inventario y atención al público
+        // ─────────────────────────────────────────────────────────────────────
+        const AREAS_VERIFICACION = [
+            { area: "RECEPCIÓN",            items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Góndola", "Cafetín"] },
+            { area: "CONSULTORIO CANINO 1", items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
+            { area: "CONSULTORIO CANINO 2", items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
+            { area: "CONSULTORIO CANINO 3", items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
+            { area: "CONSULTORIO FELINO",   items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
+            { area: "FISIOTERAPIA",         items: ["Paredes", "Pisos"] },
+            { area: "HOSPITALIZACIÓN",      items: ["Paredes", "Pisos", "Nevera", "Mesas", "Cajones"] },
+            { area: "NEVERA",               items: ["Temperatura", "Insumos"] },
+            { area: "LAVANDERÍA",           items: ["Pisos", "Paredes", "Lavadora", "Secadora"] },
+            { area: "ARCHIVO",              items: ["Pisos", "Paredes", "Papelería", "Tanque"] },
+            { area: "RX",                   items: ["Pisos", "Paredes"] },
+            { area: "DEPÓSITO",             items: ["Pisos", "Paredes"] },
+            { area: "GARAJE",               items: ["Pisos", "Paredes", "Papelería"] },
+            { area: "PRECIRUGÍA",           items: ["Paredes", "Pisos", "Mesas", "Sillas"] },
+            { area: "QUIRÓFANO",            items: ["Paredes", "Pisos", "Mesas", "Sillas"] },
+            { area: "SALA DE MATERIALES",   items: ["Paredes", "Pisos", "Mesas"] },
+            { area: "LABORATORIO",          items: ["Paredes", "Pisos", "Mesas", "Sillas"] },
+            { area: "DISPENSARIO",          items: ["Paredes", "Pisos", "Mesas", "Medicamentos"] },
+            { area: "HOSPITALIZACIÓN (MEDICAMENTOS)", items: ["Paredes", "Pisos", "Mesas", "Medicamentos"] },
+            { area: "HOSPITALIZACIÓN · EXCEL",    items: ["Exámenes", "Rondas", "Seguimientos"] },
+            { area: "HOSPITALIZACIÓN · WHATSAPP", items: ["Noche", "Día"] }
+        ];
+
+        const RESPONSABLES_VERIFICACION = ["Isabella", "Paola"];
+
+        const ITEMS_MENSUALES = [
+            { grupo: "INVENTARIO",          items: ["Recepción", "Dispensario"] },
+            { grupo: "ATENCIÓN AL PÚBLICO", items: ["Encuestas", "2 días en recepción", "Dulces"] }
+        ];
+
+        const MESES_NOMBRE = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        let checklist = [];
+        let observacionesVerif = {};
+        let mensualVerif = {};
+        let areasAbiertas = new Set();
+        let saveVerifTimeout = null;
+        let saveMensualTimeout = null;
+        let verifInicializado = false;
+
+        function toggleVerifLoader(show) {
+            const spinner = document.getElementById('verif-spinner');
+            if (show) spinner.classList.remove('hidden');
+            else spinner.classList.add('hidden');
+        }
+
+        function baseChecklist() {
+            const base = [];
+            AREAS_VERIFICACION.forEach(grupo => {
+                grupo.items.forEach(item => base.push({ area: grupo.area, item: item, ok: false }));
+            });
+            return base;
+        }
+
+        function setFechasVerificacion() {
+            const dateInput = document.getElementById('verif-date');
+            const expStart = document.getElementById('verif-export-start');
+            const expEnd = document.getElementById('verif-export-end');
+            const d = new Date();
+            const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+            if (!dateInput.value) dateInput.value = todayStr;
+            if (!expStart.value) expStart.value = todayStr;
+            if (!expEnd.value) expEnd.value = todayStr;
+        }
+
+        async function initChecklistApp() {
+            setFechasVerificacion();
+
+            if (!verifInicializado) {
+                const dl = document.getElementById('verif-responsables-list');
+                RESPONSABLES_VERIFICACION.forEach(nombre => {
+                    const opt = document.createElement('option');
+                    opt.value = nombre;
+                    dl.appendChild(opt);
+                });
+
+                document.getElementById('verif-search').addEventListener('input', (e) => {
+                    renderChecklist(e.target.value.toLowerCase());
+                });
+
+                document.getElementById('verif-date').addEventListener('change', async () => {
+                    areasAbiertas.clear();
+                    await loadChecklistFromFirebase();
+                    await loadMensualFromFirebase();
+                });
+
+                document.getElementById('verif-responsable').addEventListener('input', () => {
+                    clearTimeout(saveVerifTimeout);
+                    saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
+                });
+
+                verifInicializado = true;
+            }
+
+            await loadChecklistFromFirebase();
+            await loadMensualFromFirebase();
+        }
+
+        async function loadChecklistFromFirebase() {
+            toggleVerifLoader(true);
+            const fechaActual = document.getElementById('verif-date').value;
+
+            try {
+                const docSnap = await getDoc(doc(db, "verificaciones", fechaActual));
+                const base = baseChecklist();
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const guardados = data.items || [];
+                    // Conserva lo marcado y agrega los ítems nuevos de la guía
+                    checklist = base.map(b => {
+                        const prev = guardados.find(g => g.area === b.area && g.item === b.item);
+                        return prev ? { ...b, ok: !!prev.ok } : b;
+                    });
+                    observacionesVerif = data.observaciones || {};
+                    document.getElementById('verif-responsable').value = data.responsable || '';
+                } else {
+                    checklist = base;
+                    observacionesVerif = {};
+                    document.getElementById('verif-responsable').value = '';
+                }
+            } catch (error) {
+                showToast("Error al cargar la verificación", true);
+                checklist = baseChecklist();
+                observacionesVerif = {};
+            } finally {
+                renderChecklist(document.getElementById('verif-search').value.toLowerCase());
+                toggleVerifLoader(false);
+            }
+        }
+
+        async function saveChecklistToFirebase() {
+            const fechaActual = document.getElementById('verif-date').value;
+            toggleVerifLoader(true);
+            try {
+                await setDoc(doc(db, "verificaciones", fechaActual), {
+                    fecha: fechaActual,
+                    responsable: document.getElementById('verif-responsable').value.trim(),
+                    items: checklist,
+                    observaciones: observacionesVerif,
+                    actualizado: new Date().toISOString()
+                });
+            } catch (error) {
+                showToast("Error al guardar.", true);
+            } finally {
+                toggleVerifLoader(false);
+            }
+        }
+
+        function actualizarProgresoVerif() {
+            const total = checklist.length;
+            const hechos = checklist.filter(i => i.ok).length;
+            const pct = total ? Math.round((hechos / total) * 100) : 0;
+
+            document.getElementById('verif-pct').textContent = `${pct}%`;
+            document.getElementById('verif-count').textContent = `${hechos} de ${total} ítems`;
+            document.getElementById('verif-bar').style.width = `${pct}%`;
+
+            const pctEl = document.getElementById('verif-pct');
+            if (pct === 100) pctEl.className = 'text-3xl font-black text-green-700';
+            else if (pct >= 80) pctEl.className = 'text-3xl font-black text-green-600';
+            else if (pct >= 50) pctEl.className = 'text-3xl font-black text-yellow-600';
+            else pctEl.className = 'text-3xl font-black text-gray-400';
+        }
+
+        function renderChecklist(filter = '') {
+            const cont = document.getElementById('checklist-container');
+            cont.innerHTML = '';
+
+            AREAS_VERIFICACION.forEach((grupo, aidx) => {
+                const indices = [];
+                checklist.forEach((it, i) => { if (it.area === grupo.area) indices.push(i); });
+
+                const coincideArea = grupo.area.toLowerCase().includes(filter);
+                const visibles = indices.filter(i => coincideArea || checklist[i].item.toLowerCase().includes(filter));
+                if (visibles.length === 0) return;
+
+                const total = indices.length;
+                const hechos = indices.filter(i => checklist[i].ok).length;
+                const pct = total ? Math.round((hechos / total) * 100) : 0;
+                const completa = hechos === total;
+                const abierto = areasAbiertas.has(aidx) || filter !== '';
+
+                let badgeClass = 'bg-gray-100 text-gray-500 border-gray-200';
+                if (completa) badgeClass = 'bg-green-100 text-green-700 border-green-300';
+                else if (hechos > 0) badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-300';
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-xl shadow-md border overflow-hidden transition-colors ${completa ? 'border-green-300' : 'border-gray-200'}`;
+
+                const itemsHtml = visibles.map(i => `
+                    <button onclick="toggleVerifItem(${i})" class="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-100 hover:bg-gray-50 transition-colors text-left">
+                        <span class="w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${checklist[i].ok ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-300 text-transparent'}">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </span>
+                        <span class="text-sm sm:text-base ${checklist[i].ok ? 'text-gray-400 line-through' : 'text-gray-700 font-medium'}">${checklist[i].item}</span>
+                    </button>
+                `).join('');
+
+                card.innerHTML = `
+                    <button onclick="toggleAreaAbierta(${aidx})" class="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center gap-3 text-left">
+                            <i class="fa-solid fa-chevron-${abierto ? 'down' : 'right'} text-gray-400 text-xs w-3"></i>
+                            <span class="font-bold text-sm sm:text-base ${completa ? 'text-green-700' : 'text-[#154390]'}">${grupo.area}</span>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 rounded-full border shrink-0 ${badgeClass}">${hechos}/${total} · ${pct}%</span>
+                    </button>
+                    <div class="${abierto ? '' : 'hidden'}">
+                        ${itemsHtml}
+                        <div class="px-4 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                            <input type="text" value="${(observacionesVerif[grupo.area] || '').replace(/"/g, '&quot;')}"
+                                oninput="updateObservacionVerif('${grupo.area.replace(/'/g, "\\'")}', this.value)"
+                                placeholder="Novedad u observación del área (opcional)"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white">
+                            <button onclick="marcarAreaCompleta(${aidx})" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${completa ? 'bg-white text-gray-500 border-gray-300 hover:bg-gray-100' : 'bg-green-600 text-white border-green-600 hover:bg-green-700'}">
+                                <i class="fa-solid ${completa ? 'fa-rotate-left' : 'fa-check-double'}"></i> ${completa ? 'Desmarcar' : 'Marcar todo'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                cont.appendChild(card);
+            });
+
+            if (cont.innerHTML === '') {
+                cont.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-magnifying-glass text-3xl mb-3 opacity-50"></i><br>No se encontraron áreas ni ítems con esa búsqueda.</div>';
+            }
+
+            actualizarProgresoVerif();
+        }
+
+        window.toggleAreaAbierta = function(aidx) {
+            if (areasAbiertas.has(aidx)) areasAbiertas.delete(aidx);
+            else areasAbiertas.add(aidx);
+            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
+        }
+
+        window.expandirTodo = function() {
+            if (areasAbiertas.size === AREAS_VERIFICACION.length) areasAbiertas.clear();
+            else AREAS_VERIFICACION.forEach((g, i) => areasAbiertas.add(i));
+            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
+        }
+
+        window.toggleVerifItem = function(index) {
+            checklist[index].ok = !checklist[index].ok;
+            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
+
+            clearTimeout(saveVerifTimeout);
+            saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
+        }
+
+        window.marcarAreaCompleta = function(aidx) {
+            const areaNombre = AREAS_VERIFICACION[aidx].area;
+            const indices = [];
+            checklist.forEach((it, i) => { if (it.area === areaNombre) indices.push(i); });
+            const completa = indices.every(i => checklist[i].ok);
+
+            indices.forEach(i => { checklist[i].ok = !completa; });
+            areasAbiertas.add(aidx);
+            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
+
+            clearTimeout(saveVerifTimeout);
+            saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
+        }
+
+        window.updateObservacionVerif = function(area, valor) {
+            if (valor.trim() === '') delete observacionesVerif[area];
+            else observacionesVerif[area] = valor;
+
+            clearTimeout(saveVerifTimeout);
+            saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
+        }
+
+        window.limpiarVerificacion = async function() {
+            const fechaActual = document.getElementById('verif-date').value;
+            if (confirm(`¿Deseas borrar de la nube toda la verificación del día ${fechaActual}?`)) {
+                checklist = baseChecklist();
+                observacionesVerif = {};
+                document.getElementById('verif-search').value = '';
+                renderChecklist();
+                await saveChecklistToFirebase();
+                showToast("Verificación del día limpiada");
+            }
+        }
+
+        // --- VERIFICACIÓN MENSUAL ---
+        function mesIdDesdeFecha(fecha) {
+            return fecha ? fecha.substring(0, 7) : '';
+        }
+
+        async function loadMensualFromFirebase() {
+            const fechaActual = document.getElementById('verif-date').value;
+            const mesId = mesIdDesdeFecha(fechaActual);
+            if (!mesId) return;
+
+            const [y, m] = mesId.split('-').map(Number);
+            document.getElementById('verif-mes-label').textContent = `${MESES_NOMBRE[m - 1]} ${y}`;
+
+            try {
+                const docSnap = await getDoc(doc(db, "verificaciones_mensuales", mesId));
+                mensualVerif = docSnap.exists() ? (docSnap.data().items || {}) : {};
+            } catch (error) {
+                mensualVerif = {};
+                console.error("No se pudo cargar la verificación mensual", error);
+            } finally {
+                renderMensual();
+            }
+        }
+
+        async function saveMensualToFirebase() {
+            const mesId = mesIdDesdeFecha(document.getElementById('verif-date').value);
+            if (!mesId) return;
+            try {
+                await setDoc(doc(db, "verificaciones_mensuales", mesId), {
+                    mes: mesId,
+                    items: mensualVerif,
+                    responsable: document.getElementById('verif-responsable').value.trim(),
+                    actualizado: new Date().toISOString()
+                });
+            } catch (error) {
+                showToast("Error al guardar la verificación mensual.", true);
+            }
+        }
+
+        function renderMensual() {
+            const cont = document.getElementById('mensual-container');
+            cont.innerHTML = '';
+
+            ITEMS_MENSUALES.forEach(grupo => {
+                const div = document.createElement('div');
+                const botones = grupo.items.map(item => {
+                    const marcado = !!mensualVerif[item];
+                    return `
+                        <button onclick="toggleMensual('${item.replace(/'/g, "\\'")}')" class="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs sm:text-sm font-semibold transition-colors ${marcado ? 'bg-green-50 border-green-300 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'}">
+                            <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${marcado ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-300 text-transparent'}">
+                                <i class="fa-solid fa-check text-[10px]"></i>
+                            </span>
+                            ${item}
+                        </button>
+                    `;
+                }).join('');
+
+                div.innerHTML = `
+                    <p class="text-xs font-bold text-[#154390] uppercase tracking-wide mb-2">${grupo.grupo}</p>
+                    <div class="flex flex-wrap gap-2">${botones}</div>
+                `;
+                cont.appendChild(div);
+            });
+        }
+
+        window.toggleMensual = function(item) {
+            mensualVerif[item] = !mensualVerif[item];
+            if (!mensualVerif[item]) delete mensualVerif[item];
+            renderMensual();
+
+            clearTimeout(saveMensualTimeout);
+            saveMensualTimeout = setTimeout(() => { saveMensualToFirebase(); }, 1000);
+        }
+
+        // --- EXPORTAR VERIFICACIÓN A EXCEL ---
+        window.generarExcelVerificacion = async function() {
+            const start = document.getElementById('verif-export-start').value;
+            const end = document.getElementById('verif-export-end').value;
+
+            if (!start || !end) { showToast("Selecciona fecha de inicio y fin", true); return; }
+            if (start > end) { showToast("La fecha de inicio debe ser anterior a la de fin", true); return; }
+
+            showToast("Consultando a la nube...");
+            toggleVerifLoader(true);
+
+            try {
+                const q = query(collection(db, "verificaciones"), where("__name__", ">=", start), where("__name__", "<=", end));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    alert("No se encontraron verificaciones en la nube para estas fechas.");
+                    toggleVerifLoader(false); return;
+                }
+
+                const detalle = [];
+                const resumen = [];
+
+                querySnapshot.forEach((docSnap) => {
+                    const fecha = docSnap.id;
+                    const data = docSnap.data();
+                    const items = data.items || [];
+                    const obs = data.observaciones || {};
+                    const responsable = data.responsable || "";
+
+                    items.forEach(item => {
+                        detalle.push({
+                            "Fecha": fecha,
+                            "Responsable": responsable,
+                            "Área": item.area,
+                            "Ítem": item.item,
+                            "Estado": item.ok ? "Cumple" : "Pendiente",
+                            "Observación del área": obs[item.area] || ""
+                        });
+                    });
+
+                    const total = items.length;
+                    const hechos = items.filter(i => i.ok).length;
+                    resumen.push({
+                        "Fecha": fecha,
+                        "Responsable": responsable,
+                        "Ítems verificados": hechos,
+                        "Total de ítems": total,
+                        "% Cumplimiento": total ? Math.round((hechos / total) * 100) / 100 : 0
+                    });
+                });
+
+                if (detalle.length === 0) {
+                    alert("Se encontraron fechas en la nube, pero no hay ítems registrados.");
+                    toggleVerifLoader(false); return;
+                }
+
+                resumen.sort((a, b) => a.Fecha.localeCompare(b.Fecha));
+
+                const libro = XLSX.utils.book_new();
+                const hojaResumen = XLSX.utils.json_to_sheet(resumen);
+                const hojaDetalle = XLSX.utils.json_to_sheet(detalle);
+                XLSX.utils.book_append_sheet(libro, hojaResumen, "Resumen");
+                XLSX.utils.book_append_sheet(libro, hojaDetalle, "Detalle");
+                XLSX.writeFile(libro, `Verificacion_Diaria_CEV_${start}_al_${end}.xlsx`);
+                showToast("Excel descargado correctamente");
+
+            } catch (error) {
+                alert("Hubo un problema al descargar los datos de la nube.");
+            } finally {
+                toggleVerifLoader(false);
+            }
+        }
+
+        // ==========================================
+        // 4. ADMINISTRACIÓN DE USUARIOS Y ACCESOS
+        // ==========================================
+        // Colección en Firestore:
+        //   usuarios/{uid} → { nombre, correo, activo, admin, insumos, pedidos, verificacion, creado }
+        // La lista de usuarios se lee de esta colección (Firebase Auth no permite
+        // listar cuentas desde el navegador). Las cuentas nuevas se crean con una
+        // instancia secundaria de Firebase para no cerrar la sesión de la admin.
+        // ─────────────────────────────────────────────────────────────────────
+        let nuevoPermisosSel = {};
+
+        window.toggleNuevaClave = function() {
+            const input = document.getElementById('nuevo-clave');
+            const icon = document.getElementById('nuevo-clave-icon');
+            if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+        };
+
+        function renderNuevoPermisos() {
+            const cont = document.getElementById('nuevo-permisos');
+            cont.innerHTML = '';
+            MODULOS.forEach(m => {
+                const marcado = nuevoPermisosSel[m.id] === true;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => { nuevoPermisosSel[m.id] = !marcado; renderNuevoPermisos(); };
+                btn.className = `flex items-center gap-2 px-3 py-2 rounded-lg border text-xs sm:text-sm font-semibold transition-colors ${marcado ? 'bg-blue-50 border-[#154390] text-[#154390]' : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'}`;
+                btn.innerHTML = `
+                    <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${marcado ? 'bg-[#154390] border-[#154390] text-white' : 'bg-white border-gray-300 text-transparent'}">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </span>
+                    <i class="fa-solid ${m.icono}"></i> ${m.nombre}`;
+                cont.appendChild(btn);
+            });
+        }
+
+        window.initAdminApp = function() {
+            nuevoPermisosSel = {};
+            MODULOS.forEach(m => nuevoPermisosSel[m.id] = true);
+            renderNuevoPermisos();
+            cargarUsuarios();
+        };
+
+        window.crearUsuario = async function() {
+            const nombre = document.getElementById('nuevo-nombre').value.trim();
+            const correo = document.getElementById('nuevo-correo').value.trim().toLowerCase();
+            const clave  = document.getElementById('nuevo-clave').value;
+            const btn = document.getElementById('btn-crear-usuario');
+
+            if (!nombre) { showToast("Escribe el nombre de la persona.", true); return; }
+            if (!correo) { showToast("Escribe el correo.", true); return; }
+            if (clave.length < 6) { showToast("La contraseña debe tener al menos 6 caracteres.", true); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando...';
+
+            // App secundaria para no cerrar la sesión de la administradora
+            let secondaryApp = null;
+            try {
+                secondaryApp = initializeApp(firebaseConfig, "Secondary_" + Date.now());
+                const secondaryAuth = getAuth(secondaryApp);
+                await setPersistence(secondaryAuth, inMemoryPersistence);
+                const cred = await createUserWithEmailAndPassword(secondaryAuth, correo, clave);
+                const uid = cred.user.uid;
+
+                const perfil = {
+                    nombre: nombre,
+                    correo: correo,
+                    activo: true,
+                    admin: false,
+                    creado: new Date().toISOString()
+                };
+                MODULOS.forEach(m => perfil[m.id] = nuevoPermisosSel[m.id] === true);
+
+                await setDoc(doc(db, "usuarios", uid), perfil);
+                await signOut(secondaryAuth);
+
+                document.getElementById('nuevo-nombre').value = '';
+                document.getElementById('nuevo-correo').value = '';
+                document.getElementById('nuevo-clave').value = '';
+                nuevoPermisosSel = {};
+                MODULOS.forEach(m => nuevoPermisosSel[m.id] = true);
+                renderNuevoPermisos();
+
+                showToast(`Usuario "${nombre}" creado correctamente.`);
+                cargarUsuarios();
+            } catch (error) {
+                let msg = "No se pudo crear el usuario.";
+                if (error.code === "auth/email-already-in-use") msg = "Ese correo ya está registrado.";
+                else if (error.code === "auth/invalid-email") msg = "El correo no es válido.";
+                else if (error.code === "auth/weak-password") msg = "La contraseña es demasiado débil.";
+                showToast(msg, true);
+                console.error("Error creando usuario:", error);
+            } finally {
+                if (secondaryApp) { try { await deleteApp(secondaryApp); } catch(e){} }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> Crear usuario';
+            }
+        };
+
+        window.cargarUsuarios = async function() {
+            const cont = document.getElementById('usuarios-container');
+            cont.innerHTML = '<div class="text-center py-6"><div class="loader mx-auto mb-3"></div><p class="text-gray-500 font-semibold text-sm">Cargando usuarios...</p></div>';
+
+            try {
+                const snap = await getDocs(collection(db, "usuarios"));
+                const usuarios = [];
+                snap.forEach(d => usuarios.push({ uid: d.id, ...d.data() }));
+                usuarios.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+                if (usuarios.length === 0) {
+                    cont.innerHTML = '<div class="text-center py-8 text-gray-400 italic text-sm border border-gray-200 rounded-xl"><i class="fa-solid fa-user-slash text-3xl mb-2 opacity-50"></i><br>Aún no has creado usuarios con permisos. Las cuentas que ya usaban la app siguen entrando con acceso completo.</div>';
+                    return;
+                }
+
+                cont.innerHTML = '';
+                usuarios.forEach(u => {
+                    const activo = u.activo !== false;
+                    const permisosBtns = MODULOS.map(m => {
+                        const on = u[m.id] === true;
+                        return `<button onclick="togglePermisoUsuario('${u.uid}','${m.id}')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${on ? 'bg-blue-50 border-[#154390] text-[#154390]' : 'bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100'}">
+                            <i class="fa-solid ${on ? 'fa-circle-check' : 'fa-circle'} text-[10px]"></i> ${m.nombre}
+                        </button>`;
+                    }).join('');
+
+                    const card = document.createElement('div');
+                    card.className = `rounded-xl border p-4 ${activo ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-300 opacity-70'}`;
+                    card.innerHTML = `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm sm:text-base flex items-center gap-2">
+                                    ${u.nombre || '(sin nombre)'}
+                                    ${u.admin ? '<span class="text-[10px] font-bold bg-[#154390] text-white px-2 py-0.5 rounded-full uppercase">Admin</span>' : ''}
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">${activo ? 'Activo' : 'Inactivo'}</span>
+                                </p>
+                                <p class="text-xs text-gray-500 mt-0.5">${u.correo || ''}</p>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="restablecerClave('${(u.correo || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg border border-gray-300 transition-colors flex items-center gap-1" title="Enviar correo de restablecimiento">
+                                    <i class="fa-solid fa-key"></i> Contraseña
+                                </button>
+                                <button onclick="toggleActivoUsuario('${u.uid}', ${activo})" class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1 ${activo ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'}">
+                                    <i class="fa-solid ${activo ? 'fa-ban' : 'fa-circle-check'}"></i> ${activo ? 'Desactivar' : 'Activar'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">${u.admin ? '<span class="text-xs text-gray-400 italic">La administradora tiene acceso a todo.</span>' : permisosBtns}</div>
+                    `;
+                    cont.appendChild(card);
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="text-center py-6 text-red-500 bg-red-50 rounded-xl border border-red-200 text-sm"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br><b>Error al cargar usuarios</b><br>Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        };
+
+        window.togglePermisoUsuario = async function(uid, modulo) {
+            try {
+                const snap = await getDoc(doc(db, "usuarios", uid));
+                const actual = snap.exists() ? (snap.data()[modulo] === true) : false;
+                await setDoc(doc(db, "usuarios", uid), { [modulo]: !actual }, { merge: true });
+                cargarUsuarios();
+            } catch (error) {
+                showToast("No se pudo actualizar el permiso.", true);
+                console.error(error);
+            }
+        };
+
+        window.toggleActivoUsuario = async function(uid, activoActual) {
+            const accion = activoActual ? "desactivar" : "activar";
+            if (!confirm(`¿Deseas ${accion} el acceso de este usuario?`)) return;
+            try {
+                await setDoc(doc(db, "usuarios", uid), { activo: !activoActual }, { merge: true });
+                showToast(`Usuario ${activoActual ? 'desactivado' : 'activado'}.`);
+                cargarUsuarios();
+            } catch (error) {
+                showToast("No se pudo cambiar el estado.", true);
+                console.error(error);
+            }
+        };
+
+        window.restablecerClave = async function(correo) {
+            if (!correo) { showToast("Este usuario no tiene correo registrado.", true); return; }
+            if (!confirm(`Se enviará un correo de restablecimiento a:\n${correo}`)) return;
+            try {
+                await sendPasswordResetEmail(auth, correo);
+                showToast("Correo de restablecimiento enviado.");
+            } catch (error) {
+                showToast("No se pudo enviar el correo.", true);
+                console.error(error);
+            }
+        };
 
         // --- SISTEMA DE NOTIFICACIONES ---
         window.showToast = function(message, isError = false) {
