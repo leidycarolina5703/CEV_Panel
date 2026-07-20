@@ -1980,7 +1980,10 @@
             try {
                 const snap = await getDocs(collection(db, "usuarios"));
                 const usuarios = [];
-                snap.forEach(d => usuarios.push({ uid: d.id, ...d.data() }));
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data.eliminado !== true) usuarios.push({ uid: d.id, ...data });
+                });
                 usuarios.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
                 if (usuarios.length === 0) {
@@ -2010,12 +2013,18 @@
                                 </p>
                                 <p class="text-xs text-gray-500 mt-0.5">${u.correo || ''}</p>
                             </div>
-                            <div class="flex gap-2 shrink-0">
+                            <div class="flex flex-wrap gap-2 shrink-0">
+                                <button onclick="editarUsuario('${u.uid}', '${(u.nombre || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg border border-gray-300 transition-colors flex items-center gap-1" title="Editar el nombre visible">
+                                    <i class="fa-solid fa-pen"></i> Editar
+                                </button>
                                 <button onclick="restablecerClave('${(u.correo || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg border border-gray-300 transition-colors flex items-center gap-1" title="Enviar correo de restablecimiento">
                                     <i class="fa-solid fa-key"></i> Contraseña
                                 </button>
-                                <button onclick="toggleActivoUsuario('${u.uid}', ${activo})" class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1 ${activo ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'}">
+                                <button onclick="toggleActivoUsuario('${u.uid}', ${activo})" class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1 ${activo ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'}">
                                     <i class="fa-solid ${activo ? 'fa-ban' : 'fa-circle-check'}"></i> ${activo ? 'Desactivar' : 'Activar'}
+                                </button>
+                                <button onclick="eliminarUsuario('${u.uid}', '${(u.nombre || u.correo || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> Eliminar
                                 </button>
                             </div>
                         </div>
@@ -2062,6 +2071,36 @@
                 showToast("Correo de restablecimiento enviado.");
             } catch (error) {
                 showToast("No se pudo enviar el correo.", true);
+                console.error(error);
+            }
+        };
+
+        window.editarUsuario = async function(uid, nombreActual) {
+            const nuevo = prompt("Nombre visible del usuario:", nombreActual || "");
+            if (nuevo === null) return;               // canceló
+            const limpio = nuevo.trim();
+            if (limpio === "") { showToast("El nombre no puede quedar vacío.", true); return; }
+            if (limpio === nombreActual) return;      // sin cambios
+            try {
+                await setDoc(doc(db, "usuarios", uid), { nombre: limpio }, { merge: true });
+                showToast("Nombre actualizado.");
+                cargarUsuarios();
+            } catch (error) {
+                showToast("No se pudo actualizar el nombre.", true);
+                console.error(error);
+            }
+        };
+
+        window.eliminarUsuario = async function(uid, nombre) {
+            if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nDejará de aparecer en la lista y no podrá volver a iniciar sesión.`)) return;
+            try {
+                // Baja segura: se marca eliminado e inactivo. onAuthStateChanged
+                // bloquea el acceso al ver activo:false.
+                await setDoc(doc(db, "usuarios", uid), { activo: false, eliminado: true }, { merge: true });
+                showToast(`Usuario "${nombre}" eliminado.`);
+                cargarUsuarios();
+            } catch (error) {
+                showToast("No se pudo eliminar el usuario.", true);
                 console.error(error);
             }
         };
