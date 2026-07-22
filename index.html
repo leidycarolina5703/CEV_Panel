@@ -733,6 +733,17 @@
         //   aunque todavía no tenga documento en la colección "usuarios".
         const ADMIN_EMAILS = ["servicioalclientecevmascotas@gmail.com"];
 
+        // ==========================================
+        // ENVÍO AUTOMÁTICO DEL PEDIDO POR CORREO
+        // ==========================================
+        // ▸ Pega aquí la URL del Apps Script (la que termina en /exec) para que el
+        //   pedido se envíe SOLO, sin abrir Gmail ni pulsar "Enviar".
+        //   Si se deja vacío, la app sigue funcionando como antes: abre Gmail
+        //   con el correo listo para que lo envíes a mano.
+        const URL_ENVIO_CORREO = "https://script.google.com/macros/s/AKfycbwxhibvAIqvCDCwMLOvII_mBglomqk9m6UxVxckHAbgzY417o3fQapisEIYi3nxf5OY6w/exec";
+        // ▸ Debe ser idéntica a la del Apps Script. Evita que alguien más use la URL.
+        const CLAVE_ENVIO_CORREO = "cev-pedidos-2026";
+
         // ▸ Módulos que se pueden asignar con casillas a cada usuario.
         const MODULOS = [
             { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos" },
@@ -1618,15 +1629,45 @@
                 const cuerpoCorreo = encodeURIComponent(textoPlano);
                 
                 const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailDestino}&su=${asunto}&body=${cuerpoCorreo}`;
-                
-                showToast("¡Pedido guardado! Abriendo Gmail...");
-                
+
+                // Limpiar el borrador (el pedido ya quedó guardado en el historial)
                 pedidoActual = [];
                 await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: [] });
                 document.getElementById('draft-badge').classList.add('hidden');
                 renderOrderTable();
 
-                setTimeout(() => { window.open(gmailUrl, '_blank'); }, 1200);
+                if (URL_ENVIO_CORREO) {
+                    // --- Envío automático: no abre Gmail ---
+                    showToast("Enviando pedido por correo...");
+                    try {
+                        // text/plain evita el bloqueo de CORS con Apps Script
+                        const resp = await fetch(URL_ENVIO_CORREO, {
+                            method: "POST",
+                            headers: { "Content-Type": "text/plain;charset=utf-8" },
+                            body: JSON.stringify({
+                                clave: CLAVE_ENVIO_CORREO,
+                                para: emailDestino,
+                                asunto: "Pedido de Insumos Farmacia CEV",
+                                cuerpo: textoPlano
+                            })
+                        });
+                        const r = await resp.json().catch(() => null);
+                        if (r && r.ok) {
+                            showToast("¡Pedido enviado y guardado!");
+                        } else {
+                            showToast("Pedido guardado, pero el correo no salió. Reenvíalo desde 'Ver Pedidos Enviados'.", true);
+                            console.error("Respuesta del envío:", r);
+                        }
+                    } catch (err) {
+                        // No se reabre Gmail para evitar enviar el pedido dos veces.
+                        showToast("Pedido guardado, pero no se pudo enviar el correo. Reenvíalo desde 'Ver Pedidos Enviados'.", true);
+                        console.error("Error al enviar el correo:", err);
+                    }
+                } else {
+                    // --- Modo actual: abre Gmail para enviarlo a mano ---
+                    showToast("¡Pedido guardado! Abriendo Gmail...");
+                    setTimeout(() => { window.open(gmailUrl, '_blank'); }, 1200);
+                }
 
             } catch (error) {
                 console.error("Error al guardar el historial:", error);
