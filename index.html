@@ -440,6 +440,14 @@
                 <h2 class="text-xl font-bold text-gray-800 text-center">Examen ortopédico</h2>
                 <p class="text-gray-500 text-center text-sm">Examen ortopédico en pequeños animales, con imágenes de apoyo.</p>
             </button>
+
+            <button onclick="openNeuro()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 text-center">Valoración neurológica</h2>
+                <p class="text-gray-500 text-center text-sm">Examen neurológico completo por paciente.</p>
+            </button>
         </div>
 
         <!-- MÓDULO MONITOREO ANESTÉSICO -->
@@ -769,6 +777,69 @@
                     <i class="fa-solid fa-file-excel"></i> Descargar Excel
                 </button>
                 <button onclick="exportarOrtoPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- MÓDULO VALORACIÓN NEUROLÓGICA -->
+        <div id="fmt-neuro" class="hidden space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button onclick="volverSelectorFormatos()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-brain"></i></div>
+                    <h2 class="text-lg font-bold text-[#154390]">Valoración neurológica</h2>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="nuevoNeuro()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-file-circle-plus"></i> Nuevo paciente
+                    </button>
+                    <button onclick="abrirNeuroGuardados()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-folder-open"></i> Guardados
+                    </button>
+                </div>
+            </div>
+
+            <!-- LISTA DE VALORACIONES GUARDADAS -->
+            <div id="neuro-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Valoraciones guardadas</h2>
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
+                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="neuro-desde" class="fmt-in"></div>
+                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="neuro-hasta" class="fmt-in"></div>
+                    <div class="flex gap-2">
+                        <button onclick="abrirNeuroGuardados()" class="px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                        <button onclick="limpiarFiltroNeuro()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                    </div>
+                </div>
+                <div id="neuro-lista-container" class="space-y-2"></div>
+            </div>
+
+            <!-- Datos del paciente -->
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-paw"></i> Datos del paciente</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div><label class="fmt-lbl">Nombre</label><input id="n-nombre" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">HC</label><input id="n-hc" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Fecha</label><input type="date" id="n-fecha" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Edad</label><input id="n-edad" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Sexo</label>
+                        <select id="n-sexo" class="fmt-in"><option value=""></option><option>Macho</option><option>Hembra</option></select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Secciones generadas -->
+            <div id="n-secciones" class="space-y-4 sm:space-y-6"></div>
+
+            <!-- Acciones -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="guardarNeuro()" id="btn-guardar-neuro" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
+                </button>
+                <button onclick="exportarNeuroExcel()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Descargar Excel
+                </button>
+                <button onclick="exportarNeuroPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Descargar PDF
                 </button>
             </div>
@@ -2637,6 +2708,8 @@
 
         window.openMonitoreo = function() {
             document.getElementById('fmt-selector').classList.add('hidden');
+            document.getElementById('fmt-ortopedico').classList.add('hidden');
+            document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.remove('hidden');
             prepararFormularioMonitoreo();
             abrirFormatosGuardados();
@@ -2645,6 +2718,7 @@
         window.volverSelectorFormatos = function() {
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
+            document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-selector').classList.remove('hidden');
         };
 
@@ -2667,6 +2741,7 @@
             // Al entrar al módulo se muestra el selector de formatos
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
+            document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-selector').classList.remove('hidden');
             document.getElementById('fmt-lista').classList.add('hidden');
         };
@@ -3305,6 +3380,7 @@
         window.openOrtopedico = function() {
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.add('hidden');
+            document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.remove('hidden');
             prepararFormularioOrto();
             abrirOrtoGuardados();
@@ -3725,6 +3801,453 @@
                 if (!pdf) return;
                 const nombre = (d.paciente || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
                 pdf.save(`Examen_Ortopedico_${nombre}_${d.fecha || ''}.pdf`);
+            } catch (error) {
+                showToast("No se pudo generar el PDF.", true);
+                console.error(error);
+            }
+        };
+
+        // ==========================================
+        // 7. FORMATO — VALORACIÓN NEUROLÓGICA
+        // ==========================================
+        // Colección en Firestore: formatos_neurologia/{id}
+        // Las listas desplegables son las mismas del Excel original.
+        const NEURO_OPCIONES = {
+            si_no:   ["SI", "NO"],
+            escala:  ["0", "1", "2", "3", "4"],
+            estado:  ["Alerta", "Deprimido", "Estuporoso", "Comatoso", "Delirio"],
+            postura: ["Patas", "Decúbito lateral", "Decúbito esternal"]
+        };
+        const NEURO_SECCIONES = [
+            { id: "general", titulo: "Observaciones generales", icono: "fa-clipboard-list", campos: [
+                { id: "musculatura",    label: "Musculatura",             tipo: "texto" },
+                { id: "estado_mental",  label: "Estado mental",           tipo: "estado" },
+                { id: "postura",        label: "Postura",                 tipo: "postura" },
+                { id: "riesgo",         label: "Riesgo de manipulación",  tipo: "si_no" },
+                { id: "desplazamiento", label: "Desplazamiento",          tipo: "si_no" },
+                { id: "simetria",       label: "Apariencia simetría",     tipo: "si_no" },
+                { id: "tono",           label: "Tono",                    tipo: "si_no" },
+                { id: "ataxia",         label: "Ataxia",                  tipo: "si_no" },
+                { id: "claudica",       label: "Claudica",                tipo: "si_no" },
+                { id: "paresis",        label: "Paresis",                 tipo: "si_no" }
+            ]},
+            { id: "pares", titulo: "Pares craneales", icono: "fa-diagram-project", bloques: [
+                { titulo: "I Olfatorio", campos: [
+                    { id: "olfatorio", label: "Olfatorio", tipo: "texto" }
+                ]},
+                { titulo: "II Nervio óptico", campos: [
+                    { id: "rpl_der_directo",    label: "Reflejo pupilar luminoso — Derecho directo",     tipo: "si_no" },
+                    { id: "rpl_der_consensual", label: "Reflejo pupilar luminoso — Derecho consensual",  tipo: "si_no" },
+                    { id: "rpl_izq_directo",    label: "Reflejo pupilar luminoso — Izquierdo directo",   tipo: "si_no" },
+                    { id: "rpl_izq_consensual", label: "Reflejo pupilar luminoso — Izquierdo consensual",tipo: "si_no" },
+                    { id: "amenaza",            label: "Respuesta a la amenaza",                          tipo: "si_no" },
+                    { id: "colocacion_visual",  label: "Respuesta de colocación visual",                  tipo: "si_no" },
+                    { id: "fijacion",           label: "Respuesta de fijación",                           tipo: "si_no" },
+                    { id: "oftalmoscopico",     label: "Examen oftalmoscópico",                           tipo: "si_no" }
+                ]},
+                { titulo: "III Nervio oculomotor", campos: [
+                    { id: "rpz_der_directo",    label: "Reflejo pupilar a la luz — Derecho directo",     tipo: "si_no" },
+                    { id: "rpz_der_consensual", label: "Reflejo pupilar a la luz — Derecho consensual",  tipo: "si_no" },
+                    { id: "rpz_izq_directo",    label: "Reflejo pupilar a la luz — Izquierdo directo",   tipo: "si_no" },
+                    { id: "rpz_izq_consensual", label: "Reflejo pupilar a la luz — Izquierdo consensual",tipo: "si_no" },
+                    { id: "estrabismo_ventro",  label: "Estrabismo ventrolateral",                        tipo: "si_no" },
+                    { id: "ptosis",             label: "Ptosis palpebral",                                tipo: "si_no" }
+                ]},
+                { titulo: "IV Nervio troclear", campos: [
+                    { id: "estrabismo_dorso", label: "Estrabismo dorsolateral / dorsomedial", tipo: "si_no" }
+                ]},
+                { titulo: "V Trigémino", campos: [
+                    { id: "mov_mandibula",     label: "Movimiento mandíbula",                tipo: "si_no" },
+                    { id: "mandibula_caida",   label: "Mandíbula caída",                     tipo: "si_no" },
+                    { id: "atrofia_maseteros", label: "Atrofia maseteros y temporal",        tipo: "si_no" },
+                    { id: "reflejo_palpebral", label: "Reflejo palpebral",                   tipo: "si_no" },
+                    { id: "reflejo_corneal",   label: "Reflejo corneal",                     tipo: "si_no" }
+                ]},
+                { titulo: "VI Abducens", campos: [
+                    { id: "estrabismo_medial",  label: "Estrabismo medial",     tipo: "si_no" },
+                    { id: "reflejo_nictitante", label: "Reflejo nictitante",    tipo: "si_no" }
+                ]},
+                { titulo: "VII Facial", campos: [
+                    { id: "f_amenaza",   label: "Reflejo de amenaza",  tipo: "si_no" },
+                    { id: "f_palpebral", label: "Reflejo palpebral",   tipo: "si_no" },
+                    { id: "f_corneal",   label: "Reflejo corneal",     tipo: "si_no" },
+                    { id: "f_palmada",   label: "Reflejo de palmada",  tipo: "si_no" }
+                ]},
+                { titulo: "VIII Vestibulococlear — División coclear", campos: [
+                    { id: "c_palmada",   label: "Reflejo palmada",       tipo: "si_no" },
+                    { id: "c_bear",      label: "Test BEAR",             tipo: "si_no" },
+                    { id: "c_oaes",      label: "Test OAEs",             tipo: "si_no" },
+                    { id: "c_nistagmo",  label: "Nistagmo espontáneo",   tipo: "si_no" }
+                ]},
+                { titulo: "VIII Vestibulococlear — División vestibular", campos: [
+                    { id: "v_inclinacion", label: "Inclinación cabeza",    tipo: "si_no" },
+                    { id: "v_rolling",     label: "Rolling falling",       tipo: "si_no" },
+                    { id: "v_circling",    label: "Circling",              tipo: "si_no" },
+                    { id: "v_nistagmo",    label: "Nistagmo posicional",   tipo: "si_no" }
+                ]},
+                { titulo: "IX Glosofaríngeo", campos: [
+                    { id: "ix_gag",      label: "Gag reflejo", tipo: "si_no" },
+                    { id: "ix_disfagia", label: "Disfagia",    tipo: "si_no" }
+                ]},
+                { titulo: "X Vago", campos: [
+                    { id: "x_paralisis",  label: "Parálisis laríngea", tipo: "si_no" },
+                    { id: "x_gag",        label: "Gag reflejo",        tipo: "si_no" },
+                    { id: "x_disfagia",   label: "Disfagia",           tipo: "si_no" },
+                    { id: "x_taquicardia",label: "Taquicardia",        tipo: "si_no" }
+                ]},
+                { titulo: "XI Accesorio", campos: [
+                    { id: "xi_obs", label: "Hallazgos", tipo: "texto" }
+                ]},
+                { titulo: "XII Hipogloso", campos: [
+                    { id: "xii_lengua",  label: "Posición y movilidad de la lengua", tipo: "si_no" },
+                    { id: "xii_atrofia", label: "Atrofia muscular",                  tipo: "si_no" }
+                ]}
+            ]},
+            { id: "posturales", titulo: "Reacciones posturales", icono: "fa-person-walking", campos: [
+                { id: "cuello",          label: "Cuello",                            tipo: "si_no" },
+                { id: "nistagmus",       label: "Nistagmus",                         tipo: "si_no" },
+                { id: "propio",          label: "Propiocepción posicionamiento",     tipo: "si_no" },
+                { id: "propio_mp",       label: "Propiocepción — mp",                tipo: "si_no" },
+                { id: "propio_mt",       label: "Propiocepción — mt",                tipo: "si_no" },
+                { id: "posicionamiento", label: "Posicionamiento",                   tipo: "si_no" },
+                { id: "visual",          label: "Visual",                            tipo: "si_no" },
+                { id: "tactil",          label: "Táctil",                            tipo: "si_no" },
+                { id: "enderezamiento",  label: "Enderezamiento de decúbito",        tipo: "si_no" },
+                { id: "extensor",        label: "Extensor de rechazo",               tipo: "si_no" },
+                { id: "saltos",          label: "Saltos",                            tipo: "si_no" },
+                { id: "carretilla",      label: "Carretilla",                        tipo: "si_no" },
+                { id: "circling",        label: "Test de circling",                  tipo: "si_no" }
+            ]},
+            { id: "espinales", titulo: "Reflejos espinales", icono: "fa-bolt", nota: "Escala de 0 a 4.", campos: [
+                { id: "retirada_mti",  label: "Reflejo de retirada — mti",   tipo: "escala" },
+                { id: "retirada_mtd",  label: "Reflejo de retirada — mtd",   tipo: "escala" },
+                { id: "retirada_mpd",  label: "Reflejo de retirada — mpd",   tipo: "escala" },
+                { id: "retirada_mpi",  label: "Reflejo de retirada — mpi",   tipo: "escala" },
+                { id: "patelar_mpi",   label: "Reflejo patelar — mpi",       tipo: "escala" },
+                { id: "patelar_mpd",   label: "Reflejo patelar — mpd",       tipo: "escala" },
+                { id: "triceps_mtd",   label: "Reflejo tríceps — mtd",       tipo: "escala" },
+                { id: "triceps_mti",   label: "Reflejo tríceps — mti",       tipo: "escala" },
+                { id: "biceps_mtd",    label: "Reflejo bíceps — mtd",        tipo: "escala" },
+                { id: "biceps_mti",    label: "Reflejo bíceps — mti",        tipo: "escala" },
+                { id: "cutaneo_der",   label: "Cutáneo del tronco — derecho",tipo: "escala" },
+                { id: "cutaneo_izq",   label: "Cutáneo del tronco — izquierdo", tipo: "escala" },
+                { id: "perianal",      label: "Reflejo perianal",            tipo: "escala" },
+                { id: "cruzado_izq",   label: "Extensor cruzado — izquierdo",tipo: "escala" },
+                { id: "cruzado_der",   label: "Extensor cruzado — derecho",  tipo: "escala" }
+            ]},
+            { id: "tono", titulo: "Tono muscular", icono: "fa-dumbbell", campos: [
+                { id: "mtd", label: "mtd", tipo: "si_no" },
+                { id: "mti", label: "mti", tipo: "si_no" },
+                { id: "mpd", label: "mpd", tipo: "si_no" },
+                { id: "mpi", label: "mpi", tipo: "si_no" }
+            ]},
+            { id: "dolor", titulo: "Dolor profundo y superficial", icono: "fa-hand-dots", campos: [
+                { id: "dolor", label: "Dolor profundo y superficial", tipo: "si_no" }
+            ]}
+        ];
+        const NEURO_DATOS = ["nombre","hc","fecha","edad","sexo"];
+        let neuroIdActual = null;
+
+        window.openNeuro = function() {
+            document.getElementById('fmt-selector').classList.add('hidden');
+            document.getElementById('fmt-monitoreo').classList.add('hidden');
+            document.getElementById('fmt-ortopedico').classList.add('hidden');
+            document.getElementById('fmt-neuro').classList.remove('hidden');
+            prepararFormularioNeuro();
+            abrirNeuroGuardados();
+        };
+
+        function prepararFormularioNeuro() {
+            if (document.getElementById('n-secciones').children.length === 0) renderSeccionesNeuro();
+            if (neuroIdActual === null && !document.getElementById('n-fecha').value) {
+                const d = new Date();
+                document.getElementById('n-fecha').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            }
+        }
+
+        function campoNeuroHTML(secId, campo) {
+            const dom = `n-${secId}-${campo.id}`;
+            if (campo.tipo === "texto") {
+                return `<div><label class="fmt-lbl">${campo.label}</label><input id="${dom}" class="fmt-in"></div>`;
+            }
+            const ops = NEURO_OPCIONES[campo.tipo] || [];
+            const opts = ['<option value=""></option>'].concat(ops.map(o => `<option>${o}</option>`)).join('');
+            return `<div><label class="fmt-lbl">${campo.label}</label><select id="${dom}" class="fmt-in">${opts}</select></div>`;
+        }
+
+        function renderSeccionesNeuro() {
+            const cont = document.getElementById('n-secciones');
+            let html = '';
+            NEURO_SECCIONES.forEach(sec => {
+                html += `<section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid ${sec.icono}"></i> ${sec.titulo}</h2>`;
+                if (sec.nota) html += `<p class="text-xs text-gray-500 italic mb-3">${sec.nota}</p>`;
+                if (sec.campos) {
+                    html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">`;
+                    sec.campos.forEach(c => { html += campoNeuroHTML(sec.id, c); });
+                    html += `</div>`;
+                }
+                if (sec.bloques) {
+                    sec.bloques.forEach(b => {
+                        html += `<div class="mt-4 border border-gray-200 rounded-xl p-3 bg-gray-50/50">
+                            <p class="text-xs font-bold text-[#154390] uppercase tracking-wide mb-2">${b.titulo}</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">`;
+                        b.campos.forEach(c => { html += campoNeuroHTML(sec.id, c); });
+                        html += `</div></div>`;
+                    });
+                }
+                html += `</section>`;
+            });
+            cont.innerHTML = html;
+        }
+
+        function recorrerCamposNeuro(fn) {
+            NEURO_SECCIONES.forEach(sec => {
+                (sec.campos || []).forEach(c => fn(sec.id, c));
+                (sec.bloques || []).forEach(b => b.campos.forEach(c => fn(sec.id, c)));
+            });
+        }
+
+        function recogerNeuro() {
+            const data = {};
+            NEURO_DATOS.forEach(c => { data[c] = (document.getElementById('n-' + c)?.value || '').trim(); });
+            const campos = {};
+            recorrerCamposNeuro((secId, c) => {
+                campos[secId + '_' + c.id] = (document.getElementById(`n-${secId}-${c.id}`)?.value || '').trim();
+            });
+            data.campos = campos;
+            return data;
+        }
+
+        function volcarNeuro(data) {
+            NEURO_DATOS.forEach(c => { const el = document.getElementById('n-' + c); if (el) el.value = data[c] || ''; });
+            const campos = data.campos || {};
+            recorrerCamposNeuro((secId, c) => {
+                const el = document.getElementById(`n-${secId}-${c.id}`);
+                if (el) el.value = campos[secId + '_' + c.id] || '';
+            });
+        }
+
+        window.nuevoNeuro = function() {
+            neuroIdActual = null;
+            NEURO_DATOS.forEach(c => { const el = document.getElementById('n-' + c); if (el) el.value = ''; });
+            recorrerCamposNeuro((secId, c) => {
+                const el = document.getElementById(`n-${secId}-${c.id}`); if (el) el.value = '';
+            });
+            const d = new Date();
+            document.getElementById('n-fecha').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            document.getElementById('neuro-lista').classList.add('hidden');
+            showToast("Valoración nueva lista.");
+        };
+
+        window.guardarNeuro = async function() {
+            const data = recogerNeuro();
+            if (!data.nombre && !data.hc) { showToast("Escribe al menos el nombre o la historia clínica.", true); return; }
+            const btn = document.getElementById('btn-guardar-neuro');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const id = neuroIdActual || ("neuro_" + Date.now());
+                data.tipo = "valoracion_neurologica";
+                data.actualizado = new Date().toISOString();
+                if (!neuroIdActual) data.creado = data.actualizado;
+                await setDoc(doc(db, "formatos_neurologia", id), data, { merge: true });
+                neuroIdActual = id;
+                showToast("Valoración guardada en la nube.");
+            } catch (error) {
+                showToast("No se pudo guardar. Revisa tu conexión.", true);
+                console.error(error);
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube';
+            }
+        };
+
+        window.limpiarFiltroNeuro = function() {
+            document.getElementById('neuro-desde').value = '';
+            document.getElementById('neuro-hasta').value = '';
+            abrirNeuroGuardados();
+        };
+
+        window.abrirNeuroGuardados = async function() {
+            const panel = document.getElementById('neuro-lista');
+            const cont = document.getElementById('neuro-lista-container');
+            panel.classList.remove('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "formatos_neurologia"));
+                let items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+
+                const desde = document.getElementById('neuro-desde').value;
+                const hasta = document.getElementById('neuro-hasta').value;
+                const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0,10) : '');
+                if (desde) items = items.filter(it => fechaDe(it) >= desde);
+                if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
+
+                if (items.length === 0) {
+                    cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay valoraciones para ese rango de fechas.</div>';
+                    return;
+                }
+                items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
+                const grupos = {};
+                items.forEach(it => { const f = fechaDe(it) || 'Sin fecha'; (grupos[f] = grupos[f] || []).push(it); });
+
+                cont.innerHTML = '';
+                Object.keys(grupos).sort((a, b) => b.localeCompare(a)).forEach(fecha => {
+                    const enc = document.createElement('div');
+                    enc.className = "flex items-center gap-2 mt-3 mb-1";
+                    enc.innerHTML = `<i class="fa-solid fa-calendar-day text-[#154390]"></i><span class="text-sm font-bold text-[#154390]">${fecha}</span><span class="text-xs text-gray-400">(${grupos[fecha].length})</span>`;
+                    cont.appendChild(enc);
+                    grupos[fecha].forEach(it => {
+                        const row = document.createElement('div');
+                        row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
+                        row.innerHTML = `
+                            <div class="min-w-0">
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin nombre)'}</p>
+                                <p class="text-xs text-gray-500">${it.hc ? 'HC ' + it.hc : ''}</p>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="cargarNeuro('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                                <button onclick="descargarNeuroPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                                <button onclick="eliminarNeuro('${it.id}', '${(it.nombre || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>`;
+                        cont.appendChild(row);
+                    });
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        };
+
+        window.cargarNeuro = async function(id) {
+            try {
+                const snap = await getDoc(doc(db, "formatos_neurologia", id));
+                if (!snap.exists()) { showToast("Esa valoración ya no existe.", true); return; }
+                neuroIdActual = id;
+                volcarNeuro(snap.data());
+                document.getElementById('neuro-lista').classList.add('hidden');
+                document.getElementById('fmt-neuro').scrollIntoView({ behavior: 'smooth' });
+                showToast("Valoración cargada.");
+            } catch (error) {
+                showToast("No se pudo abrir la valoración.", true);
+                console.error(error);
+            }
+        };
+
+        window.eliminarNeuro = async function(id, nombre) {
+            if (!confirm(`¿Eliminar la valoración de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, "formatos_neurologia", id));
+                if (neuroIdActual === id) nuevoNeuro();
+                showToast("Valoración eliminada.");
+                abrirNeuroGuardados();
+            } catch (error) {
+                showToast("No se pudo eliminar.", true);
+                console.error(error);
+            }
+        };
+
+        window.exportarNeuroExcel = function() {
+            const d = recogerNeuro();
+            const filas = [];
+            const par = (a, b) => filas.push([a, b || '']);
+            filas.push(["CENTRO DE ESPECIALISTAS VETERINARIOS — VALORACIÓN NEUROLÓGICA", ""]);
+            filas.push(["", ""]);
+            filas.push(["DATOS DEL PACIENTE", ""]);
+            par("Nombre", d.nombre); par("HC", d.hc); par("Fecha", d.fecha);
+            par("Edad", d.edad); par("Sexo", d.sexo);
+            const campos = d.campos || {};
+            NEURO_SECCIONES.forEach(sec => {
+                filas.push(["", ""]);
+                filas.push([sec.titulo.toUpperCase(), ""]);
+                (sec.campos || []).forEach(c => par(c.label, campos[sec.id + '_' + c.id]));
+                (sec.bloques || []).forEach(b => {
+                    filas.push([b.titulo, ""]);
+                    b.campos.forEach(c => par("   " + c.label, campos[sec.id + '_' + c.id]));
+                });
+            });
+            const hoja = XLSX.utils.aoa_to_sheet(filas);
+            hoja['!cols'] = [{ wch: 48 }, { wch: 26 }];
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Valoración neurológica");
+            const nombre = (d.nombre || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
+            XLSX.writeFile(libro, `Valoracion_Neurologica_${nombre}_${d.fecha || ''}.xlsx`);
+            showToast("Excel descargado.");
+        };
+
+        function construirNeuroPDF(d) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                showToast("No se pudo cargar el generador de PDF. Revisa tu conexión.", true);
+                return null;
+            }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const AZUL = [21, 67, 144];
+            const M = 40;
+            const anchoUtil = pdf.internal.pageSize.getWidth() - M * 2;
+
+            const altoLogo = logoPDF(pdf, M, 22, 112);
+            pdf.setFontSize(14); pdf.setTextColor(...AZUL); pdf.setFont(undefined, 'bold');
+            pdf.text("Centro de Especialistas Veterinarios", M + 126, 46);
+            pdf.setFontSize(11); pdf.setTextColor(60, 60, 60); pdf.setFont(undefined, 'normal');
+            pdf.text("Valoración neurológica", M + 126, 62);
+            const yLinea = Math.max(70, 22 + altoLogo + 8);
+            pdf.setDrawColor(...AZUL); pdf.setLineWidth(1.5); pdf.line(M, yLinea, M + anchoUtil, yLinea);
+            let y = yLinea + 16;
+
+            const tabla = (titulo, filas) => {
+                pdf.autoTable({
+                    startY: y,
+                    head: [[{ content: titulo, colSpan: 2, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
+                    body: filas.map(f => [f[0], f[1] || '']),
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40] },
+                    columnStyles: { 0: { cellWidth: 300, fontStyle: 'bold', textColor: [90, 90, 90] } },
+                    margin: { left: M, right: M }
+                });
+                y = pdf.lastAutoTable.finalY + 10;
+            };
+
+            tabla("DATOS DEL PACIENTE", [
+                ["Nombre", d.nombre], ["HC", d.hc], ["Fecha", d.fecha],
+                ["Edad", d.edad], ["Sexo", d.sexo]
+            ]);
+            const campos = d.campos || {};
+            NEURO_SECCIONES.forEach(sec => {
+                if (sec.campos) {
+                    tabla(sec.titulo.toUpperCase(), sec.campos.map(c => [c.label, campos[sec.id + '_' + c.id]]));
+                }
+                if (sec.bloques) {
+                    sec.bloques.forEach(b => {
+                        tabla((sec.titulo + " — " + b.titulo).toUpperCase(),
+                              b.campos.map(c => [c.label, campos[sec.id + '_' + c.id]]));
+                    });
+                }
+            });
+            sellarLogoPaginas(pdf, M);
+            return pdf;
+        }
+
+        window.exportarNeuroPDF = function() {
+            const d = recogerNeuro();
+            if (!d.nombre && !d.hc) { showToast("Escribe al menos el nombre o la historia clínica.", true); return; }
+            showToast("Generando PDF...");
+            const pdf = construirNeuroPDF(d);
+            if (!pdf) return;
+            const nombre = (d.nombre || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
+            pdf.save(`Valoracion_Neurologica_${nombre}_${d.fecha || ''}.pdf`);
+        };
+
+        window.descargarNeuroPDF = async function(id) {
+            try {
+                showToast("Generando PDF...");
+                const snap = await getDoc(doc(db, "formatos_neurologia", id));
+                if (!snap.exists()) { showToast("Esa valoración ya no existe.", true); return; }
+                const d = snap.data();
+                const pdf = construirNeuroPDF(d);
+                if (!pdf) return;
+                const nombre = (d.nombre || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
+                pdf.save(`Valoracion_Neurologica_${nombre}_${d.fecha || ''}.pdf`);
             } catch (error) {
                 showToast("No se pudo generar el PDF.", true);
                 console.error(error);
