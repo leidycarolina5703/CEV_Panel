@@ -4254,6 +4254,203 @@
             }
         };
 
+        // ==========================================
+        // 8. BORRADORES AUTOMÁTICOS DE FORMATOS
+        // ==========================================
+        // Mientras se llena un formato, lo escrito se guarda solo en la nube
+        // (colección "borradores"). Si la persona cierra la app o se le va la
+        // señal, al volver a entrar se le ofrece recuperar lo que había.
+        // El borrador es propio de cada usuario y se borra al guardar el formato.
+        const BORRADORES = {
+            monitoreo:  { pantalla: 'fmt-monitoreo',  etiqueta: 'monitoreo anestésico',
+                          recoger: () => recogerFormato(), volcar: d => volcarFormato(d) },
+            ortopedico: { pantalla: 'fmt-ortopedico', etiqueta: 'examen ortopédico',
+                          recoger: () => recogerOrto(),    volcar: d => volcarOrto(d) },
+            neuro:      { pantalla: 'fmt-neuro',      etiqueta: 'valoración neurológica',
+                          recoger: () => recogerNeuro(),   volcar: d => volcarNeuro(d) }
+        };
+        let borradorTimer = null;
+        let hayCambiosSinGuardar = false;
+
+        function idBorrador(tipo) {
+            const u = auth.currentUser;
+            return u ? `${u.uid}_${tipo}` : null;
+        }
+
+        // ¿El formato tiene algo escrito? (evita guardar borradores vacíos)
+        function tieneContenido(v) {
+            if (v === null || v === undefined) return false;
+            if (typeof v === 'string') return v.trim() !== '';
+            if (Array.isArray(v)) return v.some(tieneContenido);
+            if (typeof v === 'object') {
+                return Object.keys(v).some(k => !['tipo','creado','actualizado','fecha'].includes(k) && tieneContenido(v[k]));
+            }
+            return false;
+        }
+
+        function marcarCambioBorrador(tipo) {
+            hayCambiosSinGuardar = true;
+            clearTimeout(borradorTimer);
+            borradorTimer = setTimeout(() => guardarBorrador(tipo), 1500);
+        }
+
+        async function guardarBorrador(tipo) {
+            const id = idBorrador(tipo);
+            if (!id) return;
+            try {
+                const datos = BORRADORES[tipo].recoger();
+                if (!tieneContenido(datos)) { await limpiarBorrador(tipo); return; }
+                await setDoc(doc(db, "borradores", id), {
+                    tipo: tipo,
+                    datos: JSON.stringify(datos),
+                    actualizado: new Date().toISOString()
+                });
+                const av = document.getElementById('borrador-estado-' + tipo);
+                if (av) {
+                    av.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardado como pendiente';
+                    av.classList.remove('hidden');
+                }
+            } catch (e) { console.error("No se pudo guardar el borrador:", e); }
+        }
+
+        async function limpiarBorrador(tipo) {
+            const id = idBorrador(tipo);
+            if (!id) return;
+            hayCambiosSinGuardar = false;
+            clearTimeout(borradorTimer);
+            try { await deleteDoc(doc(db, "borradores", id)); } catch (e) { /* no existía */ }
+            const av = document.getElementById('borrador-estado-' + tipo);
+            if (av) av.classList.add('hidden');
+            ocultarAvisoBorrador(tipo);
+        }
+
+        function ocultarAvisoBorrador(tipo) {
+            const b = document.getElementById('borrador-aviso-' + tipo);
+            if (b) b.classList.add('hidden');
+        }
+
+        // Al entrar al formato, revisa si quedó algo pendiente
+        async function revisarBorrador(tipo) {
+            const id = idBorrador(tipo);
+            if (!id) return;
+            try {
+                const snap = await getDoc(doc(db, "borradores", id));
+                if (!snap.exists()) { ocultarAvisoBorrador(tipo); return; }
+                const b = snap.data();
+                const aviso = document.getElementById('borrador-aviso-' + tipo);
+                if (!aviso) return;
+                const f = b.actualizado ? new Date(b.actualizado) : null;
+                const cuando = f ? `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()} a las ${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
+                document.getElementById('borrador-fecha-' + tipo).textContent = cuando;
+                aviso.classList.remove('hidden');
+            } catch (e) { console.error("No se pudo revisar el borrador:", e); }
+        }
+
+        window.recuperarBorrador = async function(tipo) {
+            const id = idBorrador(tipo);
+            if (!id) return;
+            try {
+                const snap = await getDoc(doc(db, "borradores", id));
+                if (!snap.exists()) { showToast("Ese pendiente ya no está disponible.", true); ocultarAvisoBorrador(tipo); return; }
+                BORRADORES[tipo].volcar(JSON.parse(snap.data().datos));
+                ocultarAvisoBorrador(tipo);
+                showToast("Se recuperó lo que habías escrito.");
+            } catch (e) {
+                showToast("No se pudo recuperar el pendiente.", true);
+                console.error(e);
+            }
+        };
+
+        window.descartarBorrador = async function(tipo) {
+            if (!confirm("¿Descartar lo que quedó pendiente? No se puede recuperar después.")) return;
+            await limpiarBorrador(tipo);
+            showToast("Pendiente descartado.");
+        };
+
+        // Aviso visual dentro de cada formato + escucha de cambios
+        function prepararBorradores() {
+            Object.keys(BORRADORES).forEach(tipo => {
+                const cont = document.getElementById(BORRADORES[tipo].pantalla);
+                if (!cont) return;
+
+                const aviso = document.createElement('div');
+                aviso.id = 'borrador-aviso-' + tipo;
+                aviso.className = 'hidden bg-yellow-50 border border-yellow-300 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+                aviso.innerHTML = `
+                    <div class="flex items-start gap-2 text-sm text-yellow-800">
+                        <i class="fa-solid fa-clock-rotate-left mt-0.5"></i>
+                        <span>Tienes un <strong>${BORRADORES[tipo].etiqueta}</strong> sin terminar del <span id="borrador-fecha-${tipo}" class="font-semibold"></span>.</span>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="recuperarBorrador('${tipo}')" class="px-3 py-1.5 text-xs font-semibold bg-[#154390] text-white rounded-lg hover:bg-[#0f3268] flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Recuperar</button>
+                        <button onclick="descartarBorrador('${tipo}')" class="px-3 py-1.5 text-xs font-semibold bg-white text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100">Descartar</button>
+                    </div>`;
+                cont.insertBefore(aviso, cont.firstChild);
+
+                const estado = document.createElement('p');
+                estado.id = 'borrador-estado-' + tipo;
+                estado.className = 'hidden text-xs text-gray-400 italic text-right';
+                estado.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardado como pendiente';
+                cont.appendChild(estado);
+
+                // Cualquier cosa que se escriba o elija programa el guardado
+                cont.addEventListener('input', () => marcarCambioBorrador(tipo));
+                cont.addEventListener('change', () => marcarCambioBorrador(tipo));
+            });
+
+            // La cuadrícula del monitoreo se marca con toques, no con teclado
+            if (window.tocarCeldaIntra) {
+                const _tocar = window.tocarCeldaIntra;
+                window.tocarCeldaIntra = function(r, c) { _tocar(r, c); marcarCambioBorrador('monitoreo'); };
+            }
+            if (window.marcarParamIntra) {
+                const _marcar = window.marcarParamIntra;
+                window.marcarParamIntra = function(id, c) { _marcar(id, c); marcarCambioBorrador('monitoreo'); };
+            }
+
+            // Al guardar de verdad, el pendiente ya no hace falta
+            [['guardarFormato','monitoreo'], ['guardarOrto','ortopedico'], ['guardarNeuro','neuro']].forEach(([fn, tipo]) => {
+                if (!window[fn]) return;
+                const original = window[fn];
+                window[fn] = async function() {
+                    await original.apply(this, arguments);
+                    await limpiarBorrador(tipo);
+                };
+            });
+
+            // "Nuevo paciente" también limpia lo pendiente
+            [['nuevoFormato','monitoreo'], ['nuevoOrto','ortopedico'], ['nuevoNeuro','neuro']].forEach(([fn, tipo]) => {
+                if (!window[fn]) return;
+                const original = window[fn];
+                window[fn] = function() {
+                    const r = original.apply(this, arguments);
+                    limpiarBorrador(tipo);
+                    return r;
+                };
+            });
+
+            // Al abrir cada formato, revisar si quedó algo pendiente
+            [['openMonitoreo','monitoreo'], ['openOrtopedico','ortopedico'], ['openNeuro','neuro']].forEach(([fn, tipo]) => {
+                if (!window[fn]) return;
+                const original = window[fn];
+                window[fn] = function() {
+                    const r = original.apply(this, arguments);
+                    hayCambiosSinGuardar = false;
+                    revisarBorrador(tipo);
+                    return r;
+                };
+            });
+        }
+
+        // Aviso del navegador si se intenta cerrar con cambios sin guardar
+        window.addEventListener('beforeunload', (e) => {
+            if (!hayCambiosSinGuardar) return;
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        prepararBorradores();
+
         // --- SISTEMA DE NOTIFICACIONES ---
         window.showToast = function(message, isError = false) {
             const toast = document.getElementById('toast');
