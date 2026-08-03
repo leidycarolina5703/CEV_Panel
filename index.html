@@ -113,15 +113,6 @@
                 </div>
             </button>
 
-            <button id="card-verificacion" onclick="openChecklist()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-green-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
-                <div class="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-green-600 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-list-check"></i>
-                </div>
-                <div class="text-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Verificación Diaria</h2>
-                    <p class="text-gray-500 text-center text-sm">Ronda de orden y aseo por áreas del centro.</p>
-                </div>
-            </button>
 
             <button id="card-formatos" onclick="openFormatos()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
@@ -130,6 +121,16 @@
                 <div class="text-center">
                     <h2 class="text-xl font-bold text-gray-800 mb-2">Formatos clínicos</h2>
                     <p class="text-gray-500 text-center text-sm">Diligencia el monitoreo anestésico y otros formatos.</p>
+                </div>
+            </button>
+
+            <button id="card-laboratorio" onclick="openLaboratorio()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-teal-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-flask-vial"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Laboratorio</h2>
+                    <p class="text-gray-500 text-center text-sm">Genera cuentas de cobro de exámenes de manera automática.</p>
                 </div>
             </button>
         </div>
@@ -191,6 +192,14 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-cart-arrow-down text-red-600"></i> Insumos por reponer</span>
+                <span id="reponer-count" class="text-xs sm:text-sm font-bold bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-200">0</span>
+            </h2>
+            <div id="resumen-reponer" class="space-y-1"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
             <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 sm:mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
                 <i class="fa-solid fa-file-excel text-green-600"></i> Exportar a Excel
             </h2>
@@ -222,7 +231,7 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center justify-center sm:justify-start gap-2">
                         Pedido a Farmacia
                     </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala por Gmail</p>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala en PDF por correo</p>
                 </div>
             </div>
             
@@ -296,10 +305,25 @@
             </div>
         </div>
 
-        <button onclick="generarYEnviarCorreo()" class="w-full py-4 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors shadow-lg flex justify-center items-center gap-3 text-lg">
-            <i class="fa-brands fa-google text-2xl"></i>
-            Enviar por Gmail y Guardar
-        </button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button onclick="vistaPreviaPedido()" class="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors border border-gray-200 flex justify-center items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-blue-600"></i> Vista previa del PDF
+            </button>
+            <button onclick="enviarPedidoPorCorreo()" id="btn-enviar-pedido" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg flex justify-center items-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Enviar pedido por correo
+            </button>
+        </div>
+
+        <div id="pedido-preview-container" class="hidden bg-white rounded-xl shadow-md border border-gray-200 p-3">
+            <div class="flex justify-between items-center mb-2">
+                <p class="font-bold text-gray-700 text-sm"><i class="fa-solid fa-file-pdf text-blue-600"></i> Vista previa del PDF</p>
+                <div class="flex gap-2">
+                    <button onclick="descargarPedidoPDF()" class="text-xs font-semibold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-100"><i class="fa-solid fa-download"></i> Descargar</button>
+                    <button onclick="cerrarVistaPreviaPedido()" class="text-xs font-semibold bg-gray-100 text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-200">Cerrar</button>
+                </div>
+            </div>
+            <iframe id="pedido-preview-frame" class="w-full rounded-lg border border-gray-200 bg-gray-50" style="height:70vh;" title="Vista previa del pedido"></iframe>
+        </div>
     </div>
 
     <div id="history-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
@@ -317,93 +341,6 @@
             </div>
         </header>
         <div id="history-container" class="space-y-4">
-        </div>
-    </div>
-
-    <div id="checklist-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
-        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
-            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
-                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-green-700 flex items-center justify-center sm:justify-start gap-2">Verificación Diaria</h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1 flex items-center justify-center sm:justify-start gap-1">
-                        <i class="fa-solid fa-cloud text-green-600"></i> Guardado automático en la nube
-                    </p>
-                </div>
-            </div>
-            <div class="flex flex-col items-center sm:items-end w-full sm:w-auto gap-2">
-                <label for="verif-date" class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1 hidden sm:block">Fecha de la ronda</label>
-                <div class="flex items-center gap-2 w-full justify-center sm:justify-end">
-                    <div id="verif-spinner" class="loader hidden"></div>
-                    <input type="date" id="verif-date" class="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-green-700 font-bold shadow-sm cursor-pointer hover:bg-gray-200 transition-colors text-sm">
-                </div>
-            </div>
-        </header>
-
-        <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200">
-            <div class="flex flex-col sm:flex-row gap-4 items-end">
-                <div class="w-full sm:w-2/3">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Responsable de la ronda</label>
-                    <input type="text" id="verif-responsable" list="verif-responsables-list" placeholder="Nombre de quien verifica" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-sm font-semibold text-gray-700">
-                    <datalist id="verif-responsables-list"></datalist>
-                </div>
-                <div class="w-full sm:w-1/3 text-center sm:text-right">
-                    <span class="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Cumplimiento del día</span>
-                    <span id="verif-pct" class="text-3xl font-black text-green-700">0%</span>
-                    <span id="verif-count" class="block text-xs text-gray-500 font-medium">0 de 0 ítems</span>
-                </div>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3 overflow-hidden">
-                <div id="verif-bar" class="bg-green-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 border border-gray-200 flex flex-col sm:flex-row gap-3 justify-between items-center sticky top-0 z-10">
-            <div class="relative w-full sm:w-1/2">
-                <i class="fa-solid fa-search absolute left-3 top-2.5 sm:top-3.5 text-gray-400"></i>
-                <input type="text" id="verif-search" placeholder="Buscar área o ítem..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all bg-gray-50 text-sm">
-            </div>
-            <div class="flex w-full sm:w-auto gap-2">
-                <button onclick="expandirTodo()" class="w-full sm:w-auto px-3 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-list"></i> Ver todo
-                </button>
-                <button onclick="limpiarVerificacion()" class="w-full sm:w-auto px-3 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-trash-can"></i> Limpiar Día
-                </button>
-            </div>
-        </div>
-
-        <div id="checklist-container" class="space-y-3"></div>
-
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
-            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-1 flex items-center gap-2">
-                <i class="fa-solid fa-calendar-check"></i> Verificación Mensual
-            </h2>
-            <p class="text-gray-500 text-xs sm:text-sm mb-4 border-b border-gray-100 pb-2">Corresponde al mes de <span id="verif-mes-label" class="font-bold text-gray-700"></span></p>
-            <div id="mensual-container" class="space-y-4"></div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
-            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 sm:mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
-                <i class="fa-solid fa-file-excel text-green-600"></i> Exportar a Excel
-            </h2>
-            <div class="flex flex-col sm:flex-row items-end gap-3">
-                <div class="w-full sm:w-1/3">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Inicio</label>
-                    <input type="date" id="verif-export-start" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-gray-700 text-sm">
-                </div>
-                <div class="w-full sm:w-1/3">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
-                    <input type="date" id="verif-export-end" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-gray-700 text-sm">
-                </div>
-                <div class="w-full sm:w-1/3">
-                    <button onclick="generarExcelVerificacion()" class="w-full px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Descargar
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -911,6 +848,224 @@
         </div>
     </div>
 
+    <!-- ============================================================= -->
+    <!-- MÓDULO LABORATORIO — CUENTAS DE COBRO (servicio tercerizado)  -->
+    <!-- ============================================================= -->
+    <div id="laboratorio-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-teal-700 flex items-center gap-2">
+                        <i class="fa-solid fa-flask-vial"></i> Laboratorio
+                    </h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Cuentas de cobro de exámenes — se generan solas</p>
+                </div>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="nuevaCuenta()" class="px-4 py-2 bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-teal-200 w-full sm:w-auto justify-center">
+                    <i class="fa-solid fa-file-circle-plus"></i> Nueva
+                </button>
+                <button onclick="abrirCuentasGuardadas()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
+                    <i class="fa-solid fa-folder-open"></i> Guardadas
+                </button>
+            </div>
+        </header>
+
+        <!-- FORMULARIO -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="fmt-lbl">Fecha de la cuenta</label>
+                    <input type="date" id="lab-fecha" class="fmt-in cursor-pointer">
+                </div>
+                <div>
+                    <label class="fmt-lbl">Valor (pesos) <span class="text-gray-400 normal-case font-normal">· se calcula solo, editable</span></label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400 font-bold">$</span>
+                        <input type="text" inputmode="numeric" id="lab-valor" placeholder="0" class="fmt-in pl-7 font-bold text-teal-700">
+                    </div>
+                    <p id="lab-valor-letras" class="text-xs text-gray-500 italic mt-1"></p>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-4">
+                <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-vials text-teal-600"></i> Exámenes tomados</p>
+                <div class="flex flex-col sm:flex-row gap-2 mt-1">
+                    <input type="text" id="lab-examen-buscar" placeholder="Filtrar por nombre..." class="fmt-in sm:w-2/5">
+                    <select id="lab-examen-select" onchange="actualizarBotonBorrarExamen()" class="fmt-in flex-1 cursor-pointer"></select>
+                    <button onclick="agregarExamen()" class="px-4 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 text-sm flex items-center justify-center gap-2 shrink-0">
+                        <i class="fa-solid fa-plus"></i> Agregar
+                    </button>
+                    <button id="btn-borrar-examen" onclick="borrarExamenPersonalizado()" title="Eliminar este examen de la lista" class="hidden px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm shrink-0 flex items-center justify-center">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+                <div class="mt-2 text-right">
+                    <button type="button" onclick="mostrarNuevoExamen()" class="text-sm text-teal-700 hover:underline font-semibold inline-flex items-center gap-1">
+                        <i class="fa-solid fa-flask-vial"></i> ¿No está el examen? Agregar uno nuevo
+                    </button>
+                </div>
+                <div id="lab-nuevo-examen" class="hidden mt-2 bg-teal-50 border border-teal-200 rounded-lg p-3 flex flex-col sm:flex-row gap-2 items-stretch">
+                    <input type="text" id="lab-nuevo-nombre" placeholder="Nombre del examen" class="fmt-in flex-1 uppercase">
+                    <div class="relative sm:w-36">
+                        <span class="absolute left-3 top-2.5 text-gray-400 font-bold">$</span>
+                        <input type="text" inputmode="numeric" id="lab-nuevo-precio" placeholder="Precio" class="fmt-in pl-7">
+                    </div>
+                    <button onclick="guardarExamenNuevo()" class="px-4 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 text-sm shrink-0 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
+                    </button>
+                    <button onclick="cancelarExamenNuevo()" class="px-3 py-2 bg-white text-gray-500 rounded-lg text-sm border border-gray-300 hover:bg-gray-100 shrink-0">Cancelar</button>
+                </div>
+                <p class="text-xs text-gray-400 italic mt-1">Los exámenes que agregues aparecen con ★ y puedes borrarlos si te equivocas.</p>
+                <div class="mt-2">
+                    <button onclick="descargarExamenesExcel()" class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 text-sm flex items-center justify-center gap-2 transition-colors shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i> Descargar lista de exámenes (Excel)
+                    </button>
+                </div>
+                <div id="lab-examenes-sel" class="mt-3 space-y-1"></div>
+                <div id="lab-examenes-vacio" class="mt-3 text-center text-gray-400 italic text-xs py-2">Aún no has agregado exámenes.</div>
+                <div id="lab-examenes-total" class="hidden mt-2 flex justify-between items-center border-t border-dashed border-gray-300 pt-2 text-sm font-bold text-gray-700">
+                    <span>Total exámenes</span><span id="lab-total-num" class="text-teal-700"></span>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-4">
+                <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-user-tag text-teal-600"></i> Deudor (a quién se le cobra)</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                    <div>
+                        <label class="fmt-lbl">Nombre completo</label>
+                        <input type="text" id="lab-deudor-nombre" placeholder="Nombre completo del deudor" class="fmt-in uppercase">
+                    </div>
+                    <div>
+                        <label class="fmt-lbl">Cédula (CC)</label>
+                        <input type="text" id="lab-deudor-cc" placeholder="Número de cédula" class="fmt-in">
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-4">
+                <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-vials text-teal-600"></i> Concepto</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                    <div>
+                        <label class="fmt-lbl">Paciente</label>
+                        <input type="text" id="lab-paciente" placeholder="Nombre del paciente" class="fmt-in">
+                    </div>
+                    <div>
+                        <label class="fmt-lbl">Historia clínica</label>
+                        <input type="text" id="lab-hc" placeholder="N.º de historia clínica" class="fmt-in">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="fmt-lbl">Texto del concepto</label>
+                    <input type="text" id="lab-concepto-base" value="Realización de exámenes de laboratorio del paciente" class="fmt-in">
+                    <p class="text-xs text-gray-400 italic mt-1">El paciente, la historia clínica y los exámenes se agregan solos al final del texto.</p>
+                </div>
+                <label class="flex items-center gap-2 mt-3 cursor-pointer select-none">
+                    <input type="checkbox" id="lab-detallar" checked class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                    <span class="text-sm text-gray-600">Detallar cada examen con su valor (y qué incluye) en el concepto</span>
+                </label>
+            </div>
+
+            <!-- Datos fijos de quien cobra (colapsable) -->
+            <div class="border-t border-gray-100 pt-4">
+                <button type="button" onclick="toggleLabConfig()" class="text-sm text-teal-700 hover:underline font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-gear"></i> Datos de quien cobra y cuenta bancaria
+                    <i id="lab-config-chevron" class="fa-solid fa-chevron-down text-xs"></i>
+                </button>
+                <div id="lab-config" class="hidden mt-3 bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="fmt-lbl">Nombre de quien cobra</label>
+                            <input type="text" id="lab-acreedor-nombre" class="fmt-in uppercase">
+                        </div>
+                        <div>
+                            <label class="fmt-lbl">Cédula de quien cobra</label>
+                            <input type="text" id="lab-acreedor-cc" class="fmt-in">
+                        </div>
+                        <div>
+                            <label class="fmt-lbl">Ciudad</label>
+                            <input type="text" id="lab-ciudad" class="fmt-in">
+                        </div>
+                        <div>
+                            <label class="fmt-lbl">Cuenta bancaria</label>
+                            <input type="text" id="lab-banco" class="fmt-in">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="fmt-lbl">Correo remitente (desde el que se envía)</label>
+                            <input type="email" id="lab-remitente" placeholder="correo@gmail.com" class="fmt-in">
+                            <p class="text-[11px] text-gray-400 italic mt-1">Debe ser el correo con el que publicaste el Apps Script (o un alias suyo).</p>
+                        </div>
+                    </div>
+                    <button onclick="guardarConfigLab()" class="text-xs font-semibold bg-teal-600 text-white px-3 py-1.5 rounded-lg hover:bg-teal-700 flex items-center gap-1">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar como predeterminado
+                    </button>
+                    <p class="text-xs text-gray-400 italic">Estos datos quedan fijos para las próximas cuentas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA PREVIA (como quedará el documento, sin logo) -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 sm:p-10 relative">
+            <div class="absolute top-3 right-4 text-[10px] uppercase tracking-widest text-gray-300 font-bold">Vista previa</div>
+            <div id="lab-preview" class="text-center text-gray-800 leading-relaxed space-y-3 text-sm sm:text-[15px]" style="font-family: Georgia, 'Times New Roman', serif;">
+                <!-- se llena solo -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button onclick="guardarCuenta()" class="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors border border-gray-200 flex justify-center items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Guardar
+            </button>
+            <button onclick="descargarCuentaPDF()" class="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+            </button>
+        </div>
+
+        <!-- ENVIAR AL PROPIETARIO -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-paper-plane text-teal-600"></i> Enviar al correo del propietario</p>
+            <div class="flex flex-col sm:flex-row gap-2 mt-1">
+                <input type="email" id="lab-email-propietario" oninput="validarCorreoPropietario()" placeholder="correo@ejemplo.com" class="fmt-in flex-1">
+                <button onclick="enviarCuentaPorCorreo()" id="lab-btn-enviar" class="px-5 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 text-sm flex items-center justify-center gap-2 shrink-0">
+                    <i class="fa-solid fa-paper-plane"></i> Enviar PDF por correo
+                </button>
+            </div>
+            <p id="lab-email-estado" class="text-xs mt-1 min-h-[1rem]"></p>
+            <p class="text-xs text-gray-400 italic mt-1">El PDF se envía desde <strong>servicioalclientecevmascotas@gmail.com</strong> al correo que escribas aquí.</p>
+        </div>
+
+        <!-- LISTA DE CUENTAS GUARDADAS -->
+        <div id="lab-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h3 class="text-lg font-bold text-teal-700 flex items-center gap-2 mb-3"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</h3>
+
+            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
+                <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                <div class="flex flex-wrap items-end gap-2">
+                    <div class="flex-1 min-w-[120px]">
+                        <label class="fmt-lbl">Desde</label>
+                        <input type="date" id="lab-desde" class="fmt-in text-sm py-1.5">
+                    </div>
+                    <div class="flex-1 min-w-[120px]">
+                        <label class="fmt-lbl">Hasta</label>
+                        <input type="date" id="lab-hasta" class="fmt-in text-sm py-1.5">
+                    </div>
+                    <button onclick="abrirCuentasGuardadas()" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button onclick="rangoRapidoCuentas('hoy')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                    <button onclick="rangoRapidoCuentas('mes')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                    <button onclick="rangoRapidoCuentas('todo')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
+                </div>
+            </div>
+
+            <div id="lab-lista-resumen" class="hidden text-sm text-gray-700 font-semibold mb-2 bg-teal-50 border border-teal-100 rounded-lg px-3 py-2"></div>
+            <div id="lab-lista-container" class="space-y-1"></div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
         <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
         <span id="toast-msg">Mensaje</span>
@@ -958,8 +1113,8 @@
         const MODULOS = [
             { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos" },
             { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos" },
-            { id: "verificacion", nombre: "Verificación Diaria",  icono: "fa-list-check",      card: "card-verificacion" },
-            { id: "formatos",     nombre: "Formatos clínicos",    icono: "fa-file-medical",    card: "card-formatos" }
+            { id: "formatos",     nombre: "Formatos clínicos",    icono: "fa-file-medical",    card: "card-formatos" },
+            { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" }
         ];
 
         // ▸ MODO_ESTRICTO = false: si un usuario NO tiene documento en "usuarios",
@@ -981,7 +1136,6 @@
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('checklist-screen').classList.add('hidden');
             document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.remove('hidden');
@@ -993,24 +1147,12 @@
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('checklist-screen').classList.add('hidden');
             document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.remove('hidden');
             initOrders();
         };
 
-        window.openChecklist = function() {
-            if (!tienePermiso('verificacion')) { showToast("No tienes acceso a este módulo.", true); return; }
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('inventory-screen').classList.add('hidden');
-            document.getElementById('orders-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('admin-screen').classList.add('hidden');
-            document.getElementById('formatos-screen').classList.add('hidden');
-            document.getElementById('checklist-screen').classList.remove('hidden');
-            initChecklistApp();
-        };
 
         window.openAdmin = function() {
             if (!esAdmin) { showToast("Solo la administradora puede entrar aquí.", true); return; }
@@ -1018,7 +1160,6 @@
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('checklist-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.add('hidden');
             document.getElementById('admin-screen').classList.remove('hidden');
             initAdminApp();
@@ -1030,7 +1171,6 @@
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('checklist-screen').classList.add('hidden');
             document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.remove('hidden');
             initFormatosApp();
@@ -1040,10 +1180,22 @@
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('checklist-screen').classList.add('hidden');
             document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.add('hidden');
+            document.getElementById('laboratorio-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
+        };
+
+        window.openLaboratorio = function() {
+            if (!tienePermiso('laboratorio')) { showToast("No tienes acceso a este módulo.", true); return; }
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+            document.getElementById('formatos-screen').classList.add('hidden');
+            document.getElementById('laboratorio-screen').classList.remove('hidden');
+            initLaboratorioApp();
         };
 
         function tienePermiso(modulo) {
@@ -1110,9 +1262,9 @@
                 document.getElementById('inventory-screen').classList.add('hidden');
                 document.getElementById('orders-screen').classList.add('hidden');
                 document.getElementById('history-screen').classList.add('hidden');
-                document.getElementById('checklist-screen').classList.add('hidden');
                 document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.add('hidden');
+            document.getElementById('laboratorio-screen').classList.add('hidden');
             }
         });
 
@@ -1475,7 +1627,54 @@
                     tbody.appendChild(tr);
                 }
             });
+            actualizarResumenReponer();
         }
+
+        // Devuelve solo los insumos que hay que reponer (stock contado < ideal)
+        function obtenerListaReponer() {
+            const lista = [];
+            inventory.forEach(item => {
+                if (item.actual !== '' && item.actual !== null && item.actual !== undefined) {
+                    const actual = parseInt(item.actual);
+                    if (!isNaN(actual)) {
+                        const reponer = Math.max(0, item.ideal - actual);
+                        if (reponer > 0) lista.push({ name: item.name, ideal: item.ideal, actual: actual, reponer: reponer });
+                    }
+                }
+            });
+            return lista;
+        }
+
+        // Llena el cuadro "Insumos por reponer" (no toca la tabla principal)
+        function actualizarResumenReponer() {
+            const cont = document.getElementById('resumen-reponer');
+            const badge = document.getElementById('reponer-count');
+            const items = obtenerListaReponer();
+            if (badge) badge.textContent = items.length;
+            if (!cont) return;
+            if (items.length === 0) {
+                cont.innerHTML = '<p class="text-gray-400 italic text-sm text-center py-3">No hay insumos por reponer todavía. Ingresa el stock contado para verlos aquí.</p>';
+                return;
+            }
+            cont.innerHTML = `
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-gray-500">
+                            <th class="text-left py-1.5 font-semibold">Insumo</th>
+                            <th class="text-center py-1.5 font-semibold w-24 sm:w-32">Cantidad a reponer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(it => `
+                            <tr class="border-b border-gray-100">
+                                <td class="py-1.5 text-gray-700 pr-2">${it.name}</td>
+                                <td class="py-1.5 text-center font-bold text-red-600">${it.reponer}</td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+
 
         window.updateItem = function(index, value) {
             if (value !== '' && parseInt(value) < 0) value = '0';
@@ -1504,6 +1703,7 @@
 
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => { saveDataToFirebase(); }, 1000);
+            actualizarResumenReponer();
         }
 
         window.clearAll = async function() {
@@ -1744,10 +1944,14 @@
                 }
             }
 
-            const index = pedidoActual.findIndex(item => item.name.toLowerCase() === itemName.toLowerCase());
+            const index = pedidoActual.findIndex(item => item.name.trim().toLowerCase() === itemName.trim().toLowerCase());
             
             if (index !== -1) {
-                showToast("Este insumo ya está en el pedido actual.", true);
+                showToast('"' + itemName + '" ya está en el pedido', true);
+                // Limpiar el campo y resaltar la fila que ya lo tiene
+                if (modoManual) document.getElementById('order-item-input').value = "";
+                else document.getElementById('order-item-select').value = "";
+                resaltarInsumoExistente(index);
                 return;
             } else {
                 pedidoActual.push({ name: itemName });
@@ -1794,7 +1998,8 @@
             pedidoActual.forEach((item, index) => {
                 total++;
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-gray-100";
+                tr.className = "border-b border-gray-100 transition-colors duration-500";
+                tr.id = "order-row-" + index;
                 tr.innerHTML = `
                     <td class="py-3 text-center text-gray-500 font-bold text-sm">${index + 1}</td>
                     <td class="py-3 text-gray-800 font-medium text-sm sm:text-base">${item.name}</td>
@@ -1809,6 +2014,15 @@
 
             totalItems.textContent = total;
         }
+
+        // Resalta y desplaza a la fila del insumo que ya está en el pedido
+        window.resaltarInsumoExistente = function(index) {
+            const row = document.getElementById('order-row-' + index);
+            if (!row) return;
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.style.backgroundColor = '#fde68a'; // ámbar
+            setTimeout(() => { row.style.backgroundColor = ''; }, 1600);
+        };
 
         // --- ENVIAR POR GMAIL Y GUARDAR EL TEXTO EXACTO ---
         window.generarYEnviarCorreo = async function() {
@@ -1885,6 +2099,157 @@
             }
         }
 
+        // ============================================================
+        // PEDIDO EN PDF: construcción, vista previa y envío por correo
+        // ============================================================
+        function construirPedidoPDF() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                showToast("No se pudo cargar el generador de PDF. Revisa tu conexión.", true);
+                return null;
+            }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const AZUL = [21, 67, 144];
+            const M = 40;
+            const anchoUtil = pdf.internal.pageSize.getWidth() - M * 2;
+
+            // Encabezado con logo CEV
+            const altoLogo = logoPDF(pdf, M, 22, 112);
+            pdf.setFontSize(14); pdf.setTextColor(...AZUL); pdf.setFont(undefined, 'bold');
+            pdf.text("Centro de Especialistas Veterinarios", M + 126, 46);
+            pdf.setFontSize(11); pdf.setTextColor(60, 60, 60); pdf.setFont(undefined, 'normal');
+            pdf.text("Pedido de insumos · Farmacia", M + 126, 62);
+            const yLinea = Math.max(70, 22 + altoLogo + 8);
+            pdf.setDrawColor(...AZUL); pdf.setLineWidth(1.5); pdf.line(M, yLinea, M + anchoUtil, yLinea);
+            let y = yLinea + 20;
+
+            // Fecha y total
+            const hoy = new Date();
+            const fechaStr = hoy.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+            pdf.setFontSize(10); pdf.setTextColor(90, 90, 90);
+            pdf.text("Fecha: " + fechaStr, M, y);
+            pdf.text("Total de ítems: " + pedidoActual.length, M + anchoUtil, y, { align: 'right' });
+            y += 12;
+
+            // Tabla de insumos
+            pdf.autoTable({
+                startY: y,
+                head: [["N°", "Descripción del insumo"]],
+                body: pedidoActual.map((it, i) => [i + 1, it.name]),
+                theme: 'grid',
+                styles: { fontSize: 10, cellPadding: 5, textColor: [40, 40, 40] },
+                headStyles: { fillColor: AZUL, textColor: 255, halign: 'left' },
+                columnStyles: { 0: { cellWidth: 42, halign: 'center', fontStyle: 'bold', textColor: [90, 90, 90] } },
+                margin: { left: M, right: M }
+            });
+            sellarLogoPaginas(pdf, M);
+            return pdf;
+        }
+
+        function nombrePedidoPDF() {
+            const hoy = new Date();
+            const f = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            return "Pedido_insumos_CEV_" + f + ".pdf";
+        }
+
+        function textoPedidoPlano() {
+            let t = "PEDIDO DE INSUMOS FARMACIA CEV\n\nDetalle del pedido:\n";
+            pedidoActual.forEach((it, i) => { t += (i + 1) + ". " + it.name + "\n"; });
+            return t;
+        }
+
+        window.vistaPreviaPedido = function() {
+            if (pedidoActual.length === 0) { showToast("El pedido está vacío.", true); return; }
+            const pdf = construirPedidoPDF();
+            if (!pdf) return;
+            const cont = document.getElementById('pedido-preview-container');
+            document.getElementById('pedido-preview-frame').src = pdf.output('bloburl');
+            cont.classList.remove('hidden');
+            cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.cerrarVistaPreviaPedido = function() {
+            document.getElementById('pedido-preview-container').classList.add('hidden');
+        };
+
+        window.descargarPedidoPDF = function() {
+            if (pedidoActual.length === 0) { showToast("El pedido está vacío.", true); return; }
+            const pdf = construirPedidoPDF();
+            if (pdf) { pdf.save(nombrePedidoPDF()); showToast("PDF generado."); }
+        };
+
+        async function guardarHistorialYLimpiarPedido() {
+            const ts = Date.now().toString();
+            await setDoc(doc(db, "pedidos_farmacia", ts), { timestamp: parseInt(ts), textoEnviado: textoPedidoPlano() });
+            pedidoActual = [];
+            await setDoc(doc(db, "pedidos_farmacia", "borrador_actual"), { items: [] });
+            document.getElementById('draft-badge').classList.add('hidden');
+            renderOrderTable();
+            cerrarVistaPreviaPedido();
+        }
+
+        window.enviarPedidoPorCorreo = async function() {
+            if (pedidoActual.length === 0) { showToast("El pedido está vacío.", true); return; }
+            const pdf = construirPedidoPDF();
+            if (!pdf) return;
+
+            const emailDestino = "servicioalclientecevmascotas@gmail.com";
+            const fechaEnvio = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const asunto = "Pedido de Insumos Farmacia CEV - " + fechaEnvio;
+
+            // Sin Apps Script: se descarga el PDF y se abre Gmail para adjuntarlo a mano
+            if (!URL_ENVIO_CORREO) {
+                pdf.save(nombrePedidoPDF());
+                const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=" + emailDestino +
+                                 "&su=" + encodeURIComponent(asunto) +
+                                 "&body=" + encodeURIComponent("(Adjunta el PDF que se acaba de descargar.)");
+                try { await guardarHistorialYLimpiarPedido(); } catch (e) { console.error(e); }
+                showToast("Se descargó el PDF. Adjúntalo en el correo que se abrirá.", true);
+                setTimeout(() => { window.open(gmailUrl, '_blank'); }, 1200);
+                return;
+            }
+
+            const dataUri = pdf.output('datauristring');
+            const base64 = dataUri.substring(dataUri.indexOf(',') + 1);
+
+            const btn = document.getElementById('btn-enviar-pedido');
+            const htmlOrig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+            showToast("Enviando pedido por correo...");
+
+            try {
+                const resp = await fetch(URL_ENVIO_CORREO, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        clave: CLAVE_ENVIO_CORREO,
+                        tipo: "pedido",
+                        para: emailDestino,
+                        asunto: asunto,
+                        cuerpo: "",
+                        archivoNombre: nombrePedidoPDF(),
+                        pdfBase64: base64
+                    })
+                });
+                const r = await resp.json().catch(() => null);
+                if (r && r.ok) {
+                    // El borrador solo se limpia cuando el envío fue exitoso
+                    await guardarHistorialYLimpiarPedido();
+                    showToast("¡Pedido enviado y guardado!");
+                } else {
+                    showToast("No se pudo enviar. El pedido sigue guardado; intenta de nuevo o descarga el PDF.", true);
+                    console.error("Respuesta del envío:", r);
+                }
+            } catch (err) {
+                showToast("No se pudo enviar el correo. El pedido sigue guardado; revisa tu conexión.", true);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = htmlOrig;
+            }
+        };
+
         // --- HISTORIAL ESTILO CHAT DE CORREO ---
         window.openHistory = function() {
             document.getElementById('orders-screen').classList.add('hidden');
@@ -1953,448 +2318,6 @@
                 
             } catch (error) {
                 container.innerHTML = '<div class="text-center py-8 text-red-500 bg-red-50 rounded-xl border border-red-200"><i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i><br><b>Error al cargar historial</b></div>';
-            }
-        }
-
-        // ==========================================
-        // 3. VERIFICACIÓN DIARIA (ORDEN Y ASEO)
-        // ==========================================
-        // Colecciones en Firestore:
-        //   verificaciones/{YYYY-MM-DD}  → ronda diaria
-        //   verificaciones_mensuales/{YYYY-MM} → inventario y atención al público
-        // ─────────────────────────────────────────────────────────────────────
-        const AREAS_VERIFICACION = [
-            { area: "RECEPCIÓN",            items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Góndola", "Cafetín"] },
-            { area: "CONSULTORIO CANINO 1", items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
-            { area: "CONSULTORIO CANINO 2", items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
-            { area: "CONSULTORIO CANINO 3", items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
-            { area: "CONSULTORIO FELINO",   items: ["Paredes", "Pisos", "Escritorios", "Sillas", "Premios"] },
-            { area: "FISIOTERAPIA",         items: ["Paredes", "Pisos"] },
-            { area: "HOSPITALIZACIÓN",      items: ["Paredes", "Pisos", "Nevera", "Mesas", "Cajones"] },
-            { area: "NEVERA",               items: ["Temperatura", "Insumos"] },
-            { area: "LAVANDERÍA",           items: ["Pisos", "Paredes", "Lavadora", "Secadora"] },
-            { area: "ARCHIVO",              items: ["Pisos", "Paredes", "Papelería", "Tanque"] },
-            { area: "RX",                   items: ["Pisos", "Paredes"] },
-            { area: "DEPÓSITO",             items: ["Pisos", "Paredes"] },
-            { area: "GARAJE",               items: ["Pisos", "Paredes", "Papelería"] },
-            { area: "PRECIRUGÍA",           items: ["Paredes", "Pisos", "Mesas", "Sillas"] },
-            { area: "QUIRÓFANO",            items: ["Paredes", "Pisos", "Mesas", "Sillas"] },
-            { area: "SALA DE MATERIALES",   items: ["Paredes", "Pisos", "Mesas"] },
-            { area: "LABORATORIO",          items: ["Paredes", "Pisos", "Mesas", "Sillas"] },
-            { area: "DISPENSARIO",          items: ["Paredes", "Pisos", "Mesas", "Medicamentos"] },
-            { area: "HOSPITALIZACIÓN (MEDICAMENTOS)", items: ["Paredes", "Pisos", "Mesas", "Medicamentos"] },
-            { area: "HOSPITALIZACIÓN · EXCEL",    items: ["Exámenes", "Rondas", "Seguimientos"] },
-            { area: "HOSPITALIZACIÓN · WHATSAPP", items: ["Noche", "Día"] }
-        ];
-
-        const RESPONSABLES_VERIFICACION = ["Isabella", "Paola"];
-
-        const ITEMS_MENSUALES = [
-            { grupo: "INVENTARIO",          items: ["Recepción", "Dispensario"] },
-            { grupo: "ATENCIÓN AL PÚBLICO", items: ["Encuestas", "2 días en recepción", "Dulces"] }
-        ];
-
-        const MESES_NOMBRE = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-        let checklist = [];
-        let observacionesVerif = {};
-        let mensualVerif = {};
-        let areasAbiertas = new Set();
-        let saveVerifTimeout = null;
-        let saveMensualTimeout = null;
-        let verifInicializado = false;
-
-        function toggleVerifLoader(show) {
-            const spinner = document.getElementById('verif-spinner');
-            if (show) spinner.classList.remove('hidden');
-            else spinner.classList.add('hidden');
-        }
-
-        function baseChecklist() {
-            const base = [];
-            AREAS_VERIFICACION.forEach(grupo => {
-                grupo.items.forEach(item => base.push({ area: grupo.area, item: item, ok: false }));
-            });
-            return base;
-        }
-
-        function setFechasVerificacion() {
-            const dateInput = document.getElementById('verif-date');
-            const expStart = document.getElementById('verif-export-start');
-            const expEnd = document.getElementById('verif-export-end');
-            const d = new Date();
-            const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-            if (!dateInput.value) dateInput.value = todayStr;
-            if (!expStart.value) expStart.value = todayStr;
-            if (!expEnd.value) expEnd.value = todayStr;
-        }
-
-        async function initChecklistApp() {
-            setFechasVerificacion();
-
-            if (!verifInicializado) {
-                const dl = document.getElementById('verif-responsables-list');
-                RESPONSABLES_VERIFICACION.forEach(nombre => {
-                    const opt = document.createElement('option');
-                    opt.value = nombre;
-                    dl.appendChild(opt);
-                });
-
-                document.getElementById('verif-search').addEventListener('input', (e) => {
-                    renderChecklist(e.target.value.toLowerCase());
-                });
-
-                document.getElementById('verif-date').addEventListener('change', async () => {
-                    areasAbiertas.clear();
-                    await loadChecklistFromFirebase();
-                    await loadMensualFromFirebase();
-                });
-
-                document.getElementById('verif-responsable').addEventListener('input', () => {
-                    clearTimeout(saveVerifTimeout);
-                    saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
-                });
-
-                verifInicializado = true;
-            }
-
-            await loadChecklistFromFirebase();
-            await loadMensualFromFirebase();
-        }
-
-        async function loadChecklistFromFirebase() {
-            toggleVerifLoader(true);
-            const fechaActual = document.getElementById('verif-date').value;
-
-            try {
-                const docSnap = await getDoc(doc(db, "verificaciones", fechaActual));
-                const base = baseChecklist();
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const guardados = data.items || [];
-                    // Conserva lo marcado y agrega los ítems nuevos de la guía
-                    checklist = base.map(b => {
-                        const prev = guardados.find(g => g.area === b.area && g.item === b.item);
-                        return prev ? { ...b, ok: !!prev.ok } : b;
-                    });
-                    observacionesVerif = data.observaciones || {};
-                    document.getElementById('verif-responsable').value = data.responsable || '';
-                } else {
-                    checklist = base;
-                    observacionesVerif = {};
-                    document.getElementById('verif-responsable').value = '';
-                }
-            } catch (error) {
-                showToast("Error al cargar la verificación", true);
-                checklist = baseChecklist();
-                observacionesVerif = {};
-            } finally {
-                renderChecklist(document.getElementById('verif-search').value.toLowerCase());
-                toggleVerifLoader(false);
-            }
-        }
-
-        async function saveChecklistToFirebase() {
-            const fechaActual = document.getElementById('verif-date').value;
-            toggleVerifLoader(true);
-            try {
-                await setDoc(doc(db, "verificaciones", fechaActual), {
-                    fecha: fechaActual,
-                    responsable: document.getElementById('verif-responsable').value.trim(),
-                    items: checklist,
-                    observaciones: observacionesVerif,
-                    actualizado: new Date().toISOString()
-                });
-            } catch (error) {
-                showToast("Error al guardar.", true);
-            } finally {
-                toggleVerifLoader(false);
-            }
-        }
-
-        function actualizarProgresoVerif() {
-            const total = checklist.length;
-            const hechos = checklist.filter(i => i.ok).length;
-            const pct = total ? Math.round((hechos / total) * 100) : 0;
-
-            document.getElementById('verif-pct').textContent = `${pct}%`;
-            document.getElementById('verif-count').textContent = `${hechos} de ${total} ítems`;
-            document.getElementById('verif-bar').style.width = `${pct}%`;
-
-            const pctEl = document.getElementById('verif-pct');
-            if (pct === 100) pctEl.className = 'text-3xl font-black text-green-700';
-            else if (pct >= 80) pctEl.className = 'text-3xl font-black text-green-600';
-            else if (pct >= 50) pctEl.className = 'text-3xl font-black text-yellow-600';
-            else pctEl.className = 'text-3xl font-black text-gray-400';
-        }
-
-        function renderChecklist(filter = '') {
-            const cont = document.getElementById('checklist-container');
-            cont.innerHTML = '';
-
-            AREAS_VERIFICACION.forEach((grupo, aidx) => {
-                const indices = [];
-                checklist.forEach((it, i) => { if (it.area === grupo.area) indices.push(i); });
-
-                const coincideArea = grupo.area.toLowerCase().includes(filter);
-                const visibles = indices.filter(i => coincideArea || checklist[i].item.toLowerCase().includes(filter));
-                if (visibles.length === 0) return;
-
-                const total = indices.length;
-                const hechos = indices.filter(i => checklist[i].ok).length;
-                const pct = total ? Math.round((hechos / total) * 100) : 0;
-                const completa = hechos === total;
-                const abierto = areasAbiertas.has(aidx) || filter !== '';
-
-                let badgeClass = 'bg-gray-100 text-gray-500 border-gray-200';
-                if (completa) badgeClass = 'bg-green-100 text-green-700 border-green-300';
-                else if (hechos > 0) badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-300';
-
-                const card = document.createElement('div');
-                card.className = `bg-white rounded-xl shadow-md border overflow-hidden transition-colors ${completa ? 'border-green-300' : 'border-gray-200'}`;
-
-                const itemsHtml = visibles.map(i => `
-                    <button onclick="toggleVerifItem(${i})" class="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-100 hover:bg-gray-50 transition-colors text-left">
-                        <span class="w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${checklist[i].ok ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-300 text-transparent'}">
-                            <i class="fa-solid fa-check text-xs"></i>
-                        </span>
-                        <span class="text-sm sm:text-base ${checklist[i].ok ? 'text-gray-400 line-through' : 'text-gray-700 font-medium'}">${checklist[i].item}</span>
-                    </button>
-                `).join('');
-
-                card.innerHTML = `
-                    <button onclick="toggleAreaAbierta(${aidx})" class="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center gap-3 text-left">
-                            <i class="fa-solid fa-chevron-${abierto ? 'down' : 'right'} text-gray-400 text-xs w-3"></i>
-                            <span class="font-bold text-sm sm:text-base ${completa ? 'text-green-700' : 'text-[#154390]'}">${grupo.area}</span>
-                        </div>
-                        <span class="text-xs font-bold px-2 py-1 rounded-full border shrink-0 ${badgeClass}">${hechos}/${total} · ${pct}%</span>
-                    </button>
-                    <div class="${abierto ? '' : 'hidden'}">
-                        ${itemsHtml}
-                        <div class="px-4 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                            <input type="text" value="${(observacionesVerif[grupo.area] || '').replace(/"/g, '&quot;')}"
-                                oninput="updateObservacionVerif('${grupo.area.replace(/'/g, "\\'")}', this.value)"
-                                placeholder="Novedad u observación del área (opcional)"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white">
-                            <button onclick="marcarAreaCompleta(${aidx})" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${completa ? 'bg-white text-gray-500 border-gray-300 hover:bg-gray-100' : 'bg-green-600 text-white border-green-600 hover:bg-green-700'}">
-                                <i class="fa-solid ${completa ? 'fa-rotate-left' : 'fa-check-double'}"></i> ${completa ? 'Desmarcar' : 'Marcar todo'}
-                            </button>
-                        </div>
-                    </div>
-                `;
-                cont.appendChild(card);
-            });
-
-            if (cont.innerHTML === '') {
-                cont.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-200 text-gray-400 italic"><i class="fa-solid fa-magnifying-glass text-3xl mb-3 opacity-50"></i><br>No se encontraron áreas ni ítems con esa búsqueda.</div>';
-            }
-
-            actualizarProgresoVerif();
-        }
-
-        window.toggleAreaAbierta = function(aidx) {
-            if (areasAbiertas.has(aidx)) areasAbiertas.delete(aidx);
-            else areasAbiertas.add(aidx);
-            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
-        }
-
-        window.expandirTodo = function() {
-            if (areasAbiertas.size === AREAS_VERIFICACION.length) areasAbiertas.clear();
-            else AREAS_VERIFICACION.forEach((g, i) => areasAbiertas.add(i));
-            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
-        }
-
-        window.toggleVerifItem = function(index) {
-            checklist[index].ok = !checklist[index].ok;
-            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
-
-            clearTimeout(saveVerifTimeout);
-            saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
-        }
-
-        window.marcarAreaCompleta = function(aidx) {
-            const areaNombre = AREAS_VERIFICACION[aidx].area;
-            const indices = [];
-            checklist.forEach((it, i) => { if (it.area === areaNombre) indices.push(i); });
-            const completa = indices.every(i => checklist[i].ok);
-
-            indices.forEach(i => { checklist[i].ok = !completa; });
-            areasAbiertas.add(aidx);
-            renderChecklist(document.getElementById('verif-search').value.toLowerCase());
-
-            clearTimeout(saveVerifTimeout);
-            saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
-        }
-
-        window.updateObservacionVerif = function(area, valor) {
-            if (valor.trim() === '') delete observacionesVerif[area];
-            else observacionesVerif[area] = valor;
-
-            clearTimeout(saveVerifTimeout);
-            saveVerifTimeout = setTimeout(() => { saveChecklistToFirebase(); }, 1000);
-        }
-
-        window.limpiarVerificacion = async function() {
-            const fechaActual = document.getElementById('verif-date').value;
-            if (confirm(`¿Deseas borrar de la nube toda la verificación del día ${fechaActual}?`)) {
-                checklist = baseChecklist();
-                observacionesVerif = {};
-                document.getElementById('verif-search').value = '';
-                renderChecklist();
-                await saveChecklistToFirebase();
-                showToast("Verificación del día limpiada");
-            }
-        }
-
-        // --- VERIFICACIÓN MENSUAL ---
-        function mesIdDesdeFecha(fecha) {
-            return fecha ? fecha.substring(0, 7) : '';
-        }
-
-        async function loadMensualFromFirebase() {
-            const fechaActual = document.getElementById('verif-date').value;
-            const mesId = mesIdDesdeFecha(fechaActual);
-            if (!mesId) return;
-
-            const [y, m] = mesId.split('-').map(Number);
-            document.getElementById('verif-mes-label').textContent = `${MESES_NOMBRE[m - 1]} ${y}`;
-
-            try {
-                const docSnap = await getDoc(doc(db, "verificaciones_mensuales", mesId));
-                mensualVerif = docSnap.exists() ? (docSnap.data().items || {}) : {};
-            } catch (error) {
-                mensualVerif = {};
-                console.error("No se pudo cargar la verificación mensual", error);
-            } finally {
-                renderMensual();
-            }
-        }
-
-        async function saveMensualToFirebase() {
-            const mesId = mesIdDesdeFecha(document.getElementById('verif-date').value);
-            if (!mesId) return;
-            try {
-                await setDoc(doc(db, "verificaciones_mensuales", mesId), {
-                    mes: mesId,
-                    items: mensualVerif,
-                    responsable: document.getElementById('verif-responsable').value.trim(),
-                    actualizado: new Date().toISOString()
-                });
-            } catch (error) {
-                showToast("Error al guardar la verificación mensual.", true);
-            }
-        }
-
-        function renderMensual() {
-            const cont = document.getElementById('mensual-container');
-            cont.innerHTML = '';
-
-            ITEMS_MENSUALES.forEach(grupo => {
-                const div = document.createElement('div');
-                const botones = grupo.items.map(item => {
-                    const marcado = !!mensualVerif[item];
-                    return `
-                        <button onclick="toggleMensual('${item.replace(/'/g, "\\'")}')" class="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs sm:text-sm font-semibold transition-colors ${marcado ? 'bg-green-50 border-green-300 text-green-700' : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'}">
-                            <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${marcado ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-300 text-transparent'}">
-                                <i class="fa-solid fa-check text-[10px]"></i>
-                            </span>
-                            ${item}
-                        </button>
-                    `;
-                }).join('');
-
-                div.innerHTML = `
-                    <p class="text-xs font-bold text-[#154390] uppercase tracking-wide mb-2">${grupo.grupo}</p>
-                    <div class="flex flex-wrap gap-2">${botones}</div>
-                `;
-                cont.appendChild(div);
-            });
-        }
-
-        window.toggleMensual = function(item) {
-            mensualVerif[item] = !mensualVerif[item];
-            if (!mensualVerif[item]) delete mensualVerif[item];
-            renderMensual();
-
-            clearTimeout(saveMensualTimeout);
-            saveMensualTimeout = setTimeout(() => { saveMensualToFirebase(); }, 1000);
-        }
-
-        // --- EXPORTAR VERIFICACIÓN A EXCEL ---
-        window.generarExcelVerificacion = async function() {
-            const start = document.getElementById('verif-export-start').value;
-            const end = document.getElementById('verif-export-end').value;
-
-            if (!start || !end) { showToast("Selecciona fecha de inicio y fin", true); return; }
-            if (start > end) { showToast("La fecha de inicio debe ser anterior a la de fin", true); return; }
-
-            showToast("Consultando a la nube...");
-            toggleVerifLoader(true);
-
-            try {
-                const q = query(collection(db, "verificaciones"), where("__name__", ">=", start), where("__name__", "<=", end));
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    alert("No se encontraron verificaciones en la nube para estas fechas.");
-                    toggleVerifLoader(false); return;
-                }
-
-                const detalle = [];
-                const resumen = [];
-
-                querySnapshot.forEach((docSnap) => {
-                    const fecha = docSnap.id;
-                    const data = docSnap.data();
-                    const items = data.items || [];
-                    const obs = data.observaciones || {};
-                    const responsable = data.responsable || "";
-
-                    items.forEach(item => {
-                        detalle.push({
-                            "Fecha": fecha,
-                            "Responsable": responsable,
-                            "Área": item.area,
-                            "Ítem": item.item,
-                            "Estado": item.ok ? "Cumple" : "Pendiente",
-                            "Observación del área": obs[item.area] || ""
-                        });
-                    });
-
-                    const total = items.length;
-                    const hechos = items.filter(i => i.ok).length;
-                    resumen.push({
-                        "Fecha": fecha,
-                        "Responsable": responsable,
-                        "Ítems verificados": hechos,
-                        "Total de ítems": total,
-                        "% Cumplimiento": total ? Math.round((hechos / total) * 100) / 100 : 0
-                    });
-                });
-
-                if (detalle.length === 0) {
-                    alert("Se encontraron fechas en la nube, pero no hay ítems registrados.");
-                    toggleVerifLoader(false); return;
-                }
-
-                resumen.sort((a, b) => a.Fecha.localeCompare(b.Fecha));
-
-                const libro = XLSX.utils.book_new();
-                const hojaResumen = XLSX.utils.json_to_sheet(resumen);
-                const hojaDetalle = XLSX.utils.json_to_sheet(detalle);
-                XLSX.utils.book_append_sheet(libro, hojaResumen, "Resumen");
-                XLSX.utils.book_append_sheet(libro, hojaDetalle, "Detalle");
-                XLSX.writeFile(libro, `Verificacion_Diaria_CEV_${start}_al_${end}.xlsx`);
-                showToast("Excel descargado correctamente");
-
-            } catch (error) {
-                alert("Hubo un problema al descargar los datos de la nube.");
-            } finally {
-                toggleVerifLoader(false);
             }
         }
 
@@ -4267,7 +4190,9 @@
             ortopedico: { pantalla: 'fmt-ortopedico', etiqueta: 'examen ortopédico',
                           recoger: () => recogerOrto(),    volcar: d => volcarOrto(d) },
             neuro:      { pantalla: 'fmt-neuro',      etiqueta: 'valoración neurológica',
-                          recoger: () => recogerNeuro(),   volcar: d => volcarNeuro(d) }
+                          recoger: () => recogerNeuro(),   volcar: d => volcarNeuro(d) },
+            laboratorio:{ pantalla: 'laboratorio-screen', etiqueta: 'cuenta de cobro',
+                          recoger: () => recogerBorradorLab(), volcar: d => volcarBorradorLab(d) }
         };
         let borradorTimer = null;
         let hayCambiosSinGuardar = false;
@@ -4283,7 +4208,7 @@
             if (typeof v === 'string') return v.trim() !== '';
             if (Array.isArray(v)) return v.some(tieneContenido);
             if (typeof v === 'object') {
-                return Object.keys(v).some(k => !['tipo','creado','actualizado','fecha'].includes(k) && tieneContenido(v[k]));
+                return Object.keys(v).some(k => !['tipo','creado','actualizado','fecha','conceptoBase','detallar'].includes(k) && tieneContenido(v[k]));
             }
             return false;
         }
@@ -4408,6 +4333,17 @@
                 window.marcarParamIntra = function(id, c) { _marcar(id, c); marcarCambioBorrador('monitoreo'); };
             }
 
+            // Agregar/quitar exámenes (por botón) también marca cambios en Laboratorio
+            ['agregarExamen', 'quitarExamen', 'guardarExamenNuevo'].forEach(fn => {
+                if (!window[fn]) return;
+                const original = window[fn];
+                window[fn] = function() {
+                    const r = original.apply(this, arguments);
+                    marcarCambioBorrador('laboratorio');
+                    return r;
+                };
+            });
+
             // Al guardar de verdad, el pendiente ya no hace falta
             [['guardarFormato','monitoreo'], ['guardarOrto','ortopedico'], ['guardarNeuro','neuro']].forEach(([fn, tipo]) => {
                 if (!window[fn]) return;
@@ -4430,7 +4366,7 @@
             });
 
             // Al abrir cada formato, revisar si quedó algo pendiente
-            [['openMonitoreo','monitoreo'], ['openOrtopedico','ortopedico'], ['openNeuro','neuro']].forEach(([fn, tipo]) => {
+            [['openMonitoreo','monitoreo'], ['openOrtopedico','ortopedico'], ['openNeuro','neuro'], ['openLaboratorio','laboratorio']].forEach(([fn, tipo]) => {
                 if (!window[fn]) return;
                 const original = window[fn];
                 window[fn] = function() {
@@ -4450,6 +4386,909 @@
         });
 
         prepararBorradores();
+
+        // ==========================================================
+        // MÓDULO LABORATORIO — CUENTAS DE COBRO
+        // ==========================================================
+        const LAB_DEFAULTS = {
+            acreedorNombre: "CYNDI MONTES ARENAS",
+            acreedorCC: "1.053.769.043",
+            ciudad: "Manizales",
+            banco: "BANCOLOMBIA: 912945129-21 AHORROS",
+            remitente: "servicioalclientecevmascotas@gmail.com",
+            correoDestino: ""
+        };
+        let LAB_CONFIG = { ...LAB_DEFAULTS };
+        let labConfigCargada = false;
+        let labListenersListos = false;
+        let cuentaIdActual = null;
+        let examenesSel = [];   // exámenes elegidos para la cuenta actual
+        let examenesPersonalizados = [];       // exámenes agregados por el usuario
+        let examenesPersonalizadosCargados = false;
+
+        const EXAMENES_LAB = [
+            {n:"Hemograma Completo", p:38000},
+            {n:"ALT", p:25000},
+            {n:"AST", p:25000},
+            {n:"FA", p:25000},
+            {n:"Creatinina", p:25000},
+            {n:"Urea", p:25000},
+            {n:"Bilirrubina Total", p:36000},
+            {n:"Colesterol / Triglicéridos", p:36000},
+            {n:"Glucosa", p:15000},
+            {n:"Albúmina", p:36000},
+            {n:"Fósforo", p:36000},
+            {n:"Diferencial de Proteínas", p:71000},
+            {n:"Fructosamina", p:100000},
+            {n:"T4 Total + Colesterol T", p:126000},
+            {n:"TSH Canina", p:96000},
+            {n:"Amoníaco", p:75000},
+            {n:"Niveles de Fenobarbital", p:130000},
+            {n:"Cortisol (1 Lectura)", p:96000},
+            {n:"Prueba cruzada", p:150000},
+            {n:"SDMA (Dimetilarginina simétrica)", p:180000},
+            {n:"Coprológico por Flotación", p:20000},
+            {n:"EDAN - Gases Arteriales / Venosos", p:85000},
+            {n:"Análisis de Líquido", p:50000},
+            {n:"Rotor Hepático", p:120000},
+            {n:"Rotor Urgencias", p:90000},
+            {n:"Rotor Renal", p:100000},
+            {n:"Gram", p:34000},
+            {n:"Citologías", p:28000},
+            {n:"PT y PPT (Coagulación)", p:75000},
+            {n:"Parcial de Orina", p:28000},
+            {n:"Relación Creatinina y Proteína en Orina (UPC)", p:100000},
+            {n:"BACAF", p:45000},
+            {n:"Cartucho EDAN", p:40000},
+            {n:"Creatinina Seca", p:36000},
+            {n:"Leptospira MAT", p:200000},
+            {n:"Hematocrito y Proteínas totales", p:10000},
+            {n:"Jeringas 3 y 5 ml", p:2000},
+            {n:"Jeringa EDAN", p:16000},
+            {n:"Suero Autólogo", p:16000},
+            {n:"Tiempo de Coagulación en Tubo", p:3000},
+            {n:"Tubos Extra", p:3000},
+            {n:"Distemper", p:52000},
+            {n:"Parvovirus / Coronavirus", p:57000},
+            {n:"SIDA / Leucemia", p:52000},
+            {n:"2 DX (Ehrlichia, Anaplasma)", p:67000},
+            {n:"Lipasa Esp. Pancreática Canina/Felina", p:100000},
+            {n:"Urocultivo", p:92000},
+            {n:"Cultivo de Gérmenes Comunes", p:92000},
+            {n:"Cultivo de Hongos", p:92000},
+            {n:"Hemocultivo (1 Frasco)", p:92000},
+            {n:"PAQUETE RENAL 1", p:500000, incluye:"Perfil Renal – T4 Total – Colesterol Total – Lipasa – SDMA"},
+            {n:"PAQUETE RENAL 2", p:325000, incluye:"Perfil Renal – T4 Total – Colesterol Total – Lipasa"},
+            {n:"RENAL", p:172000, incluye:"Hemograma – Parcial de Orina – Cloro – Calcio – Potasio – Albúmina – Urea – Sodio – Creatinina – CO2 – Glucosa – Fósforo"},
+            {n:"HEPÁTICO", p:172000, incluye:"Hemograma – Colesterol T – Parcial de Orina – GGT – ALT – Bilirrubina T – Ácidos Biliares – Albúmina – Urea – Fosfatasa"},
+            {n:"GERIÁTRICO CANINO", p:315000, incluye:"CH – Uroanálisis – Perfil Renal – Perfil Hepático"},
+            {n:"CONVULSIVO", p:220000, incluye:"CH – EDAN – PO – CREA – UREA – ALT – AST – FA"},
+            {n:"URGENCIAS 2", p:250000, incluye:"CH – Creatinina – EDAN – Urea – Fosfatasa – Parcial de Orina – ALT – Glucosa – Proteínas T"},
+            {n:"URGENCIAS 1", p:155000, incluye:"CH – Creatinina – Fosfatasa – Urea – ALT – Parcial de Orina – Glucosa – Proteínas T"},
+            {n:"BÁSICO 1 Grado I", p:105000, incluye:"CH – PO – CREATININA – ALT"},
+            {n:"BÁSICO 1 Grado II", p:140000, incluye:"CH – PO – CREATININA – UREA – ALT – AST"},
+            {n:"BÁSICO 2 Grado I", p:180000, incluye:"CH – PO – EDAN – CREATININA – ALT"},
+            {n:"BÁSICO 2 Grado II", p:220000, incluye:"CH – PO – EDAN – CREATININA – UREA – ALT – AST"},
+            {n:"ASA I", p:100000, incluye:"CH – PO – Creatinina – ALT – TCT"},
+            {n:"ASA II", p:145000, incluye:"CH – PO – CREA – UREA – ALT – FA – TCT"},
+            {n:"ASA III", p:200000, incluye:"CH – PO – CREA – ALT – FA – EDAN – TCT"},
+            {n:"ASA IV", p:280000, incluye:"CH – PO – CREA – ALT – FA – EDAN – TP – TTP"}
+        ];
+
+        const MESES_LAB = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+        // ---- Número a letras (español, pesos colombianos) ----
+        function numeroALetras(num) {
+            num = Math.floor(Math.abs(Number(num) || 0));
+            if (num === 0) return "CERO";
+            const U = ["","UNO","DOS","TRES","CUATRO","CINCO","SEIS","SIETE","OCHO","NUEVE","DIEZ",
+                       "ONCE","DOCE","TRECE","CATORCE","QUINCE","DIECISEIS","DIECISIETE","DIECIOCHO","DIECINUEVE","VEINTE"];
+            const D = ["","","VEINTE","TREINTA","CUARENTA","CINCUENTA","SESENTA","SETENTA","OCHENTA","NOVENTA"];
+            const C = ["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
+
+            function menor100(n) {
+                if (n <= 20) return U[n];
+                if (n < 30) { const u = n - 20; return "VEINTI" + U[u]; }
+                const d = Math.floor(n / 10), u = n % 10;
+                return D[d] + (u > 0 ? " Y " + U[u] : "");
+            }
+            function menor1000(n) {
+                let out = "";
+                const c = Math.floor(n / 100), r = n % 100;
+                if (c === 1 && r === 0) return "CIEN";
+                if (c > 0) out += C[c];
+                if (r > 0) out += (out ? " " : "") + menor100(r);
+                return out;
+            }
+            function convertir(n) {
+                if (n < 1000) return menor1000(n);
+                if (n < 1000000) {
+                    const miles = Math.floor(n / 1000), r = n % 1000;
+                    const pref = (miles === 1) ? "MIL" : menor1000(miles) + " MIL";
+                    return pref + (r > 0 ? " " + menor1000(r) : "");
+                }
+                const millones = Math.floor(n / 1000000), r = n % 1000000;
+                const pref = (millones === 1) ? "UN MILLON" : convertir(millones) + " MILLONES";
+                return pref + (r > 0 ? " " + convertir(r) : "");
+            }
+            let palabras = convertir(num);
+            // Apócope de "UNO" -> "UN" antes de MIL/MILLON y del sustantivo (pesos)
+            palabras = palabras.replace(/VEINTIUNO/g, "VEINTIUN").replace(/\bUNO\b/g, "UN");
+            return palabras;
+        }
+
+        function valorEnLetras(num) {
+            const n = Math.floor(Math.abs(Number(num) || 0));
+            return numeroALetras(n) + (n === 1 ? " PESO" : " PESOS");
+        }
+
+        function fechaLargaCuenta(fechaStr, ciudad) {
+            if (!fechaStr) return ciudad || "";
+            const [y, m, d] = fechaStr.split('-').map(Number);
+            const dd = String(d).padStart(2, '0');
+            return (ciudad || "") + ", " + dd + " de " + MESES_LAB[m - 1] + " " + y;
+        }
+
+        function fmtMiles(n) {
+            const num = Math.floor(Math.abs(Number(n) || 0));
+            return num.toLocaleString('es-CO');
+        }
+
+        // Pone puntos de miles en una cédula (ignora lo que no sean dígitos)
+        function formatearCC(cc) {
+            const digitos = (cc || "").replace(/\D/g, '');
+            if (!digitos) return (cc || "").trim();
+            return Number(digitos).toLocaleString('es-CO');
+        }
+
+        // ---- Composición de datos y concepto ----
+        function componerConcepto() {
+            const base = (document.getElementById('lab-concepto-base').value || "").trim();
+            const paciente = (document.getElementById('lab-paciente').value || "").trim();
+            const hc = (document.getElementById('lab-hc').value || "").trim();
+            let txt = base;
+            if (paciente) txt += " " + paciente;
+            if (hc) txt += " (HC " + hc + ")";
+            return txt.trim();
+        }
+
+        function detallarActivo() {
+            const d = document.getElementById('lab-detallar');
+            return !!(d && d.checked) && examenesSel.length > 0;
+        }
+
+        // ---- Borrador automático de la cuenta (para recuperar si se sale) ----
+        function recogerBorradorLab() {
+            return {
+                fecha: document.getElementById('lab-fecha').value,
+                deudorNombre: document.getElementById('lab-deudor-nombre').value,
+                deudorCC: document.getElementById('lab-deudor-cc').value,
+                paciente: document.getElementById('lab-paciente').value,
+                hc: document.getElementById('lab-hc').value,
+                conceptoBase: document.getElementById('lab-concepto-base').value,
+                valor: document.getElementById('lab-valor').value,
+                detallar: !!(document.getElementById('lab-detallar') && document.getElementById('lab-detallar').checked),
+                examenes: examenesSel.map(e => ({ n: e.n, p: e.p, incluye: e.incluye || "" }))
+            };
+        }
+
+        function volcarBorradorLab(d) {
+            if (!d) return;
+            document.getElementById('lab-fecha').value = d.fecha || '';
+            document.getElementById('lab-deudor-nombre').value = d.deudorNombre || '';
+            document.getElementById('lab-deudor-cc').value = d.deudorCC || '';
+            document.getElementById('lab-paciente').value = d.paciente || '';
+            document.getElementById('lab-hc').value = d.hc || '';
+            document.getElementById('lab-concepto-base').value = d.conceptoBase || 'Realización de exámenes de laboratorio del paciente';
+            document.getElementById('lab-valor').value = d.valor || '';
+            const chk = document.getElementById('lab-detallar'); if (chk) chk.checked = d.detallar !== false;
+            examenesSel = Array.isArray(d.examenes) ? d.examenes.map(e => ({ n: e.n, p: Number(e.p) || 0, incluye: e.incluye || "" })) : [];
+            cuentaIdActual = null;
+            renderExamenesSel();
+            actualizarPreviewCuenta();
+        }
+
+        // ---- Selección de exámenes ----
+        function totalExamenes() {
+            return examenesSel.reduce((s, e) => s + (Number(e.p) || 0), 0);
+        }
+
+        function listaExamenes() {
+            return EXAMENES_LAB.concat(examenesPersonalizados);
+        }
+
+        function poblarSelectExamenes(filtro) {
+            const sel = document.getElementById('lab-examen-select');
+            const f = (filtro || "").trim().toLowerCase();
+            sel.innerHTML = '<option value="">Seleccione un examen…</option>';
+            listaExamenes().forEach((ex, idx) => {
+                if (f && !ex.n.toLowerCase().includes(f)) return;
+                const esCustom = idx >= EXAMENES_LAB.length;
+                const etiquetaPrecio = ex.p > 0 ? "$" + fmtMiles(ex.p) : "definir precio";
+                const opt = document.createElement('option');
+                opt.value = String(idx);
+                opt.textContent = (esCustom ? "★ " : "") + ex.n + "  —  " + etiquetaPrecio;
+                sel.appendChild(opt);
+            });
+            actualizarBotonBorrarExamen();
+        }
+
+        function actualizarBotonBorrarExamen() {
+            const sel = document.getElementById('lab-examen-select');
+            const btn = document.getElementById('btn-borrar-examen');
+            if (!btn) return;
+            const idx = Number(sel.value);
+            if (sel.value !== "" && idx >= EXAMENES_LAB.length) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        }
+        window.actualizarBotonBorrarExamen = actualizarBotonBorrarExamen;
+
+        function renderExamenesSel() {
+            const cont = document.getElementById('lab-examenes-sel');
+            const vacio = document.getElementById('lab-examenes-vacio');
+            const totalBox = document.getElementById('lab-examenes-total');
+            cont.innerHTML = '';
+            if (examenesSel.length === 0) {
+                vacio.classList.remove('hidden');
+                totalBox.classList.add('hidden');
+            } else {
+                vacio.classList.add('hidden');
+                totalBox.classList.remove('hidden');
+                examenesSel.forEach((ex, i) => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-start justify-between gap-2 bg-teal-50/60 border border-teal-100 rounded-lg px-3 py-1.5 text-sm";
+                    const precio = ex.p > 0 ? "$" + fmtMiles(ex.p) : '<span class="text-red-500">definir precio</span>';
+                    const inc = ex.incluye ? `<div class="text-xs italic text-gray-500 mt-0.5">Incluye: ${ex.incluye}</div>` : "";
+                    row.innerHTML = `
+                        <span class="min-w-0 text-gray-700">${ex.n}${inc}</span>
+                        <span class="flex items-center gap-3 shrink-0 pt-0.5">
+                            <span class="font-semibold text-teal-700">${precio}</span>
+                            <button onclick="quitarExamen(${i})" class="text-gray-400 hover:text-red-500" title="Quitar"><i class="fa-solid fa-circle-xmark"></i></button>
+                        </span>`;
+                    cont.appendChild(row);
+                });
+                document.getElementById('lab-total-num').textContent = "$" + fmtMiles(totalExamenes());
+            }
+            // El total alimenta el valor de la cuenta
+            document.getElementById('lab-valor').value = examenesSel.length ? Number(totalExamenes()).toLocaleString('es-CO') : '';
+            actualizarPreviewCuenta();
+        }
+
+        window.agregarExamen = function() {
+            const sel = document.getElementById('lab-examen-select');
+            const idx = sel.value;
+            if (idx === "") { showToast("Elige un examen de la lista.", true); return; }
+            const ex = listaExamenes()[Number(idx)];
+            examenesSel.push({ n: ex.n, p: ex.p, incluye: ex.incluye || "" });
+            renderExamenesSel();
+            sel.value = "";
+            actualizarBotonBorrarExamen();
+        };
+
+        window.quitarExamen = function(i) {
+            examenesSel.splice(i, 1);
+            renderExamenesSel();
+        };
+
+        // ---- Exámenes personalizados (agregados por el usuario) ----
+        async function guardarExamenesPersonalizados() {
+            try {
+                await setDoc(doc(db, "configuracion", "examenes_lab_extra"), { lista: examenesPersonalizados });
+            } catch (e) {
+                showToast("Se guardó solo para esta sesión (revisa permisos de Firestore).", true);
+                console.error(e);
+            }
+        }
+
+        async function cargarExamenesPersonalizados() {
+            try {
+                const snap = await getDoc(doc(db, "configuracion", "examenes_lab_extra"));
+                if (snap.exists() && Array.isArray(snap.data().lista)) {
+                    examenesPersonalizados = snap.data().lista.map(e => ({ n: e.n, p: Number(e.p) || 0, incluye: e.incluye || "" }));
+                }
+            } catch (e) { console.error("No se pudieron leer los exámenes personalizados:", e); }
+            examenesPersonalizadosCargados = true;
+        }
+
+        window.mostrarNuevoExamen = function() {
+            const box = document.getElementById('lab-nuevo-examen');
+            box.classList.remove('hidden');
+            document.getElementById('lab-nuevo-nombre').focus();
+        };
+
+        window.cancelarExamenNuevo = function() {
+            document.getElementById('lab-nuevo-nombre').value = '';
+            document.getElementById('lab-nuevo-precio').value = '';
+            document.getElementById('lab-nuevo-examen').classList.add('hidden');
+        };
+
+        window.guardarExamenNuevo = async function() {
+            const nombre = (document.getElementById('lab-nuevo-nombre').value || "").trim().toUpperCase();
+            const precio = parseInt((document.getElementById('lab-nuevo-precio').value || "").replace(/\D/g, ''), 10) || 0;
+            if (!nombre) { showToast("Escribe el nombre del examen.", true); return; }
+            if (listaExamenes().some(e => e.n.toUpperCase() === nombre)) {
+                showToast("Ese examen ya está en la lista.", true); return;
+            }
+            examenesPersonalizados.push({ n: nombre, p: precio, incluye: "" });
+            await guardarExamenesPersonalizados();
+            poblarSelectExamenes('');
+            document.getElementById('lab-examen-buscar').value = '';
+            // Agregarlo también a la cuenta actual (es lo que se acaba de tomar)
+            examenesSel.push({ n: nombre, p: precio, incluye: "" });
+            renderExamenesSel();
+            cancelarExamenNuevo();
+            showToast("Examen agregado a la lista y a la cuenta.");
+        };
+
+        window.borrarExamenPersonalizado = async function() {
+            const sel = document.getElementById('lab-examen-select');
+            const idx = Number(sel.value);
+            if (sel.value === "" || idx < EXAMENES_LAB.length) return;
+            const pos = idx - EXAMENES_LAB.length;
+            const ex = examenesPersonalizados[pos];
+            if (!ex) return;
+            if (!confirm(`¿Eliminar el examen "${ex.n}" de la lista? (No afecta las cuentas ya guardadas.)`)) return;
+            examenesPersonalizados.splice(pos, 1);
+            await guardarExamenesPersonalizados();
+            sel.value = "";
+            poblarSelectExamenes(document.getElementById('lab-examen-buscar').value || '');
+            showToast("Examen eliminado de la lista.");
+        };
+
+        // ---- Descargar la lista completa de exámenes en Excel ----
+        window.descargarExamenesExcel = function() {
+            if (!window.XLSX) { showToast("No se pudo cargar el generador de Excel.", true); return; }
+            const filas = [["Examen", "Precio", "Tipo", "Incluye"]];
+            EXAMENES_LAB.forEach(e => filas.push([e.n, Number(e.p) || 0, "Base", e.incluye || ""]));
+            examenesPersonalizados.forEach(e => filas.push([e.n, Number(e.p) || 0, "Agregado", e.incluye || ""]));
+
+            const ws = XLSX.utils.aoa_to_sheet(filas);
+            ws['!cols'] = [{ wch: 40 }, { wch: 14 }, { wch: 12 }, { wch: 70 }];
+            // Formato de miles en la columna de precio
+            for (let r = 1; r < filas.length; r++) {
+                const celda = XLSX.utils.encode_cell({ r: r, c: 1 });
+                if (ws[celda]) ws[celda].z = '#,##0';
+            }
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Exámenes CEV");
+            const hoy = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, "Lista_examenes_CEV_" + hoy + ".xlsx");
+            showToast("Lista de exámenes descargada (" + (filas.length - 1) + " exámenes).");
+        };
+
+        function recogerCuenta() {
+            const fecha = document.getElementById('lab-fecha').value;
+            const valorNum = parseInt((document.getElementById('lab-valor').value || "").replace(/\D/g, ''), 10) || 0;
+            return {
+                fecha,
+                fechaLarga: fechaLargaCuenta(fecha, LAB_CONFIG.ciudad),
+                deudorNombre: (document.getElementById('lab-deudor-nombre').value || "").trim().toUpperCase(),
+                deudorCC: formatearCC(document.getElementById('lab-deudor-cc').value),
+                paciente: (document.getElementById('lab-paciente').value || "").trim(),
+                hc: (document.getElementById('lab-hc').value || "").trim(),
+                conceptoBase: (document.getElementById('lab-concepto-base').value || "").trim(),
+                concepto: componerConcepto(),
+                valor: valorNum,
+                valorFmt: fmtMiles(valorNum),
+                valorLetras: valorEnLetras(valorNum),
+                examenes: examenesSel.map(e => ({ n: e.n, p: e.p, incluye: e.incluye || "" })),
+                totalExamenes: totalExamenes(),
+                detallar: !!(document.getElementById('lab-detallar') && document.getElementById('lab-detallar').checked),
+                formatoConcepto: 2,
+                acreedorNombre: LAB_CONFIG.acreedorNombre.toUpperCase(),
+                acreedorCC: formatearCC(LAB_CONFIG.acreedorCC),
+                ciudad: LAB_CONFIG.ciudad,
+                banco: LAB_CONFIG.banco
+            };
+        }
+
+        // ---- Vista previa en vivo ----
+        function actualizarPreviewCuenta() {
+            const d = recogerCuenta();
+            document.getElementById('lab-valor-letras').textContent =
+                d.valor > 0 ? "En letras: " + d.valorLetras : "";
+            const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            let desgloseHtml = "";
+            if (detallarActivo()) {
+                desgloseHtml = '<div class="mt-1 space-y-1">' + examenesSel.map(ex => {
+                    const inc = ex.incluye ? `<div class="text-xs italic text-gray-500">Incluye: ${esc(ex.incluye)}</div>` : "";
+                    return `<div><span class="font-semibold">${esc(ex.n)}</span> — $${fmtMiles(ex.p)}${inc}</div>`;
+                }).join("") + '</div>';
+            }
+            const prev = document.getElementById('lab-preview');
+            prev.innerHTML = `
+                <p class="text-lg font-bold tracking-wide" style="letter-spacing:0.05em;">CUENTA DE COBRO</p>
+                <div class="border-b border-gray-300 my-2"></div>
+                <p class="text-gray-500 text-sm">${esc(d.fechaLarga) || '<span class="text-gray-300">Fecha…</span>'}</p>
+                <div class="h-8"></div>
+                <p class="font-bold">${esc(d.deudorNombre) || '<span class="text-gray-300">NOMBRE DEL DEUDOR</span>'}</p>
+                <p class="font-bold">${d.deudorCC ? 'CC ' + esc(d.deudorCC) : '<span class="text-gray-300">CC …</span>'}</p>
+                <div class="h-3"></div>
+                <p class="font-bold">DEBE A:</p>
+                <p class="font-bold">${esc(d.acreedorNombre)} identificado con CC ${esc(d.acreedorCC)} de ${esc(d.ciudad)}</p>
+                <div class="h-3"></div>
+                <p class="font-bold">LA SUMA DE: ${esc(d.valorLetras)}</p>
+                <p class="font-bold">($${esc(d.valorFmt)})</p>
+                <div class="h-4"></div>
+                <p><span class="font-bold">POR CONCEPTO DE:</span> ${esc(d.concepto)}</p>
+                ${desgloseHtml}
+                <div class="h-6"></div>
+                <div class="mx-auto w-56 border-t border-gray-500 mb-1"></div>
+                <p class="font-bold">${esc(d.acreedorNombre)}</p>
+                <p class="font-bold">CC ${esc(d.acreedorCC)}</p>
+                <p class="font-bold">${esc(d.banco)}</p>
+            `;
+        }
+
+        // ---- Config (datos fijos de quien cobra) ----
+        window.toggleLabConfig = function() {
+            const box = document.getElementById('lab-config');
+            const chev = document.getElementById('lab-config-chevron');
+            box.classList.toggle('hidden');
+            chev.classList.toggle('fa-chevron-down');
+            chev.classList.toggle('fa-chevron-up');
+        };
+
+        function volcarConfigEnCampos() {
+            document.getElementById('lab-acreedor-nombre').value = LAB_CONFIG.acreedorNombre;
+            document.getElementById('lab-acreedor-cc').value = LAB_CONFIG.acreedorCC;
+            document.getElementById('lab-ciudad').value = LAB_CONFIG.ciudad;
+            document.getElementById('lab-banco').value = LAB_CONFIG.banco;
+            document.getElementById('lab-remitente').value = LAB_CONFIG.remitente || '';
+        }
+
+        async function loadConfigLab() {
+            try {
+                const snap = await getDoc(doc(db, "configuracion", "laboratorio"));
+                if (snap.exists()) LAB_CONFIG = { ...LAB_DEFAULTS, ...snap.data() };
+            } catch (e) { console.error("No se pudo leer la config de laboratorio:", e); }
+            labConfigCargada = true;
+            volcarConfigEnCampos();
+        }
+
+        window.guardarConfigLab = async function() {
+            LAB_CONFIG = {
+                acreedorNombre: (document.getElementById('lab-acreedor-nombre').value || "").trim(),
+                acreedorCC: (document.getElementById('lab-acreedor-cc').value || "").trim(),
+                ciudad: (document.getElementById('lab-ciudad').value || "").trim() || "Manizales",
+                banco: (document.getElementById('lab-banco').value || "").trim(),
+                remitente: (document.getElementById('lab-remitente').value || "").trim()
+            };
+            try {
+                await setDoc(doc(db, "configuracion", "laboratorio"), LAB_CONFIG);
+                showToast("Datos de cobro guardados como predeterminados.");
+            } catch (e) {
+                showToast("Se guardaron para esta sesión (revisa permisos de Firestore).", true);
+                console.error(e);
+            }
+            actualizarPreviewCuenta();
+        };
+
+        // ---- Inicialización ----
+        window.initLaboratorioApp = async function() {
+            // 1) Llenar la lista de exámenes YA (no depende de la nube)
+            poblarSelectExamenes('');
+            renderExamenesSel();
+
+            const hoy = new Date();
+            const fechaLocal = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            if (!document.getElementById('lab-fecha').value) document.getElementById('lab-fecha').value = fechaLocal;
+
+            // 2) Escuchas una sola vez
+            if (!labListenersListos) {
+                const screen = document.getElementById('laboratorio-screen');
+                screen.addEventListener('input', (e) => {
+                    if (e.target && (e.target.id === 'lab-valor' || e.target.id === 'lab-nuevo-precio')) {
+                        const digits = e.target.value.replace(/\D/g, '');
+                        e.target.value = digits ? Number(digits).toLocaleString('es-CO') : '';
+                    }
+                    if (e.target && e.target.id === 'lab-examen-buscar') {
+                        poblarSelectExamenes(e.target.value);
+                        return;
+                    }
+                    actualizarPreviewCuenta();
+                });
+                screen.addEventListener('change', actualizarPreviewCuenta);
+                labListenersListos = true;
+            }
+
+            // 3) Vista previa inicial
+            actualizarPreviewCuenta();
+
+            // 4) Datos de la nube en segundo plano (sin bloquear la lista de exámenes)
+            if (!examenesPersonalizadosCargados) {
+                await cargarExamenesPersonalizados();
+                poblarSelectExamenes(document.getElementById('lab-examen-buscar').value || '');
+            }
+            if (!labConfigCargada) {
+                try { await loadConfigLab(); } catch (e) { console.error(e); }
+                actualizarPreviewCuenta();
+            } else {
+                volcarConfigEnCampos();
+            }
+        };
+
+        window.nuevaCuenta = function() {
+            cuentaIdActual = null;
+            examenesSel = [];
+            document.getElementById('lab-deudor-nombre').value = '';
+            document.getElementById('lab-deudor-cc').value = '';
+            document.getElementById('lab-paciente').value = '';
+            document.getElementById('lab-hc').value = '';
+            document.getElementById('lab-valor').value = '';
+            const emailProp = document.getElementById('lab-email-propietario'); if (emailProp) emailProp.value = '';
+            const chkDet = document.getElementById('lab-detallar'); if (chkDet) chkDet.checked = true;
+            const buscar = document.getElementById('lab-examen-buscar'); if (buscar) buscar.value = '';
+            document.getElementById('lab-concepto-base').value = 'Realización de exámenes de laboratorio del paciente';
+            const hoy = new Date();
+            document.getElementById('lab-fecha').value = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            document.getElementById('lab-lista').classList.add('hidden');
+            poblarSelectExamenes('');
+            renderExamenesSel();
+            if (typeof limpiarBorrador === 'function') limpiarBorrador('laboratorio');
+            showToast("Lista para una nueva cuenta.");
+        };
+
+        // ---- PDF (sin logo) ----
+        function construirCuentaPDF(d) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                showToast("No se pudo cargar el generador de PDF. Revisa tu conexión.", true);
+                return null;
+            }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const W = pdf.internal.pageSize.getWidth();
+            const M = 70;
+            const maxW = W - M * 2;
+            const cx = W / 2;
+            let y = 96;
+
+            // Título
+            pdf.setFont('times', 'bold'); pdf.setTextColor(20, 20, 20); pdf.setFontSize(20);
+            pdf.text("CUENTA DE COBRO", cx, y, { align: 'center' });
+            y += 12;
+            pdf.setDrawColor(120, 120, 120); pdf.setLineWidth(0.8);
+            pdf.line(M, y, W - M, y);
+            y += 28;
+
+            // Fecha
+            pdf.setFont('times', 'normal'); pdf.setFontSize(11.5); pdf.setTextColor(70, 70, 70);
+            pdf.text(d.fechaLarga, cx, y, { align: 'center' });
+            pdf.setTextColor(20, 20, 20);
+            y += 62;
+
+            const bloque = (txt, bold, size, gap) => {
+                pdf.setFont('times', bold ? 'bold' : 'normal');
+                pdf.setFontSize(size || 12.5);
+                pdf.splitTextToSize(txt, maxW).forEach(l => { pdf.text(l, cx, y, { align: 'center' }); y += (size || 12.5) + 6; });
+                y += (gap || 0);
+            };
+
+            bloque(d.deudorNombre, true, 13, 2);
+            bloque("CC " + d.deudorCC, true, 13, 22);
+            bloque("DEBE A:", true, 12.5, 6);
+            bloque(d.acreedorNombre + " identificado con CC " + d.acreedorCC + " de " + d.ciudad, true, 12.5, 22);
+            bloque("LA SUMA DE: " + d.valorLetras, true, 12.5, 2);
+            bloque("($" + d.valorFmt + ")", true, 13, 28);
+
+            // Concepto
+            pdf.setFont('times', 'bold'); pdf.setFontSize(12.5);
+            pdf.text("POR CONCEPTO DE:", cx, y, { align: 'center' }); y += 20;
+            pdf.setFont('times', 'normal'); pdf.setFontSize(12);
+            pdf.splitTextToSize(d.concepto, maxW).forEach(l => { pdf.text(l, cx, y, { align: 'center' }); y += 17; });
+
+            // Desglose de exámenes con su valor y qué incluye (formato nuevo)
+            const mostrarDesglose = (d.detallar !== false) && Array.isArray(d.examenes) && d.examenes.length && d.formatoConcepto === 2;
+            if (mostrarDesglose) {
+                y += 8;
+                d.examenes.forEach(ex => {
+                    const linea = (ex.n || "") + "  —  $" + fmtMiles(ex.p);
+                    pdf.setFont('times', 'bold'); pdf.setFontSize(11.5);
+                    pdf.splitTextToSize(linea, maxW).forEach(l => { pdf.text(l, cx, y, { align: 'center' }); y += 15; });
+                    if (ex.incluye) {
+                        pdf.setFont('times', 'italic'); pdf.setFontSize(10);
+                        pdf.setTextColor(80, 80, 80);
+                        pdf.splitTextToSize("Incluye: " + ex.incluye, maxW - 40).forEach(l => { pdf.text(l, cx, y, { align: 'center' }); y += 13; });
+                        pdf.setTextColor(20, 20, 20);
+                    }
+                    y += 5;
+                });
+            }
+
+            // Firma (ubicada más arriba, en la zona media-baja de la hoja)
+            const H = pdf.internal.pageSize.getHeight();
+            let ySig = Math.max(y + 40, 600);
+            if (ySig > H - 150) ySig = y + 35;
+            pdf.setDrawColor(60, 60, 60); pdf.setLineWidth(0.8);
+            pdf.line(cx - 115, ySig, cx + 115, ySig);
+            ySig += 18;
+            pdf.setFont('times', 'bold'); pdf.setFontSize(12.5);
+            pdf.text(d.acreedorNombre, cx, ySig, { align: 'center' }); ySig += 18;
+            pdf.text("CC " + d.acreedorCC, cx, ySig, { align: 'center' }); ySig += 18;
+            pdf.setFontSize(12);
+            pdf.text(d.banco, cx, ySig, { align: 'center' });
+
+            return pdf;
+        }
+
+        function nombreArchivoCuenta(d) {
+            const base = (d.paciente || d.deudorNombre || "cuenta").replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+            return "Cuenta_cobro_" + base + "_" + (d.fecha || '') + ".pdf";
+        }
+
+        window.descargarCuentaPDF = function() {
+            const d = recogerCuenta();
+            if (!d.deudorNombre) { showToast("Falta el nombre del deudor.", true); return; }
+            if (d.valor <= 0) { showToast("Ingresa un valor mayor a cero.", true); return; }
+            const pdf = construirCuentaPDF(d);
+            if (pdf) { pdf.save(nombreArchivoCuenta(d)); showToast("PDF generado."); }
+        };
+
+        // Valida en vivo el correo del propietario y avisa si es válido o no
+        window.validarCorreoPropietario = function() {
+            const input = document.getElementById('lab-email-propietario');
+            const estado = document.getElementById('lab-email-estado');
+            const val = (input.value || "").trim();
+            if (!val) {
+                if (estado) estado.textContent = '';
+                input.classList.remove('border-green-400', 'border-red-400');
+                return false;
+            }
+            const valido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+            if (valido) {
+                if (estado) estado.innerHTML = '<span class="text-green-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Correo válido</span>';
+                input.classList.add('border-green-400'); input.classList.remove('border-red-400');
+            } else {
+                if (estado) estado.innerHTML = '<span class="text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Correo no válido</span>';
+                input.classList.add('border-red-400'); input.classList.remove('border-green-400');
+            }
+            return valido;
+        };
+
+        // ---- Enviar la cuenta (PDF) por correo vía Apps Script ----
+        window.enviarCuentaPorCorreo = async function() {
+            const email = (document.getElementById('lab-email-propietario').value || "").trim();
+            const d = recogerCuenta();
+            if (!d.deudorNombre) { showToast("Falta el nombre del deudor.", true); return; }
+            if (d.valor <= 0) { showToast("Ingresa un valor mayor a cero.", true); return; }
+            if (!validarCorreoPropietario()) { showToast("Escribe un correo válido del propietario.", true); document.getElementById('lab-email-propietario').focus(); return; }
+
+            const pdf = construirCuentaPDF(d);
+            if (!pdf) return;
+
+            if (!URL_ENVIO_CORREO) {
+                pdf.save(nombreArchivoCuenta(d));
+                showToast("No hay Apps Script configurado. Se descargó el PDF para enviarlo a mano.", true);
+                return;
+            }
+
+            const dataUri = pdf.output('datauristring');
+            const base64 = dataUri.substring(dataUri.indexOf(',') + 1);
+
+            const btn = document.getElementById('lab-btn-enviar');
+            const htmlOrig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+            const asunto = "Cuenta de cobro" + (d.paciente ? " - " + d.paciente : "");
+            const cuerpo = "Buen día,\n\nAdjunto la cuenta de cobro por " + d.concepto + ".\n\n" +
+                           "Valor: $" + d.valorFmt + " (" + d.valorLetras + ").\n\n" +
+                           d.acreedorNombre + "\nCC " + d.acreedorCC + "\n" + d.banco;
+
+            try {
+                const resp = await fetch(URL_ENVIO_CORREO, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        clave: CLAVE_ENVIO_CORREO,
+                        tipo: "cuenta",
+                        para: email,
+                        remitente: LAB_CONFIG.remitente || "",
+                        asunto: asunto,
+                        cuerpo: cuerpo,
+                        archivoNombre: nombreArchivoCuenta(d),
+                        pdfBase64: base64
+                    })
+                });
+                const r = await resp.json().catch(() => null);
+                if (r && r.ok) {
+                    showToast("Cuenta enviada a " + email);
+                    try {
+                        const id = cuentaIdActual || String(Date.now());
+                        await setDoc(doc(db, "cuentas_laboratorio", id), { ...d, emailPropietario: email, creado: new Date().toISOString() });
+                        cuentaIdActual = id;
+                    } catch (e) { console.error(e); }
+                    if (typeof limpiarBorrador === 'function') await limpiarBorrador('laboratorio');
+                } else {
+                    const detalle = (r && r.error) ? (" (" + r.error + ")") : "";
+                    showToast("No se pudo enviar." + detalle + " Revisa el Apps Script o descarga el PDF.", true);
+                    console.error("Respuesta del envío:", r);
+                }
+            } catch (err) {
+                showToast("No se pudo enviar el correo. Revisa tu conexión o el Apps Script.", true);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = htmlOrig;
+            }
+        };
+
+        // ---- Guardado en la nube ----
+        window.guardarCuenta = async function() {
+            const d = recogerCuenta();
+            if (!d.deudorNombre) { showToast("Falta el nombre del deudor.", true); return; }
+            if (d.valor <= 0) { showToast("Ingresa un valor mayor a cero.", true); return; }
+            const id = cuentaIdActual || String(Date.now());
+            const registro = { ...d, creado: new Date().toISOString() };
+            try {
+                await setDoc(doc(db, "cuentas_laboratorio", id), registro);
+                cuentaIdActual = id;
+                if (typeof limpiarBorrador === 'function') await limpiarBorrador('laboratorio');
+                showToast("Cuenta guardada en la nube.");
+            } catch (e) {
+                showToast("No se pudo guardar. Revisa las reglas de Firestore.", true);
+                console.error(e);
+            }
+        };
+
+        function formatoFechaLegible(f) {
+            if (!f) return 'Sin fecha';
+            const [y, m, d] = f.split('-').map(Number);
+            if (!y || !m || !d) return f;
+            return d + " de " + MESES_LAB[m - 1] + " de " + y;
+        }
+
+        window.rangoRapidoCuentas = function(tipo) {
+            const hoy = new Date();
+            const iso = dd => new Date(dd.getTime() - dd.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            const desde = document.getElementById('lab-desde');
+            const hasta = document.getElementById('lab-hasta');
+            if (tipo === 'hoy') {
+                desde.value = iso(hoy); hasta.value = iso(hoy);
+            } else if (tipo === 'mes') {
+                desde.value = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+                hasta.value = iso(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
+            } else {
+                desde.value = ''; hasta.value = '';
+            }
+            abrirCuentasGuardadas();
+        };
+
+        window.limpiarFiltroCuentas = function() {
+            document.getElementById('lab-desde').value = '';
+            document.getElementById('lab-hasta').value = '';
+            abrirCuentasGuardadas();
+        };
+
+        window.abrirCuentasGuardadas = async function() {
+            const panel = document.getElementById('lab-lista');
+            const cont = document.getElementById('lab-lista-container');
+            const resumen = document.getElementById('lab-lista-resumen');
+            panel.classList.remove('hidden');
+            resumen.classList.add('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "cuentas_laboratorio"));
+                let items = [];
+                snap.forEach(dd => items.push({ id: dd.id, ...dd.data() }));
+
+                const desde = document.getElementById('lab-desde').value;
+                const hasta = document.getElementById('lab-hasta').value;
+                const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
+                if (desde) items = items.filter(it => fechaDe(it) >= desde);
+                if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
+
+                if (items.length === 0) {
+                    cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>';
+                    return;
+                }
+
+                // Resumen general del rango
+                const totalGeneral = items.reduce((s, it) => s + (Number(it.valor) || 0), 0);
+                resumen.innerHTML = '<i class="fa-solid fa-circle-info text-teal-600"></i> ' + items.length + ' cuenta(s) · Total $' + fmtMiles(totalGeneral);
+                resumen.classList.remove('hidden');
+
+                // Agrupar por fecha (más reciente primero)
+                const grupos = {};
+                items.forEach(it => { const f = fechaDe(it); (grupos[f] = grupos[f] || []).push(it); });
+                const fechas = Object.keys(grupos).sort((a, b) => (b || '').localeCompare(a || ''));
+
+                cont.innerHTML = '';
+                fechas.forEach(fecha => {
+                    const grupo = grupos[fecha];
+                    const totalDia = grupo.reduce((s, it) => s + (Number(it.valor) || 0), 0);
+                    const header = document.createElement('div');
+                    header.className = "flex items-center justify-between bg-teal-50 border border-teal-100 rounded-lg px-3 py-1.5 mt-3 mb-1";
+                    header.innerHTML = '<span class="font-bold text-teal-700 text-sm"><i class="fa-regular fa-calendar"></i> ' + formatoFechaLegible(fecha) +
+                                       '</span><span class="text-xs text-gray-500">' + grupo.length + ' · $' + fmtMiles(totalDia) + '</span>';
+                    cont.appendChild(header);
+
+                    grupo.forEach(it => {
+                        const row = document.createElement('div');
+                        row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
+                        const safeNombre = (it.deudorNombre || '').replace(/'/g, "\\'");
+                        row.innerHTML = `
+                            <div class="min-w-0">
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}</p>
+                                <p class="text-xs text-gray-500 truncate">Propietario: ${it.deudorNombre || '—'} · <span class="font-semibold text-teal-700">$${fmtMiles(it.valor)}</span></p>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="cargarCuenta('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg border border-teal-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                                <button onclick="descargarCuentaGuardadaPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                                <button onclick="eliminarCuenta('${it.id}', '${safeNombre}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>`;
+                        cont.appendChild(row);
+                    });
+                });
+            } catch (e) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(e);
+            }
+        };
+
+        window.cargarCuenta = async function(id) {
+            try {
+                const snap = await getDoc(doc(db, "cuentas_laboratorio", id));
+                if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
+                const it = snap.data();
+                cuentaIdActual = id;
+                examenesSel = Array.isArray(it.examenes) ? it.examenes.map(e => ({ n: e.n, p: Number(e.p) || 0, incluye: e.incluye || "" })) : [];
+                document.getElementById('lab-fecha').value = it.fecha || '';
+                document.getElementById('lab-deudor-nombre').value = it.deudorNombre || '';
+                document.getElementById('lab-deudor-cc').value = it.deudorCC || '';
+                document.getElementById('lab-paciente').value = it.paciente || '';
+                document.getElementById('lab-hc').value = it.hc || '';
+                const emailProp = document.getElementById('lab-email-propietario'); if (emailProp) emailProp.value = it.emailPropietario || '';
+                const chkDet = document.getElementById('lab-detallar'); if (chkDet) chkDet.checked = !!it.detallar;
+                document.getElementById('lab-concepto-base').value = it.conceptoBase || 'Realización de exámenes de laboratorio del paciente';
+                document.getElementById('lab-valor').value = it.valor ? Number(it.valor).toLocaleString('es-CO') : '';
+                document.getElementById('lab-lista').classList.add('hidden');
+                poblarSelectExamenes('');
+                renderExamenesSel();
+                // renderExamenesSel reescribe el valor desde los exámenes; si la cuenta se guardó
+                // con un valor distinto (ajuste manual), lo respetamos.
+                if (it.valor) document.getElementById('lab-valor').value = Number(it.valor).toLocaleString('es-CO');
+                actualizarPreviewCuenta();
+                showToast("Cuenta cargada.");
+            } catch (e) {
+                showToast("No se pudo abrir la cuenta.", true);
+                console.error(e);
+            }
+        };
+
+        window.descargarCuentaGuardadaPDF = async function(id) {
+            try {
+                const snap = await getDoc(doc(db, "cuentas_laboratorio", id));
+                if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
+                const it = snap.data();
+                const d = {
+                    ...it,
+                    deudorCC: formatearCC(it.deudorCC),
+                    acreedorCC: formatearCC(it.acreedorCC || LAB_CONFIG.acreedorCC),
+                    fechaLarga: fechaLargaCuenta(it.fecha, it.ciudad || LAB_CONFIG.ciudad),
+                    valorFmt: fmtMiles(it.valor),
+                    valorLetras: it.valorLetras || valorEnLetras(it.valor)
+                };
+                const pdf = construirCuentaPDF(d);
+                if (pdf) { pdf.save(nombreArchivoCuenta(d)); showToast("PDF generado."); }
+            } catch (e) {
+                showToast("No se pudo generar el PDF.", true);
+                console.error(e);
+            }
+        };
+
+        window.eliminarCuenta = async function(id, nombre) {
+            if (!confirm(`¿Eliminar la cuenta de "${nombre || 'este deudor'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, "cuentas_laboratorio", id));
+                if (cuentaIdActual === id) nuevaCuenta();
+                showToast("Cuenta eliminada.");
+                abrirCuentasGuardadas();
+            } catch (e) {
+                showToast("No se pudo eliminar.", true);
+                console.error(e);
+            }
+        };
 
         // --- SISTEMA DE NOTIFICACIONES ---
         window.showToast = function(message, isError = false) {
