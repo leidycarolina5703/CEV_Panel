@@ -894,7 +894,6 @@
             <div class="border-t border-gray-100 pt-4">
                 <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-vials text-teal-600"></i> Exámenes tomados</p>
                 <div class="flex flex-col sm:flex-row gap-2 mt-1">
-                    <input type="text" id="lab-examen-buscar" placeholder="Filtrar por nombre..." class="fmt-in sm:w-2/5">
                     <select id="lab-examen-select" onchange="actualizarBotonBorrarExamen()" class="fmt-in flex-1 cursor-pointer"></select>
                     <button onclick="agregarExamen()" class="px-4 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 text-sm flex items-center justify-center gap-2 shrink-0">
                         <i class="fa-solid fa-plus"></i> Agregar
@@ -4728,7 +4727,6 @@
             examenesPersonalizados.push({ n: nombre, p: precio, incluye: "" });
             await guardarExamenesPersonalizados();
             poblarSelectExamenes('');
-            document.getElementById('lab-examen-buscar').value = '';
             // Agregarlo también a la cuenta actual (es lo que se acaba de tomar)
             examenesSel.push({ n: nombre, p: precio, incluye: "" });
             renderExamenesSel();
@@ -4747,7 +4745,7 @@
             examenesPersonalizados.splice(pos, 1);
             await guardarExamenesPersonalizados();
             sel.value = "";
-            poblarSelectExamenes(document.getElementById('lab-examen-buscar').value || '');
+            poblarSelectExamenes('');
             showToast("Examen eliminado de la lista.");
         };
 
@@ -4898,10 +4896,6 @@
                         const digits = e.target.value.replace(/\D/g, '');
                         e.target.value = digits ? Number(digits).toLocaleString('es-CO') : '';
                     }
-                    if (e.target && e.target.id === 'lab-examen-buscar') {
-                        poblarSelectExamenes(e.target.value);
-                        return;
-                    }
                     actualizarPreviewCuenta();
                 });
                 screen.addEventListener('change', actualizarPreviewCuenta);
@@ -4914,7 +4908,7 @@
             // 4) Datos de la nube en segundo plano (sin bloquear la lista de exámenes)
             if (!examenesPersonalizadosCargados) {
                 await cargarExamenesPersonalizados();
-                poblarSelectExamenes(document.getElementById('lab-examen-buscar').value || '');
+                poblarSelectExamenes('');
             }
             if (!labConfigCargada) {
                 try { await loadConfigLab(); } catch (e) { console.error(e); }
@@ -4934,7 +4928,6 @@
             document.getElementById('lab-valor').value = '';
             const emailProp = document.getElementById('lab-email-propietario'); if (emailProp) emailProp.value = '';
             const chkDet = document.getElementById('lab-detallar'); if (chkDet) chkDet.checked = true;
-            const buscar = document.getElementById('lab-examen-buscar'); if (buscar) buscar.value = '';
             document.getElementById('lab-concepto-base').value = 'Realización de exámenes de laboratorio del paciente';
             const hoy = new Date();
             document.getElementById('lab-fecha').value = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
