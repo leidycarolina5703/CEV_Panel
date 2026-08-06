@@ -5079,9 +5079,8 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
 
             const asunto = "Cuenta de cobro" + (d.paciente ? " - " + d.paciente : "");
-            const cuerpo = "Buen día,\n\nAdjunto la cuenta de cobro por " + d.concepto + ".\n\n" +
-                           "Valor: $" + d.valorFmt + " (" + d.valorLetras + ").\n\n" +
-                           d.acreedorNombre + "\nCC " + d.acreedorCC + "\n" + d.banco;
+            const infoPaciente = (d.paciente ? " del paciente " + d.paciente : "") + (d.hc ? " (HC " + d.hc + ")" : "");
+            const cuerpo = "Buen día,\n\nAdjunto la cuenta de cobro" + infoPaciente + ".\n\nQue tenga un excelente día.";
 
             try {
                 const resp = await fetch(URL_ENVIO_CORREO, {
