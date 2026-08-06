@@ -918,11 +918,18 @@
                     </button>
                     <button onclick="cancelarExamenNuevo()" class="px-3 py-2 bg-white text-gray-500 rounded-lg text-sm border border-gray-300 hover:bg-gray-100 shrink-0">Cancelar</button>
                 </div>
-                <p class="text-xs text-gray-400 italic mt-1">Los exámenes que agregues aparecen con ★ y puedes borrarlos si te equivocas.</p>
-                <div class="mt-2">
+                <p class="text-xs text-gray-400 italic mt-1">Los exámenes que agregues aparecen con ★.</p>
+                <div class="mt-2 flex flex-col sm:flex-row gap-2">
                     <button onclick="descargarExamenesExcel()" class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 text-sm flex items-center justify-center gap-2 transition-colors shadow-sm">
                         <i class="fa-solid fa-file-excel"></i> Descargar lista de exámenes (Excel)
                     </button>
+                    <button onclick="toggleExamenesManuales()" class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 text-sm border border-gray-200 flex items-center justify-center gap-2 transition-colors">
+                        <i class="fa-solid fa-star text-amber-400"></i> Exámenes agregados manualmente
+                        <i id="lab-custom-chevron" class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                <div id="lab-custom-wrap" class="hidden mt-2">
+                    <div id="lab-custom-list" class="space-y-1"></div>
                 </div>
                 <div id="lab-examenes-sel" class="mt-3 space-y-1"></div>
                 <div id="lab-examenes-vacio" class="mt-3 text-center text-gray-400 italic text-xs py-2">Aún no has agregado exámenes.</div>
@@ -4753,6 +4760,8 @@
             examenesPersonalizados.push({ n: nombre, p: precio, incluye: "" });
             await guardarExamenesPersonalizados();
             poblarSelectExamenes('');
+            renderExamenesPersonalizados();
+            abrirExamenesManuales();
             // Agregarlo también a la cuenta actual (es lo que se acaba de tomar)
             examenesSel.push({ n: nombre, p: precio, incluye: "" });
             renderExamenesSel();
@@ -4769,9 +4778,109 @@
             if (!ex) return;
             if (!confirm(`¿Eliminar el examen "${ex.n}" de la lista? (No afecta las cuentas ya guardadas.)`)) return;
             examenesPersonalizados.splice(pos, 1);
+            if (editandoExamenIdx === pos) editandoExamenIdx = -1;
             await guardarExamenesPersonalizados();
             sel.value = "";
             poblarSelectExamenes('');
+            renderExamenesPersonalizados();
+            showToast("Examen eliminado de la lista.");
+        };
+
+        // ---- Lista de exámenes agregados manualmente: editar / eliminar ----
+        let editandoExamenIdx = -1;
+
+        window.toggleExamenesManuales = function() {
+            const wrap = document.getElementById('lab-custom-wrap');
+            const chev = document.getElementById('lab-custom-chevron');
+            wrap.classList.toggle('hidden');
+            if (chev) { chev.classList.toggle('fa-chevron-down'); chev.classList.toggle('fa-chevron-up'); }
+            if (!wrap.classList.contains('hidden')) renderExamenesPersonalizados();
+        };
+
+        function abrirExamenesManuales() {
+            const wrap = document.getElementById('lab-custom-wrap');
+            const chev = document.getElementById('lab-custom-chevron');
+            if (wrap) wrap.classList.remove('hidden');
+            if (chev) { chev.classList.remove('fa-chevron-down'); chev.classList.add('fa-chevron-up'); }
+        }
+
+        function renderExamenesPersonalizados() {
+            const cont = document.getElementById('lab-custom-list');
+            if (!cont) return;
+            const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            if (examenesPersonalizados.length === 0) {
+                cont.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-3">Aún no has agregado exámenes manualmente. Usa "¿No está el examen? Agregar uno nuevo".</p>';
+                return;
+            }
+            cont.innerHTML = '';
+            examenesPersonalizados.forEach((ex, i) => {
+                const row = document.createElement('div');
+                if (i === editandoExamenIdx) {
+                    row.className = "flex flex-col sm:flex-row gap-2 items-stretch bg-amber-50 border border-amber-200 rounded-lg p-2";
+                    row.innerHTML = `
+                        <input type="text" id="edit-nombre-${i}" value="${esc(ex.n)}" class="fmt-in flex-1 uppercase text-sm">
+                        <div class="relative sm:w-28">
+                            <span class="absolute left-3 top-2.5 text-gray-400 font-bold">$</span>
+                            <input type="text" inputmode="numeric" id="edit-precio-${i}" value="${Number(ex.p || 0).toLocaleString('es-CO')}" class="fmt-in pl-7 text-sm">
+                        </div>
+                        <button onclick="guardarEdicionExamen(${i})" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700" title="Guardar"><i class="fa-solid fa-check"></i></button>
+                        <button onclick="cancelarEdicionExamen()" class="px-3 py-2 bg-white text-gray-500 rounded-lg text-sm border border-gray-300 hover:bg-gray-100" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>`;
+                } else {
+                    row.className = "flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm";
+                    row.innerHTML = `
+                        <span class="min-w-0 truncate text-gray-700">★ ${esc(ex.n)} <span class="text-teal-700 font-semibold">$${fmtMiles(ex.p)}</span></span>
+                        <span class="flex gap-3 shrink-0">
+                            <button onclick="editarExamenPersonalizado(${i})" class="text-teal-600 hover:text-teal-800" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarExamenPersonalizadoLista(${i})" class="text-gray-400 hover:text-red-500" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+                        </span>`;
+                }
+                cont.appendChild(row);
+            });
+        }
+
+        window.editarExamenPersonalizado = function(i) {
+            editandoExamenIdx = i;
+            renderExamenesPersonalizados();
+        };
+
+        window.cancelarEdicionExamen = function() {
+            editandoExamenIdx = -1;
+            renderExamenesPersonalizados();
+        };
+
+        window.guardarEdicionExamen = async function(i) {
+            const inpN = document.getElementById('edit-nombre-' + i);
+            const inpP = document.getElementById('edit-precio-' + i);
+            if (!inpN || !inpP) return;
+            const nombre = (inpN.value || '').trim().toUpperCase();
+            const precio = parseInt((inpP.value || '').replace(/\D/g, ''), 10) || 0;
+            if (!nombre) { showToast("El nombre no puede quedar vacío.", true); return; }
+            // Evitar que quede igual a otro examen ya existente (base o personalizado)
+            const dup = listaExamenes().some((e, idx) => e.n.toUpperCase() === nombre && idx !== (EXAMENES_LAB.length + i));
+            if (dup) { showToast("Ya existe un examen con ese nombre.", true); return; }
+            const anterior = examenesPersonalizados[i];
+            examenesPersonalizados[i] = { n: nombre, p: precio, incluye: anterior.incluye || "" };
+            // Si ese examen ya estaba agregado a la cuenta actual, actualizarlo también
+            examenesSel.forEach(sel => {
+                if (sel.n === anterior.n && Number(sel.p) === Number(anterior.p)) { sel.n = nombre; sel.p = precio; }
+            });
+            editandoExamenIdx = -1;
+            await guardarExamenesPersonalizados();
+            poblarSelectExamenes('');
+            renderExamenesPersonalizados();
+            renderExamenesSel();
+            showToast("Examen actualizado.");
+        };
+
+        window.eliminarExamenPersonalizadoLista = async function(i) {
+            const ex = examenesPersonalizados[i];
+            if (!ex) return;
+            if (!confirm(`¿Eliminar el examen "${ex.n}" de la lista? (No afecta las cuentas ya guardadas.)`)) return;
+            examenesPersonalizados.splice(i, 1);
+            if (editandoExamenIdx === i) editandoExamenIdx = -1;
+            await guardarExamenesPersonalizados();
+            poblarSelectExamenes('');
+            renderExamenesPersonalizados();
             showToast("Examen eliminado de la lista.");
         };
 
@@ -4918,7 +5027,7 @@
             if (!labListenersListos) {
                 const screen = document.getElementById('laboratorio-screen');
                 screen.addEventListener('input', (e) => {
-                    if (e.target && (e.target.id === 'lab-valor' || e.target.id === 'lab-nuevo-precio')) {
+                    if (e.target && (e.target.id === 'lab-valor' || e.target.id === 'lab-nuevo-precio' || (e.target.id && e.target.id.indexOf('edit-precio-') === 0))) {
                         const digits = e.target.value.replace(/\D/g, '');
                         e.target.value = digits ? Number(digits).toLocaleString('es-CO') : '';
                     }
@@ -4935,6 +5044,7 @@
             if (!examenesPersonalizadosCargados) {
                 await cargarExamenesPersonalizados();
                 poblarSelectExamenes('');
+                renderExamenesPersonalizados();
             }
             if (!labConfigCargada) {
                 try { await loadConfigLab(); } catch (e) { console.error(e); }
