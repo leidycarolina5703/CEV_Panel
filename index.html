@@ -1117,7 +1117,10 @@
         //   pedido se envíe SOLO, sin abrir Gmail ni pulsar "Enviar".
         //   Si se deja vacío, la app sigue funcionando como antes: abre Gmail
         //   con el correo listo para que lo envíes a mano.
-        const URL_ENVIO_CORREO = "https://script.google.com/macros/s/AKfycbwxhibvAIqvCDCwMLOvII_mBglomqk9m6UxVxckHAbgzY417o3fQapisEIYi3nxf5OY6w/exec";
+        // Cuentas de cobro (Laboratorio) -> sale desde enviolaboratoriomascotas@gmail.com
+        const URL_ENVIO_CORREO = "https://script.google.com/macros/s/AKfycbx6r5eHhH2j8jYHRPX509dVXeIpJA_LeVan2MTj909IXOOePbIWVghByB7NGTFEwBG0/exec";
+        // Pedidos de farmacia -> sale desde cevagendamientocitas@gmail.com
+        const URL_ENVIO_PEDIDOS = "https://script.google.com/macros/s/AKfycbwDfTAUS8y-o3_b3euP-MU8T_MgDwJhlM5q1ypRwSUw6Fq-Ivl_tSrr2ttbuIyeEaz8/exec";
         // ▸ Debe ser idéntica a la del Apps Script. Evita que alguien más use la URL.
         const CLAVE_ENVIO_CORREO = "cev-pedidos-2026";
 
@@ -2213,7 +2216,7 @@
             const asunto = "Pedido de Insumos Farmacia CEV - " + fechaEnvio;
 
             // Sin Apps Script: se descarga el PDF y se abre Gmail para adjuntarlo a mano
-            if (!URL_ENVIO_CORREO) {
+            if (!URL_ENVIO_PEDIDOS) {
                 pdf.save(nombrePedidoPDF());
                 const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=" + emailDestino +
                                  "&su=" + encodeURIComponent(asunto) +
@@ -2234,7 +2237,7 @@
             showToast("Enviando pedido por correo...");
 
             try {
-                const resp = await fetch(URL_ENVIO_CORREO, {
+                const resp = await fetch(URL_ENVIO_PEDIDOS, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({
