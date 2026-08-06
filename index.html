@@ -568,7 +568,7 @@
                     <span class="font-bold text-rose-600">* FR</span>,
                     <span class="font-bold text-emerald-600">&amp; PAS</span>, y de nuevo vacío.</p>
                 <div class="overflow-auto border border-gray-200 rounded-lg" style="max-height:60vh">
-                    <table class="border-collapse text-center select-none" style="font-size:11px">
+                    <table class="border-collapse text-center select-none" style="font-size:14px">
                         <thead id="f-grid-head" class="sticky top-0 bg-white z-10"></thead>
                         <tbody id="f-grid-body"></tbody>
                     </table>
@@ -576,7 +576,7 @@
 
                 <h3 class="text-sm font-bold text-[#154390] mt-6 mb-2">Parámetros por minuto</h3>
                 <div class="overflow-auto border border-gray-200 rounded-lg">
-                    <table class="border-collapse text-center" style="font-size:11px">
+                    <table class="border-collapse text-center" style="font-size:14px">
                         <thead id="f-param-head" class="sticky top-0 bg-white z-10"></thead>
                         <tbody id="f-param-body"></tbody>
                     </table>
@@ -2718,20 +2718,20 @@
                 '<th class="px-1 py-1 bg-blue-50 text-[#154390] border border-gray-200">FC +</th>' +
                 '<th class="px-1 py-1 bg-rose-50 text-rose-600 border border-gray-200">FR *</th>' +
                 '<th class="px-1 py-1 bg-emerald-50 text-emerald-600 border border-gray-200">PAS &amp;</th>';
-            MINUTOS.forEach(m => { th += `<th class="px-1 py-1 border border-gray-200 text-gray-500">${m}</th>`; });
+            MINUTOS.forEach(m => { th += `<th class="px-2 py-2 border border-gray-200 text-gray-500" style="min-width:46px">${m}</th>`; });
             th += '</tr>';
             head.innerHTML = th;
 
             let html = '';
             for (let r = 0; r < FC_SCALE.length; r++) {
                 html += '<tr>';
-                html += `<td class="border border-gray-200 text-gray-600 font-semibold bg-blue-50/40">${FC_SCALE[r]}</td>`;
-                html += `<td class="border border-gray-200 text-gray-600 font-semibold bg-rose-50/40">${FR_SCALE[r]}</td>`;
-                html += `<td class="border border-gray-200 text-gray-600 font-semibold bg-emerald-50/40">${FC_SCALE[r]}</td>`;
+                html += `<td class="border border-gray-200 text-gray-600 font-semibold bg-blue-50/40" style="height:40px;min-width:42px;font-size:14px">${FC_SCALE[r]}</td>`;
+                html += `<td class="border border-gray-200 text-gray-600 font-semibold bg-rose-50/40" style="height:40px;min-width:42px;font-size:14px">${FR_SCALE[r]}</td>`;
+                html += `<td class="border border-gray-200 text-gray-600 font-semibold bg-emerald-50/40" style="height:40px;min-width:42px;font-size:14px">${FC_SCALE[r]}</td>`;
                 for (let c = 0; c < MINUTOS.length; c++) {
                     const sym = intraPuntos[r + '-' + c] || '';
                     const col = SIMBOLO_COLOR[sym] || '';
-                    html += `<td onclick="tocarCeldaIntra(${r},${c})" class="border border-gray-200 cursor-pointer hover:bg-gray-100" style="min-width:26px;height:20px;font-weight:bold;color:${col}">${sym}</td>`;
+                    html += `<td onclick="tocarCeldaIntra(${r},${c})" class="border border-gray-200 cursor-pointer hover:bg-blue-50 active:bg-blue-100" style="min-width:46px;height:40px;font-weight:bold;font-size:19px;color:${col}">${sym}</td>`;
                 }
                 html += '</tr>';
             }
@@ -2756,20 +2756,20 @@
             const head = document.getElementById('f-param-head');
             const body = document.getElementById('f-param-body');
             let th = '<tr><th class="px-2 py-1 border border-gray-200 text-left text-gray-500 bg-gray-50" style="min-width:130px">Parámetro</th>';
-            MINUTOS.forEach(m => { th += `<th class="px-1 py-1 border border-gray-200 text-gray-500">${m}</th>`; });
+            MINUTOS.forEach(m => { th += `<th class="px-2 py-2 border border-gray-200 text-gray-500" style="min-width:46px">${m}</th>`; });
             th += '</tr>';
             head.innerHTML = th;
 
             let html = '';
             PARAM_ROWS.forEach(p => {
-                html += `<tr><td class="px-2 py-1 border border-gray-200 text-left font-semibold text-gray-700 bg-gray-50">${p.label}</td>`;
+                html += `<tr><td class="px-3 py-2 border border-gray-200 text-left font-semibold text-gray-700 bg-gray-50 whitespace-nowrap">${p.label}</td>`;
                 for (let c = 0; c < MINUTOS.length; c++) {
                     const val = (intraParams[p.id] && intraParams[p.id][c]) || '';
                     if (p.tipo === 'texto') {
-                        html += `<td class="border border-gray-200 p-0"><input value="${val.replace(/"/g,'&quot;')}" oninput="setParamIntra('${p.id}',${c},this.value)" class="w-full text-center border-0 bg-transparent focus:outline-none focus:bg-blue-50" style="min-width:34px;height:22px;font-size:11px"></td>`;
+                        html += `<td class="border border-gray-200 p-0"><input value="${val.replace(/"/g,'&quot;')}" oninput="setParamIntra('${p.id}',${c},this.value)" class="w-full text-center border-0 bg-transparent focus:outline-none focus:bg-blue-50" style="min-width:56px;height:40px;font-size:15px"></td>`;
                     } else {
                         const on = val === 'X';
-                        html += `<td onclick="marcarParamIntra('${p.id}',${c})" class="border border-gray-200 cursor-pointer hover:bg-gray-100 font-bold text-[#154390]" style="min-width:34px;height:22px">${on ? 'X' : ''}</td>`;
+                        html += `<td onclick="marcarParamIntra('${p.id}',${c})" class="border border-gray-200 cursor-pointer hover:bg-blue-50 active:bg-blue-100 font-bold text-[#154390]" style="min-width:56px;height:40px;font-size:18px">${on ? 'X' : ''}</td>`;
                     }
                 }
                 html += '</tr>';
