@@ -2311,6 +2311,13 @@
                             .replace(/\*(.*?)\*/g, '<b>$1</b>');
                     }
 
+                    let fechaTexto = "Registro guardado";
+                    if (pedido.timestamp) {
+                        const f = new Date(pedido.timestamp);
+                        fechaTexto = f.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) +
+                                     " · " + f.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                    }
+
                     const card = document.createElement('div');
                     card.className = "bg-white p-4 sm:p-5 rounded-xl shadow-md border border-blue-200 mb-4 hover:shadow-lg transition-shadow";
                     
@@ -2318,13 +2325,18 @@
                     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=servicioalclientecevmascotas@gmail.com&su=Reenvío Pedido Insumos&body=${textoParaReenviar}`;
 
                     card.innerHTML = `
-                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
-                            <div class="font-bold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
-                                <i class="fa-solid fa-envelope text-blue-500 text-lg"></i> Registro guardado
+                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-200 gap-2">
+                            <div class="font-bold text-gray-700 flex items-center gap-2 text-xs sm:text-sm min-w-0">
+                                <i class="fa-solid fa-envelope text-blue-500 text-lg shrink-0"></i> <span class="truncate">${fechaTexto}</span>
                             </div>
-                            <a href="${gmailUrl}" target="_blank" class="text-xs sm:text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full uppercase tracking-wide border border-blue-200 hover:bg-blue-200 transition-colors flex items-center gap-1">
-                                <i class="fa-solid fa-share"></i> Reenviar
-                            </a>
+                            <div class="flex gap-2 shrink-0">
+                                <a href="${gmailUrl}" target="_blank" class="text-xs font-bold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full border border-blue-200 hover:bg-blue-200 transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-share"></i> Reenviar
+                                </a>
+                                <button onclick="eliminarPedidoEnviado('${pedido.id}')" class="text-xs font-bold bg-red-50 text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-100 transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> Eliminar
+                                </button>
+                            </div>
                         </div>
                         <div class="bg-blue-50 p-3 sm:p-4 rounded-lg text-sm text-gray-700 font-mono shadow-inner border border-blue-100">
                             ${textoFormateado}
@@ -2337,6 +2349,18 @@
                 container.innerHTML = '<div class="text-center py-8 text-red-500 bg-red-50 rounded-xl border border-red-200"><i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i><br><b>Error al cargar historial</b></div>';
             }
         }
+
+        window.eliminarPedidoEnviado = async function(id) {
+            if (!confirm("¿Eliminar este pedido enviado? Esta acción no se puede deshacer.")) return;
+            try {
+                await deleteDoc(doc(db, "pedidos_farmacia", id));
+                showToast("Pedido eliminado.");
+                cargarHistorialDeFirebase();
+            } catch (error) {
+                showToast("No se pudo eliminar. Revisa tu conexión.", true);
+                console.error(error);
+            }
+        };
 
         // ==========================================
         // 4. ADMINISTRACIÓN DE USUARIOS Y ACCESOS
