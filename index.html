@@ -133,6 +133,16 @@
                     <p class="text-gray-500 text-center text-sm">Genera cuentas de cobro de exámenes de manera automática.</p>
                 </div>
             </button>
+
+            <button id="card-evidencias" onclick="openEvidencias()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-pills"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Alistamiento Medicamentos</h2>
+                    <p class="text-gray-500 text-center text-sm">Evidencia diaria con foto del alistamiento por paciente.</p>
+                </div>
+            </button>
         </div>
     </div>
 
@@ -1034,7 +1044,7 @@
         <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-paper-plane text-teal-600"></i> Enviar al correo del propietario</p>
             <div class="flex flex-col sm:flex-row gap-2 mt-1">
-                <input type="email" id="lab-email-propietario" oninput="validarCorreoPropietario()" placeholder="correo@ejemplo.com" class="fmt-in flex-1">
+                <input type="email" id="lab-email-propietario" oninput="validarCorreoPropietario()" placeholder="correo@ejemplo.com" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="fmt-in flex-1">
                 <button onclick="enviarCuentaPorCorreo()" id="lab-btn-enviar" class="px-5 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 text-sm flex items-center justify-center gap-2 shrink-0">
                     <i class="fa-solid fa-paper-plane"></i> Enviar PDF por correo
                 </button>
@@ -1081,6 +1091,105 @@
 
             <div id="lab-lista-resumen" class="hidden text-sm text-gray-700 font-semibold mb-2 bg-teal-50 border border-teal-100 rounded-lg px-3 py-2"></div>
             <div id="lab-lista-container" class="space-y-1"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MÓDULO ALISTAMIENTO DE MEDICAMENTOS (evidencia diaria con foto) -->
+    <!-- ============================================================= -->
+    <div id="evidencias-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-purple-700 flex items-center gap-2">
+                        <i class="fa-solid fa-pills"></i> Alistamiento de Medicamentos
+                    </h1>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Evidencia diaria con foto por paciente</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- FORMULARIO NUEVA EVIDENCIA -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="fmt-lbl">Fecha</label>
+                    <input type="date" id="evi-fecha" class="fmt-in cursor-pointer">
+                </div>
+                <div>
+                    <label class="fmt-lbl">Paciente</label>
+                    <input type="text" id="evi-paciente" placeholder="Nombre del paciente" class="fmt-in">
+                </div>
+            </div>
+            <div>
+                <label class="fmt-lbl">Nota / medicamentos (opcional)</label>
+                <input type="text" id="evi-nota" placeholder="Ej: Dipirona, Hartman, Omeprazol…" class="fmt-in">
+            </div>
+
+            <div>
+                <label class="fmt-lbl">Foto del alistamiento</label>
+                <input type="file" id="evi-foto-input" accept="image/*" capture="environment" class="hidden" onchange="procesarFotoEvidencia(event)">
+                <div id="evi-foto-preview-wrap" class="hidden mt-1 relative inline-block">
+                    <img id="evi-foto-preview" class="rounded-lg border border-gray-200 max-h-56 object-contain" alt="Vista previa">
+                    <button onclick="quitarFotoEvidencia()" class="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600" title="Quitar foto">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+                <button id="evi-btn-foto" onclick="document.getElementById('evi-foto-input').click()" class="mt-1 w-full sm:w-auto px-4 py-3 bg-purple-50 text-purple-700 rounded-lg font-semibold hover:bg-purple-100 border border-purple-200 flex items-center justify-center gap-2 transition-colors">
+                    <i class="fa-solid fa-camera"></i> Tomar / elegir foto
+                </button>
+                <p class="text-xs text-gray-400 italic mt-1">En el celular se abre la cámara. La foto se comprime automáticamente.</p>
+            </div>
+
+            <button onclick="guardarEvidencia()" id="evi-btn-guardar" class="w-full py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar evidencia
+            </button>
+        </div>
+
+        <!-- LISTA DE EVIDENCIAS DEL DÍA -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
+                <h3 class="text-lg font-bold text-purple-700 flex items-center gap-2"><i class="fa-solid fa-images"></i> Evidencias del día</h3>
+                <div class="flex items-end gap-2">
+                    <div>
+                        <label class="fmt-lbl">Ver día</label>
+                        <input type="date" id="evi-fecha-ver" class="fmt-in text-sm py-1.5" onchange="cargarEvidencias()">
+                    </div>
+                    <button onclick="cargarEvidencias()" class="px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold border border-purple-200 hover:bg-purple-100"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </div>
+            <div id="evi-lista" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- ACCIONES POR MES -->
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <p class="fmt-lbl text-gray-700 mb-2"><i class="fa-regular fa-calendar text-purple-600"></i> Acciones por mes</p>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
+                <div class="flex-1">
+                    <label class="fmt-lbl">Mes</label>
+                    <input type="month" id="evi-mes" class="fmt-in">
+                </div>
+                <button onclick="descargarMesPDF()" id="evi-btn-pdf" class="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 text-sm flex items-center justify-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-pdf"></i> Descargar mes en PDF
+                </button>
+                <button onclick="borrarMesEvidencias()" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 text-sm border border-red-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Borrar mes
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 italic mt-2">El PDF incluye todas las evidencias del mes con su foto. "Borrar mes" elimina todas las de ese mes (no se puede deshacer).</p>
+        </div>
+    </div>
+
+    <!-- Visor de foto en grande -->
+    <div id="evi-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onclick="cerrarFotoEvidencia()">
+        <div class="relative max-w-3xl w-full">
+            <img id="evi-modal-img" class="w-full max-h-[85vh] object-contain rounded-lg" alt="Evidencia">
+            <button onclick="cerrarFotoEvidencia()" class="absolute -top-3 -right-3 w-9 h-9 bg-white text-gray-700 rounded-full flex items-center justify-center shadow hover:bg-gray-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
     </div>
 
@@ -1135,7 +1244,8 @@
             { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos" },
             { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos" },
             { id: "formatos",     nombre: "Formatos clínicos",    icono: "fa-file-medical",    card: "card-formatos" },
-            { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" }
+            { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" },
+            { id: "evidencias",   nombre: "Alistamiento Medicamentos", icono: "fa-pills",       card: "card-evidencias" }
         ];
 
         // ▸ MODO_ESTRICTO = false: si un usuario NO tiene documento en "usuarios",
@@ -1205,7 +1315,22 @@
             document.getElementById('formatos-screen').classList.add('hidden');
             document.getElementById('laboratorio-screen').classList.add('hidden');
             document.getElementById('lab-guardadas-screen').classList.add('hidden');
+            document.getElementById('evidencias-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
+        };
+
+        window.openEvidencias = function() {
+            if (!tienePermiso('evidencias')) { showToast("No tienes acceso a este módulo.", true); return; }
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+            document.getElementById('formatos-screen').classList.add('hidden');
+            document.getElementById('laboratorio-screen').classList.add('hidden');
+            document.getElementById('lab-guardadas-screen').classList.add('hidden');
+            document.getElementById('evidencias-screen').classList.remove('hidden');
+            initEvidenciasApp();
         };
 
         window.openLaboratorio = function() {
@@ -1289,6 +1414,7 @@
             document.getElementById('formatos-screen').classList.add('hidden');
             document.getElementById('laboratorio-screen').classList.add('hidden');
             document.getElementById('lab-guardadas-screen').classList.add('hidden');
+            document.getElementById('evidencias-screen').classList.add('hidden');
             }
         });
 
@@ -5019,6 +5145,12 @@
             poblarSelectExamenes('');
             renderExamenesSel();
 
+            // El correo del propietario siempre inicia en blanco
+            const emailProp = document.getElementById('lab-email-propietario');
+            if (emailProp) emailProp.value = '';
+            const emailEstado = document.getElementById('lab-email-estado');
+            if (emailEstado) emailEstado.textContent = '';
+
             const hoy = new Date();
             const fechaLocal = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
             if (!document.getElementById('lab-fecha').value) document.getElementById('lab-fecha').value = fechaLocal;
@@ -5441,6 +5573,305 @@
             } catch (e) {
                 showToast("No se pudo eliminar.", true);
                 console.error(e);
+            }
+        };
+
+        // ==========================================================
+        // MÓDULO ALISTAMIENTO DE MEDICAMENTOS (evidencia diaria con foto)
+        // ==========================================================
+        let eviFotoActual = null; // dataURL (jpeg comprimido) de la foto actual
+
+        function fechaLocalISO() {
+            const h = new Date();
+            return new Date(h.getTime() - h.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        }
+
+        window.initEvidenciasApp = function() {
+            const hoy = fechaLocalISO();
+            if (!document.getElementById('evi-fecha').value) document.getElementById('evi-fecha').value = hoy;
+            document.getElementById('evi-fecha-ver').value = document.getElementById('evi-fecha').value || hoy;
+            if (!document.getElementById('evi-mes').value) document.getElementById('evi-mes').value = hoy.slice(0, 7);
+            cargarEvidencias();
+        };
+
+        // --- Comprimir la imagen en el navegador (para que quepa en Firestore) ---
+        function comprimirImagen(file, maxLado, calidad) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width, h = img.height;
+                        if (w > h && w > maxLado) { h = Math.round(h * maxLado / w); w = maxLado; }
+                        else if (h >= w && h > maxLado) { w = Math.round(w * maxLado / h); h = maxLado; }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', calidad));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function comprimirBajoLimite(file) {
+            let lado = 1100, calidad = 0.6;
+            let dataUrl = await comprimirImagen(file, lado, calidad);
+            // Firestore permite ~1 MB por documento; dejamos margen
+            while (dataUrl.length > 850000 && lado > 500) {
+                lado -= 200;
+                calidad = Math.max(0.4, calidad - 0.05);
+                dataUrl = await comprimirImagen(file, lado, calidad);
+            }
+            return dataUrl;
+        }
+
+        window.procesarFotoEvidencia = async function(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const btn = document.getElementById('evi-btn-foto');
+            const htmlOrig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando foto...';
+            btn.disabled = true;
+            try {
+                eviFotoActual = await comprimirBajoLimite(file);
+                document.getElementById('evi-foto-preview').src = eviFotoActual;
+                document.getElementById('evi-foto-preview-wrap').classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-camera-rotate"></i> Cambiar foto';
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudo procesar la imagen.", true);
+                btn.innerHTML = htmlOrig;
+            } finally {
+                btn.disabled = false;
+                event.target.value = ''; // permite volver a tomar la misma
+            }
+        };
+
+        window.quitarFotoEvidencia = function() {
+            eviFotoActual = null;
+            document.getElementById('evi-foto-preview').src = '';
+            document.getElementById('evi-foto-preview-wrap').classList.add('hidden');
+            document.getElementById('evi-btn-foto').innerHTML = '<i class="fa-solid fa-camera"></i> Tomar / elegir foto';
+        };
+
+        window.guardarEvidencia = async function() {
+            const fecha = document.getElementById('evi-fecha').value;
+            const paciente = (document.getElementById('evi-paciente').value || '').trim();
+            const nota = (document.getElementById('evi-nota').value || '').trim();
+            if (!fecha) { showToast("Selecciona la fecha.", true); return; }
+            if (!paciente) { showToast("Escribe el nombre del paciente.", true); return; }
+            if (!eviFotoActual) { showToast("Toma o elige una foto del alistamiento.", true); return; }
+
+            const btn = document.getElementById('evi-btn-guardar');
+            const htmlOrig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const id = String(Date.now());
+                await setDoc(doc(db, "evidencias_medicamentos", id), {
+                    fecha: fecha,
+                    paciente: paciente,
+                    nota: nota,
+                    foto: eviFotoActual,
+                    creado: new Date().toISOString(),
+                    uid: (auth.currentUser ? auth.currentUser.uid : '')
+                });
+                showToast("Evidencia guardada.");
+                // limpiar formulario (mantener la fecha)
+                document.getElementById('evi-paciente').value = '';
+                document.getElementById('evi-nota').value = '';
+                quitarFotoEvidencia();
+                document.getElementById('evi-fecha-ver').value = fecha;
+                cargarEvidencias();
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudo guardar. Revisa las reglas de Firestore o el tamaño de la foto.", true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = htmlOrig;
+            }
+        };
+
+        window.cargarEvidencias = async function() {
+            const cont = document.getElementById('evi-lista');
+            const fecha = document.getElementById('evi-fecha-ver').value;
+            cont.innerHTML = '<div class="col-span-full text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "evidencias_medicamentos"));
+                let items = [];
+                snap.forEach(dd => items.push({ id: dd.id, ...dd.data() }));
+                if (fecha) items = items.filter(it => it.fecha === fecha);
+                items.sort((a, b) => (b.creado || '').localeCompare(a.creado || ''));
+
+                if (items.length === 0) {
+                    cont.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400 italic text-sm">No hay evidencias para este día.</div>';
+                    return;
+                }
+                cont.innerHTML = '';
+                items.forEach(it => {
+                    const hora = it.creado ? new Date(it.creado).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '';
+                    const card = document.createElement('div');
+                    card.className = "border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm";
+                    const nombreSafe = (it.paciente || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    card.innerHTML = `
+                        <img src="${it.foto || ''}" class="w-full h-40 object-cover cursor-pointer" onclick="verFotoEvidencia('${it.id}')" alt="Evidencia de ${nombreSafe}">
+                        <div class="p-3">
+                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-user text-purple-600"></i> ${it.paciente || '(sin paciente)'}</p>
+                            ${it.nota ? `<p class="text-xs text-gray-500 mt-0.5 break-words">${it.nota}</p>` : ''}
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-400">${hora}</span>
+                                <button onclick="eliminarEvidencia('${it.id}', '${nombreSafe}')" class="text-xs font-semibold text-red-500 hover:text-red-700 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                            </div>
+                        </div>`;
+                    cont.appendChild(card);
+                });
+            } catch (e) {
+                cont.innerHTML = '<div class="col-span-full text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(e);
+            }
+        };
+
+        window.verFotoEvidencia = async function(id) {
+            try {
+                const snap = await getDoc(doc(db, "evidencias_medicamentos", id));
+                if (!snap.exists()) return;
+                document.getElementById('evi-modal-img').src = snap.data().foto || '';
+                document.getElementById('evi-modal').classList.remove('hidden');
+            } catch (e) { console.error(e); }
+        };
+
+        window.cerrarFotoEvidencia = function() {
+            document.getElementById('evi-modal').classList.add('hidden');
+            document.getElementById('evi-modal-img').src = '';
+        };
+
+        window.eliminarEvidencia = async function(id, nombre) {
+            if (!confirm(`¿Eliminar la evidencia de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, "evidencias_medicamentos", id));
+                showToast("Evidencia eliminada.");
+                cargarEvidencias();
+            } catch (e) {
+                showToast("No se pudo eliminar.", true);
+                console.error(e);
+            }
+        };
+
+        function nombreMesLegible(mes) {
+            // mes = "2026-08"
+            const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+            const [y, m] = (mes || '').split('-').map(Number);
+            if (!y || !m) return mes;
+            return meses[m - 1].charAt(0).toUpperCase() + meses[m - 1].slice(1) + " de " + y;
+        }
+
+        function fechaDiaLegible(f) {
+            const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+            const [y, m, d] = (f || '').split('-').map(Number);
+            if (!y || !m || !d) return f;
+            return d + " de " + meses[m - 1] + " de " + y;
+        }
+
+        window.descargarMesPDF = async function() {
+            const mes = document.getElementById('evi-mes').value;
+            if (!mes) { showToast("Selecciona el mes.", true); return; }
+            if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return; }
+
+            const btn = document.getElementById('evi-btn-pdf');
+            const htmlOrig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+            try {
+                const snap = await getDocs(collection(db, "evidencias_medicamentos"));
+                let items = [];
+                snap.forEach(dd => items.push({ id: dd.id, ...dd.data() }));
+                items = items.filter(it => (it.fecha || '').startsWith(mes));
+                if (items.length === 0) { showToast("No hay evidencias en ese mes.", true); return; }
+                items.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || (a.creado || '').localeCompare(b.creado || ''));
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+                const W = pdf.internal.pageSize.getWidth();
+                const H = pdf.internal.pageSize.getHeight();
+                const M = 15;
+                let y = M;
+
+                // Título
+                pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(90, 40, 140);
+                pdf.text("Evidencias de alistamiento de medicamentos", M, y); y += 7;
+                pdf.setFontSize(11); pdf.setTextColor(80, 80, 80);
+                pdf.text(nombreMesLegible(mes) + "  ·  " + items.length + " evidencia(s)", M, y); y += 4;
+                pdf.setDrawColor(180, 150, 210); pdf.setLineWidth(0.5); pdf.line(M, y, W - M, y); y += 8;
+                pdf.setTextColor(0, 0, 0);
+
+                let diaActual = "";
+                for (const it of items) {
+                    // Encabezado de día
+                    if (it.fecha !== diaActual) {
+                        diaActual = it.fecha;
+                        if (y + 12 > H - M) { pdf.addPage(); y = M; }
+                        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12); pdf.setTextColor(90, 40, 140);
+                        pdf.text(fechaDiaLegible(it.fecha), M, y); y += 6;
+                        pdf.setTextColor(0, 0, 0);
+                    }
+
+                    const hora = it.creado ? new Date(it.creado).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '';
+                    let imgW = 80, imgH = 60;
+                    try {
+                        const props = pdf.getImageProperties(it.foto);
+                        if (props && props.width && props.height) imgH = imgW * props.height / props.width;
+                    } catch (e) { imgH = 60; }
+                    if (imgH > 90) { imgH = 90; imgW = imgW; } // límite de alto
+
+                    const notaLineas = it.nota ? pdf.splitTextToSize("Nota: " + it.nota, W - 2 * M) : [];
+                    const bloque = 6 + (notaLineas.length * 4) + 4 + imgH + 8;
+                    if (y + bloque > H - M) { pdf.addPage(); y = M; }
+
+                    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11);
+                    pdf.text("Paciente: " + (it.paciente || '-'), M, y); y += 5;
+                    if (notaLineas.length) {
+                        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(70, 70, 70);
+                        pdf.text(notaLineas, M, y); y += notaLineas.length * 4;
+                        pdf.setTextColor(0, 0, 0);
+                    }
+                    pdf.setFontSize(8); pdf.setTextColor(120, 120, 120);
+                    pdf.text("Hora: " + hora, M, y); pdf.setTextColor(0, 0, 0); y += 4;
+                    try { pdf.addImage(it.foto, 'JPEG', M, y, imgW, imgH); } catch (e) { console.error("img", e); }
+                    y += imgH + 8;
+                }
+
+                pdf.save("Evidencias_medicamentos_" + mes + ".pdf");
+                showToast("PDF del mes generado.");
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudo generar el PDF.", true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = htmlOrig;
+            }
+        };
+
+        window.borrarMesEvidencias = async function() {
+            const mes = document.getElementById('evi-mes').value;
+            if (!mes) { showToast("Selecciona el mes.", true); return; }
+            try {
+                const snap = await getDocs(collection(db, "evidencias_medicamentos"));
+                const ids = [];
+                snap.forEach(dd => { if ((dd.data().fecha || '').startsWith(mes)) ids.push(dd.id); });
+                if (ids.length === 0) { showToast("No hay evidencias en ese mes.", true); return; }
+                if (!confirm(`¿Eliminar TODAS las ${ids.length} evidencias de ${nombreMesLegible(mes)}? Esta acción no se puede deshacer.`)) return;
+                showToast("Eliminando " + ids.length + " evidencias...");
+                for (const id of ids) { await deleteDoc(doc(db, "evidencias_medicamentos", id)); }
+                showToast(ids.length + " evidencias eliminadas.");
+                cargarEvidencias();
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudieron eliminar todas. Intenta de nuevo.", true);
+                cargarEvidencias();
             }
         };
 
