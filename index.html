@@ -401,7 +401,7 @@
 
         <!-- SELECTOR DE FORMATO -->
         <div id="fmt-selector" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <button onclick="openMonitoreo()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+            <button id="card-fmt-monitoreo" onclick="openMonitoreo()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-heart-pulse"></i>
                 </div>
@@ -409,7 +409,7 @@
                 <p class="text-gray-500 text-center text-sm">Diligencia y guarda un monitoreo por cada paciente.</p>
             </button>
 
-            <button onclick="openOrtopedico()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+            <button id="card-fmt-ortopedico" onclick="openOrtopedico()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-bone"></i>
                 </div>
@@ -417,7 +417,7 @@
                 <p class="text-gray-500 text-center text-sm">Examen ortopédico en pequeños animales, con imágenes de apoyo.</p>
             </button>
 
-            <button onclick="openNeuro()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+            <button id="card-fmt-neuro" onclick="openNeuro()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
                     <i class="fa-solid fa-brain"></i>
                 </div>
@@ -1266,11 +1266,13 @@
 
         // ▸ Módulos que se pueden asignar con casillas a cada usuario.
         const MODULOS = [
-            { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos" },
-            { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos" },
-            { id: "formatos",     nombre: "Formatos clínicos",    icono: "fa-file-medical",    card: "card-formatos" },
+            { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos",     grupo: "Farmacia" },
+            { id: "evidencias",   nombre: "Evidencias Medicamentos", icono: "fa-pills",        card: "card-evidencias",  grupo: "Farmacia" },
+            { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos",     grupo: "Farmacia" },
             { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" },
-            { id: "evidencias",   nombre: "Evidencias Medicamentos", icono: "fa-pills",       card: "card-evidencias" }
+            { id: "fmt_monitoreo",  nombre: "Monitoreo anestésico",    icono: "fa-heart-pulse",  card: "card-fmt-monitoreo",  grupo: "Formatos clínicos" },
+            { id: "fmt_ortopedico", nombre: "Examen ortopédico",       icono: "fa-bone",         card: "card-fmt-ortopedico", grupo: "Formatos clínicos" },
+            { id: "fmt_neuro",      nombre: "Valoración neurológica",  icono: "fa-brain",        card: "card-fmt-neuro",      grupo: "Formatos clínicos" }
         ];
 
         // ▸ MODO_ESTRICTO = false: si un usuario NO tiene documento en "usuarios",
@@ -1324,7 +1326,7 @@
         };
 
         window.openFormatos = function() {
-            if (!tienePermiso('formatos')) { showToast("No tienes acceso a este módulo.", true); return; }
+            if (!(tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro'))) { showToast("No tienes acceso a este módulo.", true); return; }
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
@@ -1439,6 +1441,16 @@
                     MODULOS.forEach(m => permisosActuales[m.id] = true);
                 } else if (datosUsuario) {
                     MODULOS.forEach(m => permisosActuales[m.id] = datosUsuario[m.id] === true);
+                    // Compatibilidad: usuarios creados antes tenían un solo permiso "formatos".
+                    // Solo aplica mientras no se haya definido explícitamente ningún formato.
+                    if (datosUsuario.formatos === true &&
+                        datosUsuario.fmt_monitoreo === undefined &&
+                        datosUsuario.fmt_ortopedico === undefined &&
+                        datosUsuario.fmt_neuro === undefined) {
+                        permisosActuales.fmt_monitoreo = true;
+                        permisosActuales.fmt_ortopedico = true;
+                        permisosActuales.fmt_neuro = true;
+                    }
                 } else {
                     // Sin documento: acceso completo salvo que MODO_ESTRICTO esté activo
                     MODULOS.forEach(m => permisosActuales[m.id] = !MODO_ESTRICTO);
@@ -1478,6 +1490,13 @@
                 const verFarmacia = tienePermiso('insumos') || tienePermiso('pedidos') || tienePermiso('evidencias');
                 if (verFarmacia) cardFarmacia.classList.remove('hidden');
                 else cardFarmacia.classList.add('hidden');
+            }
+            // La tarjeta "Formatos clínicos" se ve si tiene acceso a algún formato
+            const cardFormatos = document.getElementById('card-formatos');
+            if (cardFormatos) {
+                const verFormatos = tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro');
+                if (verFormatos) cardFormatos.classList.remove('hidden');
+                else cardFormatos.classList.add('hidden');
             }
             const btnAdmin = document.getElementById('btn-admin');
             if (esAdmin) btnAdmin.classList.remove('hidden');
@@ -2570,7 +2589,18 @@
         function renderNuevoPermisos() {
             const cont = document.getElementById('nuevo-permisos');
             cont.innerHTML = '';
+            let grupoActual = '__inicio__';
             MODULOS.forEach(m => {
+                const g = m.grupo || '';
+                if (g !== grupoActual) {
+                    grupoActual = g;
+                    if (g) {
+                        const h = document.createElement('div');
+                        h.className = "w-full text-xs font-bold text-gray-400 uppercase tracking-wide mt-2 mb-1";
+                        h.textContent = g;
+                        cont.appendChild(h);
+                    }
+                }
                 const marcado = nuevoPermisosSel[m.id] === true;
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -2670,9 +2700,15 @@
                 cont.innerHTML = '';
                 usuarios.forEach(u => {
                     const activo = u.activo !== false;
+                    let grpAnt = '__x__';
+                    const enCompatFmt = (u.formatos === true && u.fmt_monitoreo === undefined && u.fmt_ortopedico === undefined && u.fmt_neuro === undefined);
                     const permisosBtns = MODULOS.map(m => {
-                        const on = u[m.id] === true;
-                        return `<button onclick="togglePermisoUsuario('${u.uid}','${m.id}')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${on ? 'bg-blue-50 border-[#154390] text-[#154390]' : 'bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100'}">
+                        let header = '';
+                        const g = m.grupo || '';
+                        if (g !== grpAnt) { grpAnt = g; if (g) header = `<div class="w-full text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">${g}</div>`; }
+                        let on = u[m.id] === true;
+                        if (!on && m.grupo === 'Formatos clínicos' && enCompatFmt) on = true;
+                        return header + `<button onclick="togglePermisoUsuario('${u.uid}','${m.id}')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${on ? 'bg-blue-50 border-[#154390] text-[#154390]' : 'bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100'}">
                             <i class="fa-solid ${on ? 'fa-circle-check' : 'fa-circle'} text-[10px]"></i> ${m.nombre}
                         </button>`;
                     }).join('');
@@ -2717,8 +2753,21 @@
         window.togglePermisoUsuario = async function(uid, modulo) {
             try {
                 const snap = await getDoc(doc(db, "usuarios", uid));
-                const actual = snap.exists() ? (snap.data()[modulo] === true) : false;
-                await setDoc(doc(db, "usuarios", uid), { [modulo]: !actual }, { merge: true });
+                const d = snap.exists() ? snap.data() : {};
+                const esFormato = (modulo === 'fmt_monitoreo' || modulo === 'fmt_ortopedico' || modulo === 'fmt_neuro');
+                const enCompat = esFormato && d.formatos === true &&
+                                 d.fmt_monitoreo === undefined && d.fmt_ortopedico === undefined && d.fmt_neuro === undefined;
+                let patch = {};
+                if (enCompat) {
+                    // Antes tenían los 3 formatos activos por compatibilidad; al tocar uno,
+                    // se materializan los tres y el que se tocó pasa a apagado.
+                    patch = { fmt_monitoreo: true, fmt_ortopedico: true, fmt_neuro: true };
+                    patch[modulo] = false;
+                } else {
+                    const actual = d[modulo] === true;
+                    patch[modulo] = !actual;
+                }
+                await setDoc(doc(db, "usuarios", uid), patch, { merge: true });
                 cargarUsuarios();
             } catch (error) {
                 showToast("No se pudo actualizar el permiso.", true);
@@ -2858,6 +2907,7 @@
         }
 
         window.openMonitoreo = function() {
+            if (!tienePermiso('fmt_monitoreo')) { showToast("No tienes acceso a este formato.", true); return; }
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
@@ -3529,6 +3579,7 @@
         let ortoIdActual = null;
 
         window.openOrtopedico = function() {
+            if (!tienePermiso('fmt_ortopedico')) { showToast("No tienes acceso a este formato.", true); return; }
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
@@ -4100,6 +4151,7 @@
         let neuroIdActual = null;
 
         window.openNeuro = function() {
+            if (!tienePermiso('fmt_neuro')) { showToast("No tienes acceso a este formato.", true); return; }
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
