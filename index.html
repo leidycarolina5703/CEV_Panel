@@ -196,7 +196,7 @@
                             <i class="fa-solid fa-calendar-exclamation"></i> Día Post-Festivo
                         </span>
                         <div id="loading-spinner" class="loader hidden"></div>
-                        <input type="date" id="report-date" class="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-[#154390] font-bold shadow-sm cursor-pointer hover:bg-gray-200 transition-colors text-sm">
+                        <input type="date" id="report-date" class="js-ver w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-[#154390] font-bold shadow-sm cursor-pointer hover:bg-gray-200 transition-colors text-sm">
                     </div>
                 </div>
             </div>
@@ -1181,7 +1181,7 @@
                 <div class="flex items-end gap-2">
                     <div>
                         <label class="fmt-lbl">Ver día</label>
-                        <input type="date" id="evi-fecha-ver" class="fmt-in text-sm py-1.5" onchange="cargarEvidencias()">
+                        <input type="date" id="evi-fecha-ver" class="js-ver fmt-in text-sm py-1.5" onchange="cargarEvidencias()">
                     </div>
                     <button onclick="cargarEvidencias()" class="px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold border border-purple-200 hover:bg-purple-100"><i class="fa-solid fa-rotate"></i></button>
                 </div>
@@ -1195,7 +1195,7 @@
             <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
                 <div class="flex-1">
                     <label class="fmt-lbl">Mes</label>
-                    <input type="month" id="evi-mes" class="fmt-in">
+                    <input type="month" id="evi-mes" class="js-ver fmt-in">
                 </div>
                 <button onclick="descargarMesPDF()" id="evi-btn-pdf" class="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 text-sm flex items-center justify-center gap-2 shadow-sm">
                     <i class="fa-solid fa-file-pdf"></i> Descargar mes en PDF
@@ -1398,6 +1398,42 @@
             return esAdmin || permisosActuales[modulo] === true;
         }
 
+        // ¿El usuario puede EDITAR (guardar/eliminar/enviar) en este módulo?
+        function puedeEditar(modulo) {
+            if (esAdmin) return true;
+            // Debe tener acceso de ver Y el permiso de edición
+            return permisosActuales[modulo] === true && permisosActuales[modulo + '_edit'] === true;
+        }
+
+        // Aplica "solo lectura" a una pantalla: desactiva campos y oculta acciones de edición
+        function aplicarModoLectura(screenId, moduloId) {
+            const screen = document.getElementById(screenId);
+            if (!screen) return;
+            const editable = puedeEditar(moduloId);
+            // Campos: se desactivan salvo los marcados como filtros de consulta (js-ver)
+            screen.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.classList.contains('js-ver')) { el.disabled = false; return; }
+                el.disabled = !editable;
+            });
+            // Elementos de edición marcados: se ocultan en modo lectura
+            screen.querySelectorAll('.js-editar').forEach(el => {
+                el.style.display = editable ? '' : 'none';
+            });
+            // Banner de solo lectura
+            let banner = screen.querySelector('.banner-lectura');
+            if (!editable) {
+                if (!banner) {
+                    banner = document.createElement('div');
+                    banner.className = 'banner-lectura bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-lg px-4 py-2 flex items-center gap-2 mb-2';
+                    banner.innerHTML = '<i class="fa-solid fa-eye"></i> Modo solo lectura: puedes consultar, pero no editar en este módulo.';
+                    screen.insertBefore(banner, screen.firstChild);
+                }
+                banner.style.display = '';
+            } else if (banner) {
+                banner.style.display = 'none';
+            }
+        }
+
         // --- AUTENTICACIÓN ---
         document.getElementById('toggle-password').addEventListener('click', function () {
             const passwordInput = document.getElementById('password-input');
@@ -1436,24 +1472,31 @@
                     return;
                 }
 
-                // Cálculo de permisos por módulo
+                // Cálculo de permisos por módulo (ver) y de edición (_edit)
                 if (esAdmin) {
-                    MODULOS.forEach(m => permisosActuales[m.id] = true);
+                    MODULOS.forEach(m => { permisosActuales[m.id] = true; permisosActuales[m.id + '_edit'] = true; });
                 } else if (datosUsuario) {
-                    MODULOS.forEach(m => permisosActuales[m.id] = datosUsuario[m.id] === true);
+                    MODULOS.forEach(m => {
+                        permisosActuales[m.id] = datosUsuario[m.id] === true;
+                        // Si _edit está definido se respeta; si no, por compatibilidad,
+                        // quien ya tenía acceso conserva edición (antes era acceso total).
+                        permisosActuales[m.id + '_edit'] = (datosUsuario[m.id + '_edit'] !== undefined)
+                            ? (datosUsuario[m.id + '_edit'] === true)
+                            : (datosUsuario[m.id] === true);
+                    });
                     // Compatibilidad: usuarios creados antes tenían un solo permiso "formatos".
                     // Solo aplica mientras no se haya definido explícitamente ningún formato.
                     if (datosUsuario.formatos === true &&
                         datosUsuario.fmt_monitoreo === undefined &&
                         datosUsuario.fmt_ortopedico === undefined &&
                         datosUsuario.fmt_neuro === undefined) {
-                        permisosActuales.fmt_monitoreo = true;
-                        permisosActuales.fmt_ortopedico = true;
-                        permisosActuales.fmt_neuro = true;
+                        ['fmt_monitoreo', 'fmt_ortopedico', 'fmt_neuro'].forEach(f => {
+                            permisosActuales[f] = true; permisosActuales[f + '_edit'] = true;
+                        });
                     }
                 } else {
                     // Sin documento: acceso completo salvo que MODO_ESTRICTO esté activo
-                    MODULOS.forEach(m => permisosActuales[m.id] = !MODO_ESTRICTO);
+                    MODULOS.forEach(m => { permisosActuales[m.id] = !MODO_ESTRICTO; permisosActuales[m.id + '_edit'] = !MODO_ESTRICTO; });
                 }
 
                 aplicarPermisosEnPanel();
@@ -1851,6 +1894,7 @@
                 }
             });
             actualizarResumenReponer();
+            aplicarModoLectura('inventory-screen', 'insumos');
         }
 
         // Devuelve solo los insumos que hay que reponer (stock contado < ideal)
@@ -1900,6 +1944,7 @@
 
 
         window.updateItem = function(index, value) {
+            if (!puedeEditar('insumos')) return;
             if (value !== '' && parseInt(value) < 0) value = '0';
             inventory[index].actual = value;
             
@@ -2084,6 +2129,7 @@
             listaInsumosFarmacia.sort();
             
             actualizarSelectInsumos();
+            aplicarModoLectura('orders-screen', 'pedidos');
 
             const loaderBorrador = document.getElementById('loading-draft');
             const badgeBorrador = document.getElementById('draft-badge');
@@ -2130,6 +2176,7 @@
         }
 
         window.addOrderRow = async function() {
+            if (!puedeEditar('pedidos')) { showToast("No tienes permiso para editar aquí.", true); return; }
             let itemName = "";
             
             if (modoManual) {
@@ -2195,6 +2242,7 @@
         }
 
         window.removeOrderRow = async function(index) {
+            if (!puedeEditar('pedidos')) { showToast("No tienes permiso para editar aquí.", true); return; }
             pedidoActual.splice(index, 1);
             await guardarBorradorEnNube();
             if (pedidoActual.length === 0) {
@@ -2412,6 +2460,7 @@
         }
 
         window.enviarPedidoPorCorreo = async function() {
+            if (!puedeEditar('pedidos')) { showToast("No tienes permiso para editar aquí.", true); return; }
             if (pedidoActual.length === 0) { showToast("El pedido está vacío.", true); return; }
             const pdf = construirPedidoPDF();
             if (!pdf) return;
@@ -2557,6 +2606,7 @@
         }
 
         window.eliminarPedidoEnviado = async function(id) {
+            if (!puedeEditar('pedidos')) { showToast("No tienes permiso para editar aquí.", true); return; }
             if (!confirm("¿Eliminar este pedido enviado? Esta acción no se puede deshacer.")) return;
             try {
                 await deleteDoc(doc(db, "pedidos_farmacia", id));
@@ -2586,6 +2636,28 @@
             else { input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
         };
 
+        function nivelDe(sel, id) {
+            if (sel[id + '_edit'] === true) return 'editar';
+            if (sel[id] === true) return 'ver';
+            return 'no';
+        }
+
+        window.setNivelNuevo = function(id, nivel) {
+            nuevoPermisosSel[id] = (nivel !== 'no');
+            nuevoPermisosSel[id + '_edit'] = (nivel === 'editar');
+            renderNuevoPermisos();
+        };
+
+        function segmentoNivel(nivel, onclickBase) {
+            const opt = (val, label, activeCls) =>
+                `<button type="button" onclick="${onclickBase}'${val}')" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${nivel === val ? activeCls : 'text-gray-500 hover:bg-gray-100'}">${label}</button>`;
+            return `<span class="flex gap-0.5 shrink-0 bg-white border border-gray-200 rounded-lg p-0.5">
+                ${opt('no', 'Sin acceso', 'bg-gray-200 text-gray-700')}
+                ${opt('ver', 'Ver', 'bg-blue-100 text-blue-700')}
+                ${opt('editar', 'Editar', 'bg-[#154390] text-white')}
+            </span>`;
+        }
+
         function renderNuevoPermisos() {
             const cont = document.getElementById('nuevo-permisos');
             cont.innerHTML = '';
@@ -2601,23 +2673,19 @@
                         cont.appendChild(h);
                     }
                 }
-                const marcado = nuevoPermisosSel[m.id] === true;
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.onclick = () => { nuevoPermisosSel[m.id] = !marcado; renderNuevoPermisos(); };
-                btn.className = `flex items-center gap-2 px-3 py-2 rounded-lg border text-xs sm:text-sm font-semibold transition-colors ${marcado ? 'bg-blue-50 border-[#154390] text-[#154390]' : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'}`;
-                btn.innerHTML = `
-                    <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${marcado ? 'bg-[#154390] border-[#154390] text-white' : 'bg-white border-gray-300 text-transparent'}">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                    <i class="fa-solid ${m.icono}"></i> ${m.nombre}`;
-                cont.appendChild(btn);
+                const nivel = nivelDe(nuevoPermisosSel, m.id);
+                const row = document.createElement('div');
+                row.className = "w-full flex items-center justify-between gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5";
+                row.innerHTML = `
+                    <span class="text-sm font-medium text-gray-700 flex items-center gap-2 min-w-0"><i class="fa-solid ${m.icono} text-gray-400"></i> <span class="truncate">${m.nombre}</span></span>
+                    ${segmentoNivel(nivel, `setNivelNuevo('${m.id}',`)}`;
+                cont.appendChild(row);
             });
         }
 
         window.initAdminApp = function() {
             nuevoPermisosSel = {};
-            MODULOS.forEach(m => nuevoPermisosSel[m.id] = true);
+            MODULOS.forEach(m => { nuevoPermisosSel[m.id] = true; nuevoPermisosSel[m.id + '_edit'] = true; });
             renderNuevoPermisos();
             cargarUsuarios();
         };
@@ -2651,7 +2719,7 @@
                     admin: false,
                     creado: new Date().toISOString()
                 };
-                MODULOS.forEach(m => perfil[m.id] = nuevoPermisosSel[m.id] === true);
+                MODULOS.forEach(m => { perfil[m.id] = nuevoPermisosSel[m.id] === true; perfil[m.id + '_edit'] = nuevoPermisosSel[m.id + '_edit'] === true; });
 
                 await setDoc(doc(db, "usuarios", uid), perfil);
                 await signOut(secondaryAuth);
@@ -2660,7 +2728,7 @@
                 document.getElementById('nuevo-correo').value = '';
                 document.getElementById('nuevo-clave').value = '';
                 nuevoPermisosSel = {};
-                MODULOS.forEach(m => nuevoPermisosSel[m.id] = true);
+                MODULOS.forEach(m => { nuevoPermisosSel[m.id] = true; nuevoPermisosSel[m.id + '_edit'] = true; });
                 renderNuevoPermisos();
 
                 showToast(`Usuario "${nombre}" creado correctamente.`);
@@ -2706,11 +2774,15 @@
                         let header = '';
                         const g = m.grupo || '';
                         if (g !== grpAnt) { grpAnt = g; if (g) header = `<div class="w-full text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">${g}</div>`; }
-                        let on = u[m.id] === true;
-                        if (!on && m.grupo === 'Formatos clínicos' && enCompatFmt) on = true;
-                        return header + `<button onclick="togglePermisoUsuario('${u.uid}','${m.id}')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${on ? 'bg-blue-50 border-[#154390] text-[#154390]' : 'bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100'}">
-                            <i class="fa-solid ${on ? 'fa-circle-check' : 'fa-circle'} text-[10px]"></i> ${m.nombre}
-                        </button>`;
+                        // Nivel actual (con compatibilidad)
+                        let ver = u[m.id] === true;
+                        let edit = (u[m.id + '_edit'] !== undefined) ? (u[m.id + '_edit'] === true) : ver;
+                        if (m.grupo === 'Formatos clínicos' && enCompatFmt) { ver = true; edit = true; }
+                        const nivel = edit ? 'editar' : (ver ? 'ver' : 'no');
+                        return header + `<div class="w-full flex items-center justify-between gap-2 py-0.5">
+                            <span class="text-xs font-medium text-gray-600 flex items-center gap-1.5 min-w-0"><i class="fa-solid ${m.icono} text-gray-400"></i> <span class="truncate">${m.nombre}</span></span>
+                            ${segmentoNivel(nivel, `setNivelUsuario('${u.uid}','${m.id}',`)}
+                        </div>`;
                     }).join('');
 
                     const card = document.createElement('div');
@@ -2750,22 +2822,21 @@
             }
         };
 
-        window.togglePermisoUsuario = async function(uid, modulo) {
+        window.setNivelUsuario = async function(uid, modulo, nivel) {
             try {
-                const snap = await getDoc(doc(db, "usuarios", uid));
-                const d = snap.exists() ? snap.data() : {};
-                const esFormato = (modulo === 'fmt_monitoreo' || modulo === 'fmt_ortopedico' || modulo === 'fmt_neuro');
-                const enCompat = esFormato && d.formatos === true &&
-                                 d.fmt_monitoreo === undefined && d.fmt_ortopedico === undefined && d.fmt_neuro === undefined;
-                let patch = {};
-                if (enCompat) {
-                    // Antes tenían los 3 formatos activos por compatibilidad; al tocar uno,
-                    // se materializan los tres y el que se tocó pasa a apagado.
-                    patch = { fmt_monitoreo: true, fmt_ortopedico: true, fmt_neuro: true };
-                    patch[modulo] = false;
-                } else {
-                    const actual = d[modulo] === true;
-                    patch[modulo] = !actual;
+                const patch = {};
+                patch[modulo] = (nivel !== 'no');
+                patch[modulo + '_edit'] = (nivel === 'editar');
+                // Si el usuario venía con el permiso antiguo "formatos" y aún no se ha
+                // definido ningún formato, materializar los otros dos (para poder restringir).
+                if (modulo.indexOf('fmt_') === 0) {
+                    const snap = await getDoc(doc(db, "usuarios", uid));
+                    const d = snap.exists() ? snap.data() : {};
+                    if (d.formatos === true && d.fmt_monitoreo === undefined && d.fmt_ortopedico === undefined && d.fmt_neuro === undefined) {
+                        ['fmt_monitoreo', 'fmt_ortopedico', 'fmt_neuro'].forEach(f => {
+                            if (f !== modulo) { patch[f] = true; patch[f + '_edit'] = true; }
+                        });
+                    }
                 }
                 await setDoc(doc(db, "usuarios", uid), patch, { merge: true });
                 cargarUsuarios();
@@ -2914,6 +2985,7 @@
             document.getElementById('fmt-monitoreo').classList.remove('hidden');
             prepararFormularioMonitoreo();
             abrirFormatosGuardados();
+            aplicarModoLectura('fmt-monitoreo', 'fmt_monitoreo');
         };
 
         window.volverSelectorFormatos = function() {
@@ -3185,6 +3257,7 @@
         };
 
         window.guardarFormato = async function() {
+            if (!puedeEditar('fmt_monitoreo')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const data = recogerFormato();
             if (!data.paciente) { showToast("Escribe al menos el nombre del paciente.", true); return; }
             const btn = document.getElementById('btn-guardar-formato');
@@ -3586,6 +3659,7 @@
             document.getElementById('fmt-ortopedico').classList.remove('hidden');
             prepararFormularioOrto();
             abrirOrtoGuardados();
+            aplicarModoLectura('fmt-ortopedico', 'fmt_ortopedico');
         };
 
         function prepararFormularioOrto() {
@@ -3705,6 +3779,7 @@
         };
 
         window.guardarOrto = async function() {
+            if (!puedeEditar('fmt_ortopedico')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const data = recogerOrto();
             if (!data.paciente && !data.hc) { showToast("Escribe al menos el paciente o la historia clínica.", true); return; }
             const btn = document.getElementById('btn-guardar-orto');
@@ -4158,6 +4233,7 @@
             document.getElementById('fmt-neuro').classList.remove('hidden');
             prepararFormularioNeuro();
             abrirNeuroGuardados();
+            aplicarModoLectura('fmt-neuro', 'fmt_neuro');
         };
 
         function prepararFormularioNeuro() {
@@ -4244,6 +4320,7 @@
         };
 
         window.guardarNeuro = async function() {
+            if (!puedeEditar('fmt_neuro')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const data = recogerNeuro();
             if (!data.nombre && !data.hc) { showToast("Escribe al menos el nombre o la historia clínica.", true); return; }
             const btn = document.getElementById('btn-guardar-neuro');
@@ -4935,6 +5012,7 @@
         }
 
         window.agregarExamen = function() {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const sel = document.getElementById('lab-examen-select');
             const idx = sel.value;
             if (idx === "") { showToast("Elige un examen de la lista.", true); return; }
@@ -4983,6 +5061,7 @@
         };
 
         window.guardarExamenNuevo = async function() {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const nombre = (document.getElementById('lab-nuevo-nombre').value || "").trim().toUpperCase();
             const precio = parseInt((document.getElementById('lab-nuevo-precio').value || "").replace(/\D/g, ''), 10) || 0;
             if (!nombre) { showToast("Escribe el nombre del examen.", true); return; }
@@ -5002,6 +5081,7 @@
         };
 
         window.borrarExamenPersonalizado = async function() {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const sel = document.getElementById('lab-examen-select');
             const idx = Number(sel.value);
             if (sel.value === "" || idx < EXAMENES_LAB.length) return;
@@ -5081,6 +5161,7 @@
         };
 
         window.guardarEdicionExamen = async function(i) {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const inpN = document.getElementById('edit-nombre-' + i);
             const inpP = document.getElementById('edit-precio-' + i);
             if (!inpN || !inpP) return;
@@ -5105,6 +5186,7 @@
         };
 
         window.eliminarExamenPersonalizadoLista = async function(i) {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const ex = examenesPersonalizados[i];
             if (!ex) return;
             if (!confirm(`¿Eliminar el examen "${ex.n}" de la lista? (No afecta las cuentas ya guardadas.)`)) return;
@@ -5228,6 +5310,7 @@
         }
 
         window.guardarConfigLab = async function() {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             LAB_CONFIG = {
                 acreedorNombre: (document.getElementById('lab-acreedor-nombre').value || "").trim(),
                 acreedorCC: (document.getElementById('lab-acreedor-cc').value || "").trim(),
@@ -5260,6 +5343,7 @@
             const hoy = new Date();
             const fechaLocal = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
             if (!document.getElementById('lab-fecha').value) document.getElementById('lab-fecha').value = fechaLocal;
+            aplicarModoLectura('laboratorio-screen', 'laboratorio');
 
             // 2) Escuchas una sola vez
             if (!labListenersListos) {
@@ -5429,6 +5513,7 @@
 
         // ---- Enviar la cuenta (PDF) por correo vía Apps Script ----
         window.enviarCuentaPorCorreo = async function() {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const email = (document.getElementById('lab-email-propietario').value || "").trim();
             const d = recogerCuenta();
             if (!d.deudorNombre) { showToast("Falta el nombre del deudor.", true); return; }
@@ -5496,6 +5581,7 @@
 
         // ---- Guardado en la nube ----
         window.guardarCuenta = async function() {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const d = recogerCuenta();
             if (!d.deudorNombre) { showToast("Falta el nombre del deudor.", true); return; }
             if (d.valor <= 0) { showToast("Ingresa un valor mayor a cero.", true); return; }
@@ -5670,6 +5756,7 @@
         };
 
         window.eliminarCuenta = async function(id, nombre) {
+            if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
             if (!confirm(`¿Eliminar la cuenta de "${nombre || 'este deudor'}"? No se puede deshacer.`)) return;
             try {
                 await deleteDoc(doc(db, "cuentas_laboratorio", id));
@@ -5698,6 +5785,7 @@
             document.getElementById('evi-fecha-ver').value = document.getElementById('evi-fecha').value || hoy;
             if (!document.getElementById('evi-mes').value) document.getElementById('evi-mes').value = hoy.slice(0, 7);
             cargarEvidencias();
+            aplicarModoLectura('evidencias-screen', 'evidencias');
         };
 
         // --- Comprimir la imagen en el navegador (para que quepa en Firestore) ---
@@ -5765,6 +5853,7 @@
         };
 
         window.guardarEvidencia = async function() {
+            if (!puedeEditar('evidencias')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const fecha = document.getElementById('evi-fecha').value;
             const paciente = (document.getElementById('evi-paciente').value || '').trim();
             if (!fecha) { showToast("Selecciona la fecha.", true); return; }
@@ -5852,6 +5941,7 @@
         };
 
         window.eliminarEvidencia = async function(id, nombre) {
+            if (!puedeEditar('evidencias')) { showToast("No tienes permiso para editar aquí.", true); return; }
             if (!confirm(`¿Eliminar la evidencia de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
             try {
                 await deleteDoc(doc(db, "evidencias_medicamentos", id));
@@ -5952,6 +6042,7 @@
         };
 
         window.borrarMesEvidencias = async function() {
+            if (!puedeEditar('evidencias')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const mes = document.getElementById('evi-mes').value;
             if (!mes) { showToast("Selecciona el mes.", true); return; }
             try {
