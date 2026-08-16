@@ -94,7 +94,7 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 max-w-6xl mx-auto">
 
 
 
@@ -105,6 +105,16 @@
                 <div class="text-center">
                     <h2 class="text-xl font-bold text-gray-800 mb-2">Farmacia</h2>
                     <p class="text-gray-500 text-center text-sm">Insumos, pedidos y alistamiento de medicamentos.</p>
+                </div>
+            </button>
+
+            <button id="card-agenda" onclick="openAgenda()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-emerald-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Agendamiento de visitas</h2>
+                    <p class="text-gray-500 text-center text-sm">Calendario de visitas de los propietarios.</p>
                 </div>
             </button>
 
@@ -1218,6 +1228,80 @@
         </div>
     </div>
 
+    <!-- ============================================================= -->
+    <!-- MÓDULO AGENDAMIENTO (calendario de visitas)                    -->
+    <!-- ============================================================= -->
+    <div id="agenda-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex items-center gap-4 border border-gray-200">
+            <button onclick="goToDashboard()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-emerald-700 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Agendamiento de visitas</h1>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">Calendario de visitas de los propietarios</p>
+            </div>
+        </header>
+
+        <!-- VISTA SEMANA -->
+        <div id="agenda-semana-card" class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="cambiarSemanaAgenda(-1)" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"><i class="fa-solid fa-chevron-left"></i></button>
+                <h3 id="agenda-semana-label" class="font-bold text-base sm:text-lg text-emerald-700"></h3>
+                <button onclick="cambiarSemanaAgenda(1)" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div id="agenda-semana-lista" class="space-y-2"></div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 italic">Toca una hora en el calendario para agendar una visita. Toca una visita existente para editarla.</p>
+    </div>
+
+    <!-- Modal para agendar / editar una visita -->
+    <div id="cita-modal" class="hidden fixed inset-0 bg-black/40 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-5 space-y-3 max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="cita-modal-titulo" class="font-bold text-emerald-700 flex items-center gap-2"><i class="fa-solid fa-calendar-plus"></i> Nueva visita</h3>
+                <button onclick="cerrarModalCita()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="cita-modal-fecha" class="text-sm font-semibold text-gray-500 capitalize"></p>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="fmt-lbl">Hora (24h)</label>
+                    <div class="flex items-center gap-1">
+                        <select id="cita-hora-h" class="fmt-in"></select>
+                        <span class="font-bold text-gray-400">:</span>
+                        <select id="cita-hora-m" class="fmt-in"></select>
+                    </div>
+                </div>
+                <div>
+                    <label class="fmt-lbl">Duración</label>
+                    <select id="cita-duracion" class="fmt-in"></select>
+                </div>
+            </div>
+            <div>
+                <label class="fmt-lbl">Paciente</label>
+                <input type="text" id="cita-paciente" placeholder="Nombre del paciente" class="fmt-in">
+            </div>
+            <div>
+                <label class="fmt-lbl">Propietario</label>
+                <input type="text" id="cita-propietario" placeholder="Nombre del propietario" class="fmt-in">
+            </div>
+            <div>
+                <label class="fmt-lbl">Teléfono (opcional)</label>
+                <input type="tel" id="cita-telefono" placeholder="Celular" class="fmt-in">
+            </div>
+            <div>
+                <label class="fmt-lbl">Motivo / nota (opcional)</label>
+                <input type="text" id="cita-nota" placeholder="Ej: control, vacunación, cirugía…" class="fmt-in">
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button onclick="guardarCita()" id="cita-btn-guardar" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+                <button onclick="eliminarCitaDesdeModal()" id="cita-btn-eliminar" class="hidden px-4 py-2.5 bg-red-50 text-red-600 rounded-lg font-semibold border border-red-200 hover:bg-red-100"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
         <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
         <span id="toast-msg">Mensaje</span>
@@ -1270,6 +1354,7 @@
             { id: "evidencias",   nombre: "Evidencias Medicamentos", icono: "fa-pills",        card: "card-evidencias",  grupo: "Farmacia" },
             { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos",     grupo: "Farmacia" },
             { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" },
+            { id: "agenda",       nombre: "Agendamiento de visitas", icono: "fa-calendar-check",  card: "card-agenda" },
             { id: "fmt_monitoreo",  nombre: "Monitoreo anestésico",    icono: "fa-heart-pulse",  card: "card-fmt-monitoreo",  grupo: "Formatos clínicos" },
             { id: "fmt_ortopedico", nombre: "Examen ortopédico",       icono: "fa-bone",         card: "card-fmt-ortopedico", grupo: "Formatos clínicos" },
             { id: "fmt_neuro",      nombre: "Valoración neurológica",  icono: "fa-brain",        card: "card-fmt-neuro",      grupo: "Formatos clínicos" }
@@ -1346,7 +1431,25 @@
             document.getElementById('lab-guardadas-screen').classList.add('hidden');
             document.getElementById('evidencias-screen').classList.add('hidden');
             document.getElementById('farmacia-screen').classList.add('hidden');
+            document.getElementById('agenda-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
+        };
+
+        window.openAgenda = function() {
+            if (!tienePermiso('agenda')) { showToast("No tienes acceso a este módulo.", true); return; }
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('inventory-screen').classList.add('hidden');
+            document.getElementById('orders-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+            document.getElementById('formatos-screen').classList.add('hidden');
+            document.getElementById('laboratorio-screen').classList.add('hidden');
+            document.getElementById('lab-guardadas-screen').classList.add('hidden');
+            document.getElementById('evidencias-screen').classList.add('hidden');
+            document.getElementById('farmacia-screen').classList.add('hidden');
+            document.getElementById('agenda-screen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            initAgendaApp();
         };
 
         window.openFarmacia = function() {
@@ -1517,6 +1620,7 @@
             document.getElementById('lab-guardadas-screen').classList.add('hidden');
             document.getElementById('evidencias-screen').classList.add('hidden');
             document.getElementById('farmacia-screen').classList.add('hidden');
+            document.getElementById('agenda-screen').classList.add('hidden');
             }
         });
 
@@ -6059,6 +6163,277 @@
                 console.error(e);
                 showToast("No se pudieron eliminar todas. Intenta de nuevo.", true);
                 cargarEvidencias();
+            }
+        };
+
+        // ==========================================================
+        // MÓDULO AGENDAMIENTO (calendario de visitas)
+        // ==========================================================
+        let agendaYear, agendaMonth;      // month 0-indexado
+        let agendaDiaSel = null;          // "YYYY-MM-DD"
+        let agendaVista = 'mes';          // 'mes' | 'semana'
+        let todasCitas = [];              // todas las citas cargadas
+        let editandoCitaId = null;
+        let agendaHMin = 7;               // hora inicial visible (para calcular el clic)
+
+        const MESES_AGENDA = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+        const DIAS_SEMANA = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+
+        function isoDe(dt) {
+            return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, '0') + "-" + String(dt.getDate()).padStart(2, '0');
+        }
+        function inicioSemana(fechaISO) {
+            const [y, m, d] = fechaISO.split('-').map(Number);
+            const dt = new Date(y, m - 1, d);
+            const dow = (dt.getDay() + 6) % 7; // 0 = Lunes
+            dt.setDate(dt.getDate() - dow);
+            return dt;
+        }
+
+        window.initAgendaApp = async function() {
+            const hoy = new Date();
+            agendaYear = hoy.getFullYear();
+            agendaMonth = hoy.getMonth();
+            agendaDiaSel = fechaLocalISO();
+            agendaVista = 'semana';
+            editandoCitaId = null;
+            poblarSelectsHora();
+            cerrarModalCita();
+            await cargarCitas();
+            refrescarVistaAgenda();
+            aplicarModoLectura('agenda-screen', 'agenda');
+        };
+
+        function poblarSelectsHora() {
+            const selH = document.getElementById('cita-hora-h');
+            const selM = document.getElementById('cita-hora-m');
+            const selD = document.getElementById('cita-duracion');
+            if (selH && !selH.dataset.listo) {
+                let optsH = '';
+                for (let h = 0; h < 24; h++) optsH += `<option value="${String(h).padStart(2, '0')}">${String(h).padStart(2, '0')}</option>`;
+                selH.innerHTML = optsH;
+                selH.dataset.listo = '1';
+            }
+            if (selM && !selM.dataset.listo) {
+                let optsM = '';
+                for (let m = 0; m < 60; m += 5) optsM += `<option value="${String(m).padStart(2, '0')}">${String(m).padStart(2, '0')}</option>`;
+                selM.innerHTML = optsM;
+                selM.dataset.listo = '1';
+            }
+            if (selD && !selD.dataset.listo) {
+                const dur = [15, 20, 30, 45, 60, 90, 120];
+                selD.innerHTML = dur.map(d => `<option value="${d}">${d < 60 ? d + ' min' : (d / 60) + (d === 60 ? ' hora' : ' horas')}</option>`).join('');
+                selD.value = '15';
+                selD.dataset.listo = '1';
+            }
+        }
+
+        function getHoraAgenda() {
+            const h = document.getElementById('cita-hora-h').value;
+            const m = document.getElementById('cita-hora-m').value || '00';
+            return h ? (h + ":" + m) : "";
+        }
+
+        function setHoraAgenda(hora) {
+            const [h, m] = (hora || '').split(':');
+            const selH = document.getElementById('cita-hora-h');
+            const selM = document.getElementById('cita-hora-m');
+            if (selH) selH.value = (h || '00');
+            if (selM) selM.value = (m || '00');
+        }
+
+        async function cargarCitas() {
+            try {
+                const snap = await getDocs(collection(db, "citas"));
+                todasCitas = [];
+                snap.forEach(dd => todasCitas.push({ id: dd.id, ...dd.data() }));
+            } catch (e) {
+                console.error(e);
+                showToast("Error al cargar la agenda. Revisa las reglas de Firestore.", true);
+                todasCitas = [];
+            }
+        }
+
+        function refrescarVistaAgenda() {
+            renderSemanaAgenda();
+        }
+
+        // Nombre conservado: recarga datos y refresca la vista
+        async function renderCalendarioAgenda() {
+            await cargarCitas();
+            refrescarVistaAgenda();
+        }
+
+        window.cambiarSemanaAgenda = function(delta) {
+            const ini = inicioSemana(agendaDiaSel);
+            ini.setDate(ini.getDate() + delta * 7);
+            agendaDiaSel = isoDe(ini);
+            renderSemanaAgenda();
+        };
+
+        const AGENDA_ROW_H = 46; // alto de cada hora en px
+
+        function renderSemanaAgenda() {
+            const lunes = inicioSemana(agendaDiaSel);
+            const dias = [];
+            for (let i = 0; i < 7; i++) { const dt = new Date(lunes); dt.setDate(lunes.getDate() + i); dias.push(dt); }
+            const corto = dt => dt.getDate() + " " + MESES_AGENDA[dt.getMonth()].slice(0, 3);
+            document.getElementById('agenda-semana-label').textContent = corto(dias[0]) + " – " + corto(dias[6]) + " " + dias[6].getFullYear();
+
+            const fechasSemana = dias.map(isoDe);
+            const citasSemana = todasCitas.filter(c => fechasSemana.includes(c.fecha));
+            // Rango horario dinámico (7–19 por defecto, se amplía según las visitas)
+            let hMin = 7, hMax = 19;
+            citasSemana.forEach(c => {
+                const [hh, mm] = (c.hora || '').split(':').map(Number);
+                if (!isNaN(hh)) {
+                    hMin = Math.min(hMin, hh);
+                    const finMin = hh * 60 + (mm || 0) + (c.duracion || 15);
+                    hMax = Math.max(hMax, Math.ceil(finMin / 60));
+                }
+            });
+            if (hMin < 0) hMin = 0; if (hMax > 24) hMax = 24;
+            agendaHMin = hMin;
+            const totalH = (hMax - hMin) * AGENDA_ROW_H;
+
+            const hoyISO = fechaLocalISO();
+            const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const cols = 'grid-template-columns:44px repeat(7,minmax(92px,1fr))';
+
+            let html = '<div class="overflow-x-auto"><div style="min-width:700px">';
+            // Encabezado de días
+            html += `<div class="grid" style="${cols}"><div></div>`;
+            dias.forEach((dt, i) => {
+                const esHoy = isoDe(dt) === hoyISO;
+                html += `<div class="text-center py-1.5 text-xs font-semibold border-b-2 ${esHoy ? 'text-emerald-700 border-emerald-300' : 'text-gray-600 border-gray-100'}">${DIAS_SEMANA[i].slice(0, 3)}<br><span class="text-sm">${dt.getDate()}</span></div>`;
+            });
+            html += '</div>';
+            // Cuerpo
+            html += `<div class="grid" style="${cols}">`;
+            // Eje de horas
+            html += `<div class="relative" style="height:${totalH}px">`;
+            for (let h = hMin; h < hMax; h++) html += `<div class="absolute right-1 text-[10px] text-gray-400" style="top:${(h - hMin) * AGENDA_ROW_H - 6}px">${String(h).padStart(2, '0')}:00</div>`;
+            html += `</div>`;
+            // Columnas de días
+            dias.forEach(dt => {
+                const fecha = isoDe(dt);
+                const esHoy = fecha === hoyISO;
+                html += `<div class="relative border-l border-gray-100 cursor-pointer ${esHoy ? 'bg-emerald-50/20' : ''}" style="height:${totalH}px" onclick="clickCeldaAgenda(event,'${fecha}')">`;
+                for (let h = hMin; h < hMax; h++) html += `<div class="absolute left-0 right-0 border-t border-gray-100" style="top:${(h - hMin) * AGENDA_ROW_H}px"></div>`;
+                citasSemana.filter(c => c.fecha === fecha).forEach(c => {
+                    const [hh, mm] = (c.hora || '0:0').split(':').map(Number);
+                    const startMin = (hh - hMin) * 60 + (mm || 0);
+                    const dur = c.duracion || 15;
+                    const top = startMin / 60 * AGENDA_ROW_H;
+                    const height = Math.max(15, dur / 60 * AGENDA_ROW_H);
+                    html += `<div onclick="event.stopPropagation(); abrirModalCita('${fecha}', null, '${c.id}')" title="${esc(c.hora)} ${esc(c.paciente)}${c.propietario ? ' · ' + esc(c.propietario) : ''} (${dur} min)" class="absolute rounded bg-emerald-500 text-white overflow-hidden cursor-pointer hover:bg-emerald-600 px-1" style="top:${top}px;height:${height}px;left:2px;right:2px;font-size:10px;line-height:1.15"><b>${esc(c.hora)}</b> ${esc(c.paciente)}</div>`;
+                });
+                html += `</div>`;
+            });
+            html += '</div></div></div>';
+            document.getElementById('agenda-semana-lista').innerHTML = html;
+        }
+
+        window.clickCeldaAgenda = function(event, fecha) {
+            if (!puedeEditar('agenda')) { showToast("Modo solo lectura: no puedes agendar.", true); return; }
+            const rect = event.currentTarget.getBoundingClientRect();
+            const y = event.clientY - rect.top;
+            let totalMin = (y / AGENDA_ROW_H) * 60;
+            totalMin = Math.max(0, Math.round(totalMin / 15) * 15); // redondea a 15 min
+            let hh = agendaHMin + Math.floor(totalMin / 60);
+            const mm = totalMin % 60;
+            if (hh > 23) hh = 23;
+            const hora = String(hh).padStart(2, '0') + ":" + String(mm).padStart(2, '0');
+            abrirModalCita(fecha, hora, null);
+        };
+
+        window.abrirModalCita = function(fecha, hora, citaId) {
+            const editable = puedeEditar('agenda');
+            if (!editable && !citaId) { showToast("Modo solo lectura.", true); return; }
+            agendaDiaSel = fecha;
+            editandoCitaId = citaId || null;
+            const c = citaId ? todasCitas.find(x => x.id === citaId) : null;
+
+            document.getElementById('cita-modal-fecha').textContent = fechaDiaLegible(fecha);
+            setHoraAgenda(c ? c.hora : (hora || '08:00'));
+            document.getElementById('cita-duracion').value = String(c && c.duracion ? c.duracion : 15);
+            document.getElementById('cita-paciente').value = c ? (c.paciente || '') : '';
+            document.getElementById('cita-propietario').value = c ? (c.propietario || '') : '';
+            document.getElementById('cita-telefono').value = c ? (c.telefono || '') : '';
+            document.getElementById('cita-nota').value = c ? (c.nota || '') : '';
+            document.getElementById('cita-modal-titulo').innerHTML = citaId
+                ? '<i class="fa-solid fa-pen"></i> Editar visita'
+                : '<i class="fa-solid fa-calendar-plus"></i> Nueva visita';
+
+            const btnG = document.getElementById('cita-btn-guardar');
+            const btnE = document.getElementById('cita-btn-eliminar');
+            btnG.style.display = editable ? '' : 'none';
+            btnE.style.display = (editable && citaId) ? '' : 'none';
+            ['cita-hora-h', 'cita-hora-m', 'cita-duracion', 'cita-paciente', 'cita-propietario', 'cita-telefono', 'cita-nota'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.disabled = !editable;
+            });
+            document.getElementById('cita-modal').classList.remove('hidden');
+        };
+
+        window.cerrarModalCita = function() {
+            document.getElementById('cita-modal').classList.add('hidden');
+            editandoCitaId = null;
+        };
+
+        window.editarCita = function(id) {
+            const c = todasCitas.find(x => x.id === id);
+            if (!c) return;
+            abrirModalCita(c.fecha, null, id);
+        };
+
+        window.guardarCita = async function() {
+            if (!puedeEditar('agenda')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!agendaDiaSel) { showToast("No hay día seleccionado.", true); return; }
+            const hora = getHoraAgenda();
+            const duracion = parseInt(document.getElementById('cita-duracion').value, 10) || 15;
+            const paciente = (document.getElementById('cita-paciente').value || '').trim();
+            const propietario = (document.getElementById('cita-propietario').value || '').trim();
+            const telefono = (document.getElementById('cita-telefono').value || '').trim();
+            const nota = (document.getElementById('cita-nota').value || '').trim();
+            if (!hora) { showToast("Indica la hora de la visita.", true); return; }
+            if (!paciente) { showToast("Escribe el nombre del paciente.", true); return; }
+
+            const btn = document.getElementById('cita-btn-guardar');
+            const htmlOrig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const id = editandoCitaId || String(Date.now());
+                await setDoc(doc(db, "citas", id), {
+                    fecha: agendaDiaSel, hora, duracion, paciente, propietario, telefono, nota,
+                    creado: new Date().toISOString(),
+                    uid: (auth.currentUser ? auth.currentUser.uid : '')
+                }, { merge: true });
+                showToast(editandoCitaId ? "Visita actualizada." : "Visita agendada.");
+                cerrarModalCita();
+                await renderCalendarioAgenda();
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudo guardar. Revisa las reglas de Firestore.", true);
+            } finally {
+                btn.disabled = false; btn.innerHTML = htmlOrig;
+            }
+        };
+
+        window.eliminarCitaDesdeModal = function() {
+            if (editandoCitaId) eliminarCita(editandoCitaId, document.getElementById('cita-paciente').value);
+        };
+
+        window.eliminarCita = async function(id, nombre) {
+            if (!puedeEditar('agenda')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!confirm(`¿Eliminar la visita de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, "citas", id));
+                showToast("Visita eliminada.");
+                cerrarModalCita();
+                await renderCalendarioAgenda();
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudo eliminar.", true);
             }
         };
 
