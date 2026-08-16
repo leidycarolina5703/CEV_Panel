@@ -1242,16 +1242,23 @@
             </div>
         </header>
 
-        <!-- VISTA SEMANA -->
-        <div id="agenda-semana-card" class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-            <div class="flex items-center justify-between mb-4">
-                <button onclick="cambiarSemanaAgenda(-1)" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"><i class="fa-solid fa-chevron-left"></i></button>
-                <h3 id="agenda-semana-label" class="font-bold text-base sm:text-lg text-emerald-700"></h3>
-                <button onclick="cambiarSemanaAgenda(1)" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            <div id="agenda-semana-lista" class="space-y-2"></div>
+        <!-- Selector Día / Semana -->
+        <div class="flex justify-center gap-1 bg-gray-100 rounded-xl p-1 max-w-xs mx-auto">
+            <button id="agenda-tab-dia" onclick="setVistaAgenda('dia')" class="flex-1 py-1.5 rounded-lg text-sm font-semibold bg-white text-emerald-700 shadow-sm">Día</button>
+            <button id="agenda-tab-semana" onclick="setVistaAgenda('semana')" class="flex-1 py-1.5 rounded-lg text-sm font-semibold text-gray-500">Semana</button>
         </div>
 
+        <div class="bg-white rounded-xl shadow-md p-3 sm:p-6 border border-gray-200">
+            <div class="flex items-center justify-between mb-4 gap-2">
+                <button onclick="navAgenda(-1)" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="text-center min-w-0">
+                    <h3 id="agenda-vista-label" class="font-bold text-base sm:text-lg text-emerald-700 capitalize truncate"></h3>
+                    <button onclick="irHoyAgenda()" class="text-xs text-emerald-600 hover:underline font-semibold">Ir a hoy</button>
+                </div>
+                <button onclick="navAgenda(1)" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div id="agenda-vista-lista"></div>
+        </div>
         <p class="text-center text-xs text-gray-400 italic">Toca una hora en el calendario para agendar una visita. Toca una visita existente para editarla.</p>
     </div>
 
@@ -1297,7 +1304,7 @@
                 <button onclick="guardarCita()" id="cita-btn-guardar" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 flex justify-center items-center gap-2">
                     <i class="fa-solid fa-floppy-disk"></i> Guardar
                 </button>
-                <button onclick="eliminarCitaDesdeModal()" id="cita-btn-eliminar" class="hidden px-4 py-2.5 bg-red-50 text-red-600 rounded-lg font-semibold border border-red-200 hover:bg-red-100"><i class="fa-solid fa-trash-can"></i></button>
+                <button onclick="eliminarCitaDesdeModal()" id="cita-btn-eliminar" class="hidden px-4 py-2.5 bg-red-50 text-red-600 rounded-lg font-semibold border border-red-200 hover:bg-red-100 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
             </div>
         </div>
     </div>
@@ -6195,10 +6202,11 @@
             agendaYear = hoy.getFullYear();
             agendaMonth = hoy.getMonth();
             agendaDiaSel = fechaLocalISO();
-            agendaVista = 'semana';
+            agendaVista = 'dia';
             editandoCitaId = null;
             poblarSelectsHora();
             cerrarModalCita();
+            setVistaAgenda('dia', true);
             await cargarCitas();
             refrescarVistaAgenda();
             aplicarModoLectura('agenda-screen', 'agenda');
@@ -6255,7 +6263,8 @@
         }
 
         function refrescarVistaAgenda() {
-            renderSemanaAgenda();
+            if (agendaVista === 'dia') renderDiaAgenda();
+            else renderSemanaAgenda();
         }
 
         // Nombre conservado: recarga datos y refresca la vista
@@ -6264,27 +6273,35 @@
             refrescarVistaAgenda();
         }
 
-        window.cambiarSemanaAgenda = function(delta) {
-            const ini = inicioSemana(agendaDiaSel);
-            ini.setDate(ini.getDate() + delta * 7);
-            agendaDiaSel = isoDe(ini);
-            renderSemanaAgenda();
+        window.setVistaAgenda = function(v, soloTabs) {
+            agendaVista = v;
+            const activo = "flex-1 py-1.5 rounded-lg text-sm font-semibold bg-white text-emerald-700 shadow-sm";
+            const inactivo = "flex-1 py-1.5 rounded-lg text-sm font-semibold text-gray-500";
+            document.getElementById('agenda-tab-dia').className = (v === 'dia') ? activo : inactivo;
+            document.getElementById('agenda-tab-semana').className = (v === 'semana') ? activo : inactivo;
+            if (!soloTabs) refrescarVistaAgenda();
         };
 
-        const AGENDA_ROW_H = 46; // alto de cada hora en px
+        window.navAgenda = function(delta) {
+            const [y, m, d] = agendaDiaSel.split('-').map(Number);
+            const dt = new Date(y, m - 1, d);
+            dt.setDate(dt.getDate() + (agendaVista === 'semana' ? delta * 7 : delta));
+            agendaDiaSel = isoDe(dt);
+            refrescarVistaAgenda();
+        };
 
-        function renderSemanaAgenda() {
-            const lunes = inicioSemana(agendaDiaSel);
-            const dias = [];
-            for (let i = 0; i < 7; i++) { const dt = new Date(lunes); dt.setDate(lunes.getDate() + i); dias.push(dt); }
-            const corto = dt => dt.getDate() + " " + MESES_AGENDA[dt.getMonth()].slice(0, 3);
-            document.getElementById('agenda-semana-label').textContent = corto(dias[0]) + " – " + corto(dias[6]) + " " + dias[6].getFullYear();
+        window.irHoyAgenda = function() {
+            agendaDiaSel = fechaLocalISO();
+            refrescarVistaAgenda();
+        };
 
-            const fechasSemana = dias.map(isoDe);
-            const citasSemana = todasCitas.filter(c => fechasSemana.includes(c.fecha));
-            // Rango horario dinámico (7–19 por defecto, se amplía según las visitas)
+        window.cambiarSemanaAgenda = function(delta) { navAgenda(delta); };
+
+        let agendaRowH = 46; // alto de cada hora en px (cambia según la vista)
+
+        function rangoHoras(citas) {
             let hMin = 7, hMax = 19;
-            citasSemana.forEach(c => {
+            citas.forEach(c => {
                 const [hh, mm] = (c.hora || '').split(':').map(Number);
                 if (!isNaN(hh)) {
                     hMin = Math.min(hMin, hh);
@@ -6293,52 +6310,93 @@
                 }
             });
             if (hMin < 0) hMin = 0; if (hMax > 24) hMax = 24;
+            return { hMin, hMax };
+        }
+
+        function renderDiaAgenda() {
+            agendaRowH = 58; // más alto = más cómodo
+            const fecha = agendaDiaSel;
+            document.getElementById('agenda-vista-label').textContent = fechaDiaLegible(fecha);
+            const citasDia = todasCitas.filter(c => c.fecha === fecha).sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+            const { hMin, hMax } = rangoHoras(citasDia);
             agendaHMin = hMin;
-            const totalH = (hMax - hMin) * AGENDA_ROW_H;
+            const totalH = (hMax - hMin) * agendaRowH;
+            const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            let html = `<div class="grid" style="grid-template-columns:52px 1fr">`;
+            // Eje de horas
+            html += `<div class="relative" style="height:${totalH}px">`;
+            for (let h = hMin; h < hMax; h++) html += `<div class="absolute right-2 text-xs text-gray-400" style="top:${(h - hMin) * agendaRowH - 7}px">${String(h).padStart(2, '0')}:00</div>`;
+            html += `</div>`;
+            // Columna del día (todo el ancho)
+            html += `<div class="relative border-l border-gray-100 cursor-pointer" style="height:${totalH}px" onclick="clickCeldaAgenda(event,'${fecha}')">`;
+            for (let h = hMin; h < hMax; h++) html += `<div class="absolute left-0 right-0 border-t border-gray-100" style="top:${(h - hMin) * agendaRowH}px"></div>`;
+            citasDia.forEach(c => {
+                const [hh, mm] = (c.hora || '0:0').split(':').map(Number);
+                const startMin = (hh - hMin) * 60 + (mm || 0);
+                const dur = c.duracion || 15;
+                const top = startMin / 60 * agendaRowH;
+                const height = Math.max(24, dur / 60 * agendaRowH);
+                html += `<div onclick="event.stopPropagation(); abrirModalCita('${fecha}', null, '${c.id}')" class="absolute rounded-lg bg-emerald-500 text-white overflow-hidden cursor-pointer hover:bg-emerald-600 px-2 py-0.5 shadow-sm" style="top:${top}px;height:${height}px;left:4px;right:4px;font-size:12px;line-height:1.2"><b>${esc(c.hora)}</b> · ${esc(c.paciente)}${c.propietario ? ` <span class="opacity-90">(${esc(c.propietario)})</span>` : ''}${dur ? ` <span class="opacity-75">— ${dur} min</span>` : ''}</div>`;
+            });
+            html += `</div></div>`;
+            if (citasDia.length === 0) html += '<p class="text-center text-xs text-gray-400 italic mt-2">Sin visitas este día. Toca una hora para agendar.</p>';
+            document.getElementById('agenda-vista-lista').innerHTML = html;
+        }
+
+        function renderSemanaAgenda() {
+            agendaRowH = 46;
+            const lunes = inicioSemana(agendaDiaSel);
+            const dias = [];
+            for (let i = 0; i < 7; i++) { const dt = new Date(lunes); dt.setDate(lunes.getDate() + i); dias.push(dt); }
+            const corto = dt => dt.getDate() + " " + MESES_AGENDA[dt.getMonth()].slice(0, 3);
+            document.getElementById('agenda-vista-label').textContent = corto(dias[0]) + " – " + corto(dias[6]) + " " + dias[6].getFullYear();
+
+            const fechasSemana = dias.map(isoDe);
+            const citasSemana = todasCitas.filter(c => fechasSemana.includes(c.fecha));
+            const { hMin, hMax } = rangoHoras(citasSemana);
+            agendaHMin = hMin;
+            const totalH = (hMax - hMin) * agendaRowH;
 
             const hoyISO = fechaLocalISO();
             const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const cols = 'grid-template-columns:44px repeat(7,minmax(92px,1fr))';
+            const cols = 'grid-template-columns:46px repeat(7,minmax(118px,1fr))';
 
-            let html = '<div class="overflow-x-auto"><div style="min-width:700px">';
-            // Encabezado de días
+            let html = '<div class="overflow-x-auto"><div style="min-width:900px">';
             html += `<div class="grid" style="${cols}"><div></div>`;
             dias.forEach((dt, i) => {
                 const esHoy = isoDe(dt) === hoyISO;
-                html += `<div class="text-center py-1.5 text-xs font-semibold border-b-2 ${esHoy ? 'text-emerald-700 border-emerald-300' : 'text-gray-600 border-gray-100'}">${DIAS_SEMANA[i].slice(0, 3)}<br><span class="text-sm">${dt.getDate()}</span></div>`;
+                html += `<div class="text-center py-1.5 text-xs font-semibold border-b-2 ${esHoy ? 'text-emerald-700 border-emerald-400' : 'text-gray-600 border-gray-100'}">${DIAS_SEMANA[i].slice(0, 3)}<br><span class="text-base">${dt.getDate()}</span></div>`;
             });
             html += '</div>';
-            // Cuerpo
             html += `<div class="grid" style="${cols}">`;
-            // Eje de horas
             html += `<div class="relative" style="height:${totalH}px">`;
-            for (let h = hMin; h < hMax; h++) html += `<div class="absolute right-1 text-[10px] text-gray-400" style="top:${(h - hMin) * AGENDA_ROW_H - 6}px">${String(h).padStart(2, '0')}:00</div>`;
+            for (let h = hMin; h < hMax; h++) html += `<div class="absolute right-1 text-[10px] text-gray-400" style="top:${(h - hMin) * agendaRowH - 6}px">${String(h).padStart(2, '0')}:00</div>`;
             html += `</div>`;
-            // Columnas de días
             dias.forEach(dt => {
                 const fecha = isoDe(dt);
                 const esHoy = fecha === hoyISO;
-                html += `<div class="relative border-l border-gray-100 cursor-pointer ${esHoy ? 'bg-emerald-50/20' : ''}" style="height:${totalH}px" onclick="clickCeldaAgenda(event,'${fecha}')">`;
-                for (let h = hMin; h < hMax; h++) html += `<div class="absolute left-0 right-0 border-t border-gray-100" style="top:${(h - hMin) * AGENDA_ROW_H}px"></div>`;
+                html += `<div class="relative border-l border-gray-100 cursor-pointer ${esHoy ? 'bg-emerald-50/30' : ''}" style="height:${totalH}px" onclick="clickCeldaAgenda(event,'${fecha}')">`;
+                for (let h = hMin; h < hMax; h++) html += `<div class="absolute left-0 right-0 border-t border-gray-100" style="top:${(h - hMin) * agendaRowH}px"></div>`;
                 citasSemana.filter(c => c.fecha === fecha).forEach(c => {
                     const [hh, mm] = (c.hora || '0:0').split(':').map(Number);
                     const startMin = (hh - hMin) * 60 + (mm || 0);
                     const dur = c.duracion || 15;
-                    const top = startMin / 60 * AGENDA_ROW_H;
-                    const height = Math.max(15, dur / 60 * AGENDA_ROW_H);
-                    html += `<div onclick="event.stopPropagation(); abrirModalCita('${fecha}', null, '${c.id}')" title="${esc(c.hora)} ${esc(c.paciente)}${c.propietario ? ' · ' + esc(c.propietario) : ''} (${dur} min)" class="absolute rounded bg-emerald-500 text-white overflow-hidden cursor-pointer hover:bg-emerald-600 px-1" style="top:${top}px;height:${height}px;left:2px;right:2px;font-size:10px;line-height:1.15"><b>${esc(c.hora)}</b> ${esc(c.paciente)}</div>`;
+                    const top = startMin / 60 * agendaRowH;
+                    const height = Math.max(16, dur / 60 * agendaRowH);
+                    html += `<div onclick="event.stopPropagation(); abrirModalCita('${fecha}', null, '${c.id}')" title="${esc(c.hora)} ${esc(c.paciente)}${c.propietario ? ' · ' + esc(c.propietario) : ''} (${dur} min)" class="absolute rounded bg-emerald-500 text-white overflow-hidden cursor-pointer hover:bg-emerald-600 px-1" style="top:${top}px;height:${height}px;left:2px;right:2px;font-size:11px;line-height:1.15"><b>${esc(c.hora)}</b> ${esc(c.paciente)}</div>`;
                 });
                 html += `</div>`;
             });
             html += '</div></div></div>';
-            document.getElementById('agenda-semana-lista').innerHTML = html;
+            document.getElementById('agenda-vista-lista').innerHTML = html;
         }
 
         window.clickCeldaAgenda = function(event, fecha) {
             if (!puedeEditar('agenda')) { showToast("Modo solo lectura: no puedes agendar.", true); return; }
             const rect = event.currentTarget.getBoundingClientRect();
             const y = event.clientY - rect.top;
-            let totalMin = (y / AGENDA_ROW_H) * 60;
+            let totalMin = (y / agendaRowH) * 60;
             totalMin = Math.max(0, Math.round(totalMin / 15) * 15); // redondea a 15 min
             let hh = agendaHMin + Math.floor(totalMin / 60);
             const mm = totalMin % 60;
