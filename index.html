@@ -7072,18 +7072,13 @@
         function textoCita() {
             const fecha = fechaDiaLegible(agendaDiaSel);
             const hora = getHoraAgenda();
-            const dur = document.getElementById('cita-duracion').value;
             const paciente = (document.getElementById('cita-paciente').value || '').trim();
             const propietario = (document.getElementById('cita-propietario').value || '').trim();
-            const telefono = (document.getElementById('cita-telefono').value || '').trim();
-            const nota = (document.getElementById('cita-nota').value || '').trim();
             let t = "📅 *CEV Mascotas — Visita agendada*\n";
             t += "🗓️ Fecha: " + fecha + "\n";
-            t += "⏰ Hora: " + (hora || '—') + (dur ? " (" + dur + " min)" : "") + "\n";
+            t += "⏰ Hora: " + (hora || '—') + "\n";
             if (paciente) t += "🐾 Paciente: " + paciente + "\n";
             if (propietario) t += "👤 Propietario: " + propietario + "\n";
-            if (telefono) t += "📞 Teléfono: " + telefono + "\n";
-            if (nota) t += "📝 Motivo: " + nota + "\n";
             return t.trim();
         }
 
