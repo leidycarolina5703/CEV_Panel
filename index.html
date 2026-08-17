@@ -1356,11 +1356,17 @@
                 <label class="fmt-lbl">Motivo / nota (opcional)</label>
                 <input type="text" id="cita-nota" placeholder="Ej: control, vacunación, cirugía…" class="fmt-in">
             </div>
-            <div class="flex gap-2 pt-1">
-                <button onclick="guardarCita()" id="cita-btn-guardar" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar
-                </button>
-                <button onclick="eliminarCitaDesdeModal()" id="cita-btn-eliminar" class="hidden px-4 py-2.5 bg-red-50 text-red-600 rounded-lg font-semibold border border-red-200 hover:bg-red-100 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+            <div class="space-y-2 pt-1">
+                <div class="flex gap-2">
+                    <button onclick="guardarCita()" id="cita-btn-guardar" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
+                    </button>
+                    <button onclick="eliminarCitaDesdeModal()" id="cita-btn-eliminar" class="hidden px-4 py-2.5 bg-red-50 text-red-600 rounded-lg font-semibold border border-red-200 hover:bg-red-100 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="copiarCita()" class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-semibold border border-gray-200 hover:bg-gray-200 flex justify-center items-center gap-2"><i class="fa-regular fa-copy"></i> Copiar datos</button>
+                    <button onclick="enviarCitaWhatsApp()" class="flex-1 py-2.5 text-white rounded-lg font-semibold hover:opacity-90 flex justify-center items-center gap-2" style="background:#25D366"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                </div>
             </div>
         </div>
     </div>
@@ -7061,6 +7067,49 @@
 
         window.eliminarCitaDesdeModal = function() {
             if (editandoCitaId) eliminarCita(editandoCitaId, document.getElementById('cita-paciente').value);
+        };
+
+        function textoCita() {
+            const fecha = fechaDiaLegible(agendaDiaSel);
+            const hora = getHoraAgenda();
+            const dur = document.getElementById('cita-duracion').value;
+            const paciente = (document.getElementById('cita-paciente').value || '').trim();
+            const propietario = (document.getElementById('cita-propietario').value || '').trim();
+            const telefono = (document.getElementById('cita-telefono').value || '').trim();
+            const nota = (document.getElementById('cita-nota').value || '').trim();
+            let t = "📅 *CEV Mascotas — Visita agendada*\n";
+            t += "🗓️ Fecha: " + fecha + "\n";
+            t += "⏰ Hora: " + (hora || '—') + (dur ? " (" + dur + " min)" : "") + "\n";
+            if (paciente) t += "🐾 Paciente: " + paciente + "\n";
+            if (propietario) t += "👤 Propietario: " + propietario + "\n";
+            if (telefono) t += "📞 Teléfono: " + telefono + "\n";
+            if (nota) t += "📝 Motivo: " + nota + "\n";
+            return t.trim();
+        }
+
+        window.copiarCita = async function() {
+            const texto = textoCita();
+            try {
+                await navigator.clipboard.writeText(texto);
+                showToast("Datos copiados. Ya puedes pegarlos y enviarlos.");
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.focus(); ta.select();
+                try { document.execCommand('copy'); showToast("Datos copiados."); }
+                catch (_) { showToast("No se pudo copiar en este dispositivo.", true); }
+                document.body.removeChild(ta);
+            }
+        };
+
+        window.enviarCitaWhatsApp = function() {
+            const texto = textoCita();
+            let tel = (document.getElementById('cita-telefono').value || '').replace(/[^0-9]/g, '');
+            if (tel && tel.length === 10) tel = "57" + tel; // Colombia
+            const url = tel
+                ? `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`
+                : `https://wa.me/?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
         };
 
         window.eliminarCita = async function(id, nombre) {
