@@ -114,7 +114,7 @@
                 </div>
                 <div class="text-center">
                     <h2 class="text-xl font-bold text-gray-800 mb-2">Agendamiento de visitas</h2>
-                    <p class="text-gray-500 text-center text-sm">Calendario de visitas de los propietarios.</p>
+                    <p class="text-gray-500 text-center text-sm">Calendario de visitas de los tutores.</p>
                 </div>
             </button>
 
@@ -1292,7 +1292,7 @@
             </button>
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-emerald-700 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Agendamiento de visitas</h1>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">Calendario de visitas de los propietarios</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">Calendario de visitas de los tutores</p>
             </div>
         </header>
 
@@ -1345,8 +1345,8 @@
                 <input type="text" id="cita-paciente" placeholder="Nombre del paciente" class="fmt-in">
             </div>
             <div>
-                <label class="fmt-lbl">Propietario</label>
-                <input type="text" id="cita-propietario" placeholder="Nombre del propietario" class="fmt-in">
+                <label class="fmt-lbl">Tutor</label>
+                <input type="text" id="cita-propietario" placeholder="Nombre del tutor" class="fmt-in">
             </div>
             <div>
                 <label class="fmt-lbl">Teléfono (opcional)</label>
@@ -7078,7 +7078,7 @@
             t += "🗓️ Fecha: " + fecha + "\n";
             t += "⏰ Hora: " + (hora || '—') + "\n";
             if (paciente) t += "🐾 Paciente: " + paciente + "\n";
-            if (propietario) t += "👤 Propietario: " + propietario + "\n";
+            if (propietario) t += "👤 Tutor: " + propietario + "\n";
             return t.trim();
         }
 
