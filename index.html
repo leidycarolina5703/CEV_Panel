@@ -434,6 +434,14 @@
                 <h2 class="text-xl font-bold text-gray-800 text-center">Valoración neurológica</h2>
                 <p class="text-gray-500 text-center text-sm">Examen neurológico completo por paciente.</p>
             </button>
+
+            <button id="card-fmt-consulta" onclick="openConsulta()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-notes-medical"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 text-center">Consulta clínica</h2>
+                <p class="text-gray-500 text-center text-sm">Historia de consulta: examen, diagnóstico y tratamiento.</p>
+            </button>
         </div>
 
         <!-- MÓDULO MONITOREO ANESTÉSICO -->
@@ -826,6 +834,52 @@
                     <i class="fa-solid fa-file-excel"></i> Descargar Excel
                 </button>
                 <button onclick="exportarNeuroPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- MÓDULO CONSULTA CLÍNICA -->
+        <div id="fmt-consulta" class="hidden space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button onclick="volverSelectorFormatos()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-notes-medical"></i></div>
+                    <h2 class="text-lg font-bold text-[#154390]">Consulta clínica</h2>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="nuevoConsulta()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-file-circle-plus"></i> Nueva consulta
+                    </button>
+                    <button onclick="abrirConsultaGuardados()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-folder-open"></i> Guardadas
+                    </button>
+                </div>
+            </div>
+
+            <!-- LISTA DE CONSULTAS GUARDADAS -->
+            <div id="consulta-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Consultas guardadas</h2>
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
+                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="consulta-desde" class="js-ver fmt-in"></div>
+                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="consulta-hasta" class="js-ver fmt-in"></div>
+                    <div class="flex gap-2">
+                        <button onclick="abrirConsultaGuardados()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                        <button onclick="limpiarFiltroConsulta()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todas</button>
+                    </div>
+                </div>
+                <div id="consulta-lista-container" class="space-y-2"></div>
+            </div>
+
+            <!-- Secciones generadas -->
+            <div id="c-secciones" class="space-y-4 sm:space-y-6"></div>
+
+            <!-- Acciones -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="guardarConsulta()" id="btn-guardar-consulta" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
+                </button>
+                <button onclick="exportarConsultaPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Descargar PDF
                 </button>
             </div>
@@ -1366,7 +1420,8 @@
             { id: "agenda",       nombre: "Agendamiento de visitas", icono: "fa-calendar-check",  card: "card-agenda" },
             { id: "fmt_monitoreo",  nombre: "Monitoreo anestésico",    icono: "fa-heart-pulse",  card: "card-fmt-monitoreo",  grupo: "Formatos clínicos" },
             { id: "fmt_ortopedico", nombre: "Examen ortopédico",       icono: "fa-bone",         card: "card-fmt-ortopedico", grupo: "Formatos clínicos" },
-            { id: "fmt_neuro",      nombre: "Valoración neurológica",  icono: "fa-brain",        card: "card-fmt-neuro",      grupo: "Formatos clínicos" }
+            { id: "fmt_neuro",      nombre: "Valoración neurológica",  icono: "fa-brain",        card: "card-fmt-neuro",      grupo: "Formatos clínicos" },
+            { id: "fmt_consulta",   nombre: "Consulta clínica",        icono: "fa-notes-medical", card: "card-fmt-consulta",  grupo: "Formatos clínicos" }
         ];
 
         // ▸ MODO_ESTRICTO = false: si un usuario NO tiene documento en "usuarios",
@@ -1420,7 +1475,7 @@
         };
 
         window.openFormatos = function() {
-            if (!(tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro'))) { showToast("No tienes acceso a este módulo.", true); return; }
+            if (!(tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro') || tienePermiso('fmt_consulta'))) { showToast("No tienes acceso a este módulo.", true); return; }
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
@@ -1650,7 +1705,7 @@
             // La tarjeta "Formatos clínicos" se ve si tiene acceso a algún formato
             const cardFormatos = document.getElementById('card-formatos');
             if (cardFormatos) {
-                const verFormatos = tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro');
+                const verFormatos = tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro') || tienePermiso('fmt_consulta');
                 if (verFormatos) cardFormatos.classList.remove('hidden');
                 else cardFormatos.classList.add('hidden');
             }
@@ -3095,6 +3150,7 @@
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
+            document.getElementById('fmt-consulta').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.remove('hidden');
             prepararFormularioMonitoreo();
             abrirFormatosGuardados();
@@ -3105,6 +3161,7 @@
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
+            document.getElementById('fmt-consulta').classList.add('hidden');
             document.getElementById('fmt-selector').classList.remove('hidden');
         };
 
@@ -3769,6 +3826,7 @@
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
+            document.getElementById('fmt-consulta').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.remove('hidden');
             prepararFormularioOrto();
             abrirOrtoGuardados();
@@ -4343,6 +4401,7 @@
             document.getElementById('fmt-selector').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
+            document.getElementById('fmt-consulta').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.remove('hidden');
             prepararFormularioNeuro();
             abrirNeuroGuardados();
@@ -4641,6 +4700,468 @@
                 if (!pdf) return;
                 const nombre = (d.nombre || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
                 pdf.save(`Valoracion_Neurologica_${nombre}_${d.fecha || ''}.pdf`);
+            } catch (error) {
+                showToast("No se pudo generar el PDF.", true);
+                console.error(error);
+            }
+        };
+
+        // ==========================================================
+        // FORMATO CONSULTA CLÍNICA  (colección: formatos_consulta)
+        // ==========================================================
+        let consultaIdActual = null;
+
+        const CONSULTA_SECCIONES = [
+            { id: 'datos', titulo: 'Datos del paciente y consulta', icono: 'fa-clipboard', campos: [
+                { id: 'numero', label: 'ID consulta / No.', tipo: 'texto' },
+                { id: 'hc', label: 'H.C. #', tipo: 'texto' },
+                { id: 'nombre', label: 'Nombre del paciente', tipo: 'texto' },
+                { id: 'especie', label: 'Especie', tipo: 'select', op: ['Canino', 'Felino', 'Otro'] },
+                { id: 'raza', label: 'Raza', tipo: 'texto' },
+                { id: 'sexo', label: 'Sexo', tipo: 'select', op: ['Macho', 'Hembra', 'Macho castrado', 'Hembra castrada'] },
+                { id: 'color', label: 'Color', tipo: 'texto' },
+                { id: 'nacido', label: 'Fecha de nacimiento', tipo: 'fecha' },
+                { id: 'esteril', label: 'Estéril', tipo: 'select', op: ['Sí', 'No'] },
+                { id: 'propietario', label: 'Propietario / responsable', tipo: 'texto' },
+                { id: 'documento', label: 'Documento', tipo: 'texto' },
+                { id: 'fecha', label: 'Fecha de consulta', tipo: 'fecha' },
+                { id: 'tipo_proc', label: 'Tipo de procedimiento', tipo: 'select', op: ['Consulta', 'Control', 'Urgencia', 'Cirugía', 'Vacunación', 'Otro'] },
+                { id: 'veterinario', label: 'Veterinario', tipo: 'texto' },
+            ] },
+            { id: 'anamnesis', titulo: 'Anamnésicos', icono: 'fa-comment-medical', campos: [
+                { id: 'anamnesicos', label: 'Anamnésicos', tipo: 'area' },
+            ] },
+            { id: 'signos', titulo: 'Signos vitales', icono: 'fa-heart-pulse', campos: [
+                { id: 't', label: 'Temperatura (°C)', tipo: 'texto' },
+                { id: 'fc', label: 'Frec. cardiaca (lpm)', tipo: 'texto' },
+                { id: 'fr', label: 'Frec. respiratoria (rpm)', tipo: 'texto' },
+                { id: 'pulso', label: 'Pulso', tipo: 'texto' },
+                { id: 'mucosas', label: 'Mucosas', tipo: 'select', op: ['Pálidas', 'Rosadas', 'Congestionadas', 'Cianóticas', 'Ictéricas'] },
+                { id: 'deshidratacion', label: 'Deshidratación (%)', tipo: 'select', op: ['Normal', '5%', '6%', '7%', '8%', '9%', '10%', '12%'] },
+                { id: 'peso', label: 'Peso (kg)', tipo: 'texto' },
+                { id: 'tllc', label: 'TLLC', tipo: 'texto' },
+                { id: 'trpc', label: 'TRPC', tipo: 'texto' },
+            ] },
+            { id: 'actitud', titulo: 'Actitud y condición corporal', icono: 'fa-clipboard-check', campos: [
+                { id: 'cond_corporal', label: 'Condición corporal', tipo: 'select', op: ['1/9', '2/9', '3/9', '4/9', '5/9', '6/9', '7/9', '8/9', '9/9'] },
+                { id: 'actitud_prop', label: 'Actitud (Propietario)', tipo: 'texto' },
+                { id: 'actitud_vet', label: 'Actitud (Veterinario)', tipo: 'texto' },
+            ] },
+            { id: 'examen', titulo: 'Examen físico por sistemas', icono: 'fa-stethoscope', lista: true, campos: [
+                { id: 'piel_anexos', label: 'Piel y anexos', tipo: 'texto' },
+                { id: 'sist_respiratorio', label: 'Sistema respiratorio', tipo: 'texto' },
+                { id: 'sist_digestivo', label: 'Sistema digestivo', tipo: 'texto' },
+                { id: 'sist_genitourinario', label: 'Sistema genito-urinario', tipo: 'texto' },
+                { id: 'sist_cardiovascular', label: 'Sistema cardiovascular', tipo: 'texto' },
+                { id: 'sist_reproductivo', label: 'Sistema reproductivo', tipo: 'texto' },
+                { id: 'sist_musculoesqueletico', label: 'Sistema musculoesquelético', tipo: 'texto' },
+                { id: 'sist_nervioso', label: 'Sistema nervioso', tipo: 'texto' },
+                { id: 'organos_sentidos', label: 'Órganos de los sentidos', tipo: 'texto' },
+                { id: 'ganglios_linfaticos', label: 'Ganglios linfáticos', tipo: 'texto' },
+                { id: 'cavidad_oral', label: 'Cavidad oral', tipo: 'texto' },
+            ] },
+            { id: 'complementarios', titulo: 'Exámenes complementarios', icono: 'fa-vials', campos: [
+                { id: 'examenes_comp', label: 'Exámenes complementarios', tipo: 'area' },
+            ] },
+            { id: 'problemas', titulo: 'Listas', icono: 'fa-list-check', campos: [
+                { id: 'lista_problemas', label: 'Lista de problemas', tipo: 'area' },
+                { id: 'lista_maestra', label: 'Lista maestra', tipo: 'area' },
+            ] },
+            { id: 'evaluacion', titulo: 'Evaluación clínica', icono: 'fa-user-doctor', campos: [
+                { id: 'pronostico', label: 'Pronóstico', tipo: 'area' },
+                { id: 'diagnosticos', label: 'Diagnósticos', tipo: 'area' },
+                { id: 'tratamiento', label: 'Tratamiento', tipo: 'area' },
+                { id: 'fecha_prox', label: 'Fecha próxima cita', tipo: 'fecha' },
+            ] },
+        ];
+
+        function campoConsultaHTML(c) {
+            const dom = 'c-' + c.id;
+            if (c.tipo === 'area') {
+                return `<div><label class="fmt-lbl">${c.label}</label><textarea id="${dom}" rows="3" class="fmt-in"></textarea></div>`;
+            }
+            if (c.tipo === 'select') {
+                const opts = ['<option value=""></option>'].concat((c.op || []).map(o => `<option>${o}</option>`)).join('');
+                return `<div><label class="fmt-lbl">${c.label}</label><select id="${dom}" class="fmt-in">${opts}</select></div>`;
+            }
+            const t = c.tipo === 'fecha' ? 'date' : 'text';
+            return `<div><label class="fmt-lbl">${c.label}</label><input type="${t}" id="${dom}" class="fmt-in"></div>`;
+        }
+
+        function renderSeccionesConsulta() {
+            const cont = document.getElementById('c-secciones');
+            let html = '';
+            CONSULTA_SECCIONES.forEach(sec => {
+                html += `<section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid ${sec.icono}"></i> ${sec.titulo}</h2>`;
+                if (sec.lista) {
+                    sec.campos.forEach(c => {
+                        html += `<div class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 mt-2">
+                            <label class="fmt-lbl sm:w-56 sm:shrink-0 sm:pt-2" style="margin-bottom:0">${c.label}</label>
+                            <textarea id="c-${c.id}" rows="2" class="fmt-in flex-1"></textarea>
+                        </div>`;
+                    });
+                } else {
+                    const grid = sec.campos.filter(c => c.tipo !== 'area');
+                    const areas = sec.campos.filter(c => c.tipo === 'area');
+                    if (grid.length) {
+                        html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">`;
+                        grid.forEach(c => { html += campoConsultaHTML(c); });
+                        html += `</div>`;
+                    }
+                    areas.forEach(c => { html += `<div class="mt-3">${campoConsultaHTML(c)}</div>`; });
+                }
+                html += `</section>`;
+            });
+            cont.innerHTML = html;
+        }
+
+        function recogerConsulta() {
+            const campos = {};
+            CONSULTA_SECCIONES.forEach(sec => sec.campos.forEach(c => {
+                campos[c.id] = (document.getElementById('c-' + c.id)?.value || '').trim();
+            }));
+            return { campos, nombre: campos.nombre || '', hc: campos.hc || campos.numero || '', fecha: campos.fecha || '' };
+        }
+
+        function volcarConsulta(data) {
+            const campos = data.campos || {};
+            CONSULTA_SECCIONES.forEach(sec => sec.campos.forEach(c => {
+                const el = document.getElementById('c-' + c.id); if (el) el.value = campos[c.id] || '';
+            }));
+        }
+
+        window.openConsulta = function() {
+            if (!tienePermiso('fmt_consulta')) { showToast("No tienes acceso a este formato.", true); return; }
+            document.getElementById('fmt-selector').classList.add('hidden');
+            document.getElementById('fmt-monitoreo').classList.add('hidden');
+            document.getElementById('fmt-ortopedico').classList.add('hidden');
+            document.getElementById('fmt-neuro').classList.add('hidden');
+            document.getElementById('fmt-consulta').classList.remove('hidden');
+            prepararFormularioConsulta();
+            abrirConsultaGuardados();
+            aplicarModoLectura('fmt-consulta', 'fmt_consulta');
+        };
+
+        function prepararFormularioConsulta() {
+            if (document.getElementById('c-secciones').children.length === 0) renderSeccionesConsulta();
+            if (consultaIdActual === null && !document.getElementById('c-fecha').value) {
+                const d = new Date();
+                document.getElementById('c-fecha').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+        }
+
+        window.nuevoConsulta = function() {
+            consultaIdActual = null;
+            CONSULTA_SECCIONES.forEach(sec => sec.campos.forEach(c => {
+                const el = document.getElementById('c-' + c.id); if (el) el.value = '';
+            }));
+            const d = new Date();
+            const fEl = document.getElementById('c-fecha');
+            if (fEl) fEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            document.getElementById('consulta-lista').classList.add('hidden');
+            showToast("Consulta nueva lista.");
+        };
+
+        window.guardarConsulta = async function() {
+            if (!puedeEditar('fmt_consulta')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const data = recogerConsulta();
+            if (!data.nombre && !data.hc) { showToast("Escribe al menos el paciente o la historia clínica.", true); return; }
+            const btn = document.getElementById('btn-guardar-consulta');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const id = consultaIdActual || ("consulta_" + Date.now());
+                data.tipo = "consulta_clinica";
+                data.actualizado = new Date().toISOString();
+                if (!consultaIdActual) data.creado = data.actualizado;
+                await setDoc(doc(db, "formatos_consulta", id), data, { merge: true });
+                consultaIdActual = id;
+                showToast("Consulta guardada en la nube.");
+            } catch (error) {
+                showToast("No se pudo guardar. Revisa tu conexión o las reglas de Firestore.", true);
+                console.error(error);
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube';
+            }
+        };
+
+        window.limpiarFiltroConsulta = function() {
+            document.getElementById('consulta-desde').value = '';
+            document.getElementById('consulta-hasta').value = '';
+            abrirConsultaGuardados();
+        };
+
+        window.abrirConsultaGuardados = async function() {
+            const panel = document.getElementById('consulta-lista');
+            const cont = document.getElementById('consulta-lista-container');
+            panel.classList.remove('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "formatos_consulta"));
+                let items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                const desde = document.getElementById('consulta-desde').value;
+                const hasta = document.getElementById('consulta-hasta').value;
+                const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
+                if (desde) items = items.filter(it => fechaDe(it) >= desde);
+                if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
+                if (items.length === 0) {
+                    cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay consultas para ese rango de fechas.</div>';
+                    return;
+                }
+                items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
+                const grupos = {};
+                items.forEach(it => { const f = fechaDe(it) || 'Sin fecha'; (grupos[f] = grupos[f] || []).push(it); });
+                cont.innerHTML = '';
+                Object.keys(grupos).sort((a, b) => b.localeCompare(a)).forEach(fecha => {
+                    const enc = document.createElement('div');
+                    enc.className = "flex items-center gap-2 mt-3 mb-1";
+                    enc.innerHTML = `<i class="fa-solid fa-calendar-day text-[#154390]"></i><span class="text-sm font-bold text-[#154390]">${fecha}</span><span class="text-xs text-gray-400">(${grupos[fecha].length})</span>`;
+                    cont.appendChild(enc);
+                    grupos[fecha].forEach(it => {
+                        const row = document.createElement('div');
+                        row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
+                        row.innerHTML = `
+                            <div class="min-w-0">
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin paciente)'}</p>
+                                <p class="text-xs text-gray-500">${it.hc ? 'No. ' + it.hc : ''}</p>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="cargarConsulta('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                                <button onclick="descargarConsultaPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                                <button onclick="eliminarConsulta('${it.id}', '${(it.nombre || '').replace(/'/g, "\\'")}')" class="js-editar px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>`;
+                        cont.appendChild(row);
+                    });
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        };
+
+        window.cargarConsulta = async function(id) {
+            try {
+                const snap = await getDoc(doc(db, "formatos_consulta", id));
+                if (!snap.exists()) { showToast("Esa consulta ya no existe.", true); return; }
+                consultaIdActual = id;
+                volcarConsulta(snap.data());
+                document.getElementById('consulta-lista').classList.add('hidden');
+                document.getElementById('fmt-consulta').scrollIntoView({ behavior: 'smooth' });
+                showToast("Consulta cargada.");
+            } catch (error) {
+                showToast("No se pudo abrir la consulta.", true);
+                console.error(error);
+            }
+        };
+
+        window.eliminarConsulta = async function(id, nombre) {
+            if (!puedeEditar('fmt_consulta')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!confirm(`¿Eliminar la consulta de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, "formatos_consulta", id));
+                if (consultaIdActual === id) nuevoConsulta();
+                showToast("Consulta eliminada.");
+                abrirConsultaGuardados();
+            } catch (error) {
+                showToast("No se pudo eliminar.", true);
+                console.error(error);
+            }
+        };
+
+        function construirConsultaPDF(d) {
+            if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const AZUL = [21, 67, 144], GRIS = [130, 130, 130], GRISCLARO = [246, 248, 251], BORDE = [223, 228, 236];
+            const PW = pdf.internal.pageSize.getWidth();
+            const PH = pdf.internal.pageSize.getHeight();
+            const M = 40, W = PW - 2 * M;
+            const campos = d.campos || {};
+            const val = k => { const s = (campos[k] || '').toString().trim(); return s || '—'; };
+            let y;
+
+            // ---------- Encabezado ----------
+            const altoLogo = logoPDF(pdf, M, 28, 92);
+            pdf.setFont(undefined, 'bold'); pdf.setFontSize(13); pdf.setTextColor(...AZUL);
+            pdf.text("Centro de Especialistas Veterinarios", M + 104, 44);
+            pdf.setFont(undefined, 'normal'); pdf.setFontSize(8); pdf.setTextColor(...GRIS);
+            pdf.text("Carrera 22ª N°66-44   ·   cvmascotas@gmail.com", M + 104, 58);
+            pdf.text("Línea médica: 310 831 6247    ·    Línea citas: 312 225 2349", M + 104, 70);
+            const numeroConsulta = (campos.numero || '').toString().trim();
+            if (numeroConsulta) {
+                pdf.setFontSize(7); pdf.setTextColor(...GRIS);
+                pdf.text("ID CONSULTA", PW - M, 42, { align: 'right' });
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(13); pdf.setTextColor(...AZUL);
+                pdf.text("#" + numeroConsulta, PW - M, 58, { align: 'right' });
+            }
+            y = Math.max(84, 28 + altoLogo + 8);
+            pdf.setDrawColor(...AZUL); pdf.setLineWidth(1.2); pdf.line(M, y, M + W, y);
+            y += 16;
+            pdf.setFont(undefined, 'bold'); pdf.setFontSize(16); pdf.setTextColor(...AZUL);
+            pdf.text("Consulta clínica", M, y + 2);
+            pdf.setFont(undefined, 'normal'); pdf.setFontSize(8); pdf.setTextColor(...GRIS);
+            pdf.text("Reporte clínico de consulta", M, y + 15);
+            y += 30;
+
+            // ---------- Tarjetas paciente / consulta ----------
+            const gap = 14, cardW = (W - gap) / 2, filaH = 21;
+            function tarjeta(x, y0, w, titulo, filas) {
+                const h = 30 + filas.length * filaH + 6;
+                pdf.setFillColor(...GRISCLARO); pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
+                pdf.roundedRect(x, y0, w, h, 6, 6, 'FD');
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(9); pdf.setTextColor(...AZUL);
+                pdf.text(titulo, x + 12, y0 + 19);
+                let yy = y0 + 38;
+                filas.forEach(f => {
+                    pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.3); pdf.setTextColor(...GRIS);
+                    pdf.text(String(f[0]).toUpperCase(), x + 12, yy);
+                    pdf.setFont(undefined, 'bold'); pdf.setFontSize(9); pdf.setTextColor(40, 40, 40);
+                    pdf.text(String(f[1] || '—'), x + w - 12, yy + 1, { align: 'right', maxWidth: w - 90 });
+                    yy += filaH;
+                });
+                return h;
+            }
+            const hPac = tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
+                ["Nombre", val('nombre')], ["Especie", val('especie')], ["Raza", val('raza')],
+                ["Sexo", val('sexo')], ["Color", val('color')], ["Nacido", val('nacido')],
+                ["Estéril", val('esteril')], ["H.C.", val('hc')]
+            ]);
+            const hDet = tarjeta(M + cardW + gap, y, cardW, "DETALLES DE CONSULTA", [
+                ["Propietario / responsable", val('propietario')], ["Documento", val('documento')],
+                ["Fecha de consulta", val('fecha')], ["Tipo", val('tipo_proc')], ["Veterinario", val('veterinario')]
+            ]);
+            y += Math.max(hPac, hDet) + 16;
+
+            // ---------- Helpers de sección ----------
+            function tituloSeccion(t) {
+                if (y + 40 > PH - 44) { pdf.addPage(); y = 44; }
+                pdf.setFillColor(...AZUL); pdf.rect(M, y - 6, 8, 8, 'F');
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(9); pdf.setTextColor(...AZUL);
+                pdf.text(t.toUpperCase(), M + 14, y);
+                y += 12;
+            }
+            function seccionTexto(titulo, texto) {
+                const t = (texto || '').toString().trim() || '—';
+                pdf.setFont(undefined, 'normal'); pdf.setFontSize(8.5);
+                const lineas = pdf.splitTextToSize(t, W - 24);
+                const alto = lineas.length * 11 + 14;
+                if (y + alto + 20 > PH - 44) { pdf.addPage(); y = 44; }
+                tituloSeccion(titulo);
+                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
+                pdf.roundedRect(M, y, W, alto, 5, 5, 'S');
+                pdf.setTextColor(50, 50, 50); pdf.setFontSize(8.5);
+                pdf.text(lineas, M + 12, y + 13);
+                y += alto + 12;
+            }
+            function grillaCampos(titulo, items) {
+                const cols = 3, cg = 10, cellW = (W - cg * (cols - 1)) / cols, cellH = 34;
+                const filas = Math.ceil(items.length / cols);
+                if (y + filas * (cellH + cg) + 20 > PH - 44) { pdf.addPage(); y = 44; }
+                tituloSeccion(titulo);
+                items.forEach((it, i) => {
+                    const c = i % cols, r = Math.floor(i / cols);
+                    const x = M + c * (cellW + cg), yy = y + r * (cellH + cg);
+                    pdf.setFillColor(...GRISCLARO); pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
+                    pdf.roundedRect(x, yy, cellW, cellH, 5, 5, 'FD');
+                    pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.3); pdf.setTextColor(...GRIS);
+                    pdf.text(String(it[0]).toUpperCase(), x + 8, yy + 12);
+                    pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
+                    pdf.text(String(it[1] || '—'), x + 8, yy + 26, { maxWidth: cellW - 16 });
+                });
+                y += filas * (cellH + cg) + 8;
+            }
+
+            function seccionLista(titulo, pares) {
+                pdf.setFontSize(8.5);
+                const anchoVal = W - 24;
+                let alto = 0;
+                const prep = pares.map(p => {
+                    const lbl = String(p[0]) + ':';
+                    pdf.setFont(undefined, 'bold');
+                    const lblW = pdf.getTextWidth(lbl);
+                    pdf.setFont(undefined, 'normal');
+                    const valTxt = (p[1] || '').toString().trim() || '—';
+                    const vlines = pdf.splitTextToSize(valTxt, anchoVal - lblW - 6);
+                    alto += Math.max(1, vlines.length) * 11;
+                    return { lbl, lblW, vlines };
+                });
+                alto += 14;
+                if (y + alto + 20 > PH - 44) { pdf.addPage(); y = 44; }
+                tituloSeccion(titulo);
+                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
+                pdf.roundedRect(M, y, W, alto, 5, 5, 'S');
+                let ty = y + 13;
+                prep.forEach(p => {
+                    pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5); pdf.setTextColor(...AZUL);
+                    pdf.text(p.lbl, M + 12, ty);
+                    pdf.setFont(undefined, 'normal'); pdf.setTextColor(50, 50, 50);
+                    pdf.text(p.vlines, M + 12 + p.lblW + 4, ty);
+                    ty += Math.max(1, p.vlines.length) * 11;
+                });
+                y += alto + 12;
+            }
+
+            // ---------- Contenido ----------
+            seccionTexto("Anamnesis", campos.anamnesicos);
+            grillaCampos("Signos vitales", [
+                ["Temperatura", campos.t], ["Frec. cardiaca", campos.fc], ["Frec. respiratoria", campos.fr],
+                ["Pulso", campos.pulso], ["Mucosas", campos.mucosas], ["Deshidratación", campos.deshidratacion],
+                ["Peso", campos.peso], ["TLLC", campos.tllc], ["TRPC", campos.trpc]
+            ]);
+            grillaCampos("Actitud y condición corporal", [
+                ["Cond. corporal", campos.cond_corporal], ["Actitud (propietario)", campos.actitud_prop], ["Actitud (veterinario)", campos.actitud_vet]
+            ]);
+            seccionLista("Examen físico por sistemas", [
+                ["Piel y anexos", campos.piel_anexos], ["Sistema respiratorio", campos.sist_respiratorio],
+                ["Sistema digestivo", campos.sist_digestivo], ["Sistema genito-urinario", campos.sist_genitourinario],
+                ["Sistema cardiovascular", campos.sist_cardiovascular], ["Sistema reproductivo", campos.sist_reproductivo],
+                ["Sistema musculoesquelético", campos.sist_musculoesqueletico], ["Sistema nervioso", campos.sist_nervioso],
+                ["Órganos de los sentidos", campos.organos_sentidos], ["Ganglios linfáticos", campos.ganglios_linfaticos],
+                ["Cavidad oral", campos.cavidad_oral]
+            ]);
+            seccionTexto("Exámenes complementarios", campos.examenes_comp);
+            seccionTexto("Lista de problemas", campos.lista_problemas);
+            seccionTexto("Lista maestra", campos.lista_maestra);
+            seccionTexto("Pronóstico", campos.pronostico);
+            seccionTexto("Diagnósticos", campos.diagnosticos);
+            seccionTexto("Tratamiento", campos.tratamiento);
+            grillaCampos("Próximo control", [["Fecha próxima cita", campos.fecha_prox]]);
+
+            // ---------- Pie en cada página ----------
+            const totalPag = pdf.internal.getNumberOfPages();
+            const ahora = new Date().toLocaleString('es-CO');
+            for (let p = 1; p <= totalPag; p++) {
+                pdf.setPage(p);
+                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.6);
+                pdf.line(M, PH - 34, M + W, PH - 34);
+                pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(...GRIS);
+                pdf.text("Reporte clínico digital · Panel de Control CEV · " + ahora, M, PH - 22);
+                pdf.text("Página " + p + " de " + totalPag, PW - M, PH - 22, { align: 'right' });
+            }
+            return pdf;
+        }
+
+        window.exportarConsultaPDF = function() {
+            const d = recogerConsulta();
+            if (!d.nombre && !d.hc) { showToast("Escribe al menos el paciente o la historia clínica.", true); return; }
+            showToast("Generando PDF...");
+            const pdf = construirConsultaPDF(d);
+            if (!pdf) return;
+            const nombre = (d.nombre || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
+            pdf.save(`Consulta_${nombre}_${d.fecha || ''}.pdf`);
+        };
+
+        window.descargarConsultaPDF = async function(id) {
+            try {
+                showToast("Generando PDF...");
+                const snap = await getDoc(doc(db, "formatos_consulta", id));
+                if (!snap.exists()) { showToast("Esa consulta ya no existe.", true); return; }
+                const d = snap.data();
+                const pdf = construirConsultaPDF(d);
+                if (!pdf) return;
+                const nombre = (d.nombre || "paciente").replace(/[^a-zA-Z0-9]/g, "_");
+                pdf.save(`Consulta_${nombre}_${d.fecha || ''}.pdf`);
             } catch (error) {
                 showToast("No se pudo generar el PDF.", true);
                 console.error(error);
