@@ -1853,15 +1853,19 @@
             document.getElementById('login-error-text').innerText = msg;
         }
 
-        // Permite iniciar sesión con un nombre corto (se le agrega un dominio interno)
-        // o con un correo completo si trae "@". Compatible con las cuentas actuales.
-        const DOMINIO_INTERNO = 'cevmascotas.app';
+        // Permite iniciar sesión con un nombre corto o con un correo completo (si trae "@").
+        // Los nombres cortos se registran como alias del correo de servicio
+        // (servicioalclientecevmascotas+nombre@gmail.com): así el restablecimiento de
+        // contraseña llega SIEMPRE a servicioalclientecevmascotas@gmail.com.
+        const CORREO_SERVICIO = 'servicioalclientecevmascotas@gmail.com';
         function resolverCorreo(entrada) {
             let v = (entrada || '').trim();
             if (!v) return '';
             if (v.includes('@')) return v.toLowerCase();
             v = v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9._-]/g, '');
-            return v + '@' + DOMINIO_INTERNO;
+            if (!v) return '';
+            const partes = CORREO_SERVICIO.split('@');
+            return partes[0] + '+' + v + '@' + partes[1];
         }
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -3175,10 +3179,12 @@
 
         window.restablecerClave = async function(correo) {
             if (!correo) { showToast("Este usuario no tiene correo registrado.", true); return; }
-            if (!confirm(`Se enviará un correo de restablecimiento a:\n${correo}`)) return;
+            const esAlias = correo.includes('+') && correo.toLowerCase().indexOf(CORREO_SERVICIO.split('@')[0].toLowerCase()) === 0;
+            const destino = esAlias ? CORREO_SERVICIO : correo;
+            if (!confirm(`Se enviará el enlace de restablecimiento a:\n${destino}`)) return;
             try {
                 await sendPasswordResetEmail(auth, correo);
-                showToast("Correo de restablecimiento enviado.");
+                showToast(`Enlace de restablecimiento enviado a ${destino}.`);
             } catch (error) {
                 showToast("No se pudo enviar el correo.", true);
                 console.error(error);
