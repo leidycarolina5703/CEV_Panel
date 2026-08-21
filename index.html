@@ -71,6 +71,20 @@
                     <span>Ingresar al Sistema</span>
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
                 </button>
+
+                <div class="text-center">
+                    <button type="button" onclick="toggleRecuperar()" class="text-sm text-[#154390] hover:underline font-semibold">¿Olvidaste tu contraseña?</button>
+                </div>
+
+                <div id="recuperar-box" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                    <label class="block text-xs font-semibold text-gray-600">Escribe tu correo y te enviaremos un enlace para restablecerla:</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                        <input type="email" id="recuperar-email" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white" placeholder="tu correo">
+                    </div>
+                    <button type="button" onclick="enviarRecuperacion()" id="btn-recuperar" class="w-full py-2 bg-[#154390] text-white rounded-lg font-semibold hover:bg-blue-800 flex justify-center items-center gap-2"><i class="fa-solid fa-paper-plane"></i> Enviar enlace</button>
+                    <p id="recuperar-msg" class="text-xs text-center hidden"></p>
+                </div>
             </form>
         </div>
     </div>
@@ -1035,9 +1049,14 @@
                     <input type="text" id="nuevo-nombre" placeholder="Nombre de la persona" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Usuario <span class="text-gray-400 normal-case font-normal">(opcional)</span></label>
-                    <input type="text" id="nuevo-correo" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Se genera del nombre si lo dejas vacío" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
-                    <p class="text-[11px] text-gray-400 mt-1">Si lo dejas vacío, se usa el nombre. La persona ingresará con ese usuario (sin escribir correo).</p>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Usuario <span class="text-gray-400 normal-case font-normal">(para ingresar)</span></label>
+                    <input type="text" id="nuevo-usuario" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ej: leidy" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                    <p class="text-[11px] text-gray-400 mt-1">Con esto inicia sesión. Si lo dejas vacío, se usa el nombre.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Correo <span class="text-gray-400 normal-case font-normal">(para recuperar clave)</span></label>
+                    <input type="email" id="nuevo-correo" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="correo@ejemplo.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                    <p class="text-[11px] text-gray-400 mt-1">Ahí llegará el enlace si olvida la contraseña.</p>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Contraseña inicial</label>
@@ -1853,24 +1872,64 @@
             document.getElementById('login-error-text').innerText = msg;
         }
 
-        // Permite iniciar sesión con un nombre corto o con un correo completo (si trae "@").
-        // Los nombres cortos se registran como alias del correo de servicio
-        // (servicioalclientecevmascotas+nombre@gmail.com): así el restablecimiento de
-        // contraseña llega SIEMPRE a servicioalclientecevmascotas@gmail.com.
-        const CORREO_SERVICIO = 'servicioalclientecevmascotas@gmail.com';
-        function resolverCorreo(entrada) {
+        // Inicio de sesión por USUARIO o por CORREO.
+        // El usuario se resuelve a su correo con el índice "logins" (lectura pública).
+        function normalizarUsuario(v) {
+            return (v || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9._-]/g, '');
+        }
+        async function resolverCorreoLogin(entrada) {
             let v = (entrada || '').trim();
             if (!v) return '';
             if (v.includes('@')) return v.toLowerCase();
-            v = v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9._-]/g, '');
-            if (!v) return '';
-            const partes = CORREO_SERVICIO.split('@');
-            return partes[0] + '+' + v + '@' + partes[1];
+            const u = normalizarUsuario(v);
+            if (!u) return '';
+            try {
+                const snap = await getDoc(doc(db, 'logins', u));
+                if (snap.exists()) return (snap.data().correo || '').toLowerCase();
+            } catch (e) { console.error(e); }
+            return '';
         }
+
+        window.toggleRecuperar = function() {
+            const box = document.getElementById('recuperar-box');
+            box.classList.toggle('hidden');
+            if (!box.classList.contains('hidden')) {
+                const entrada = document.getElementById('email-input').value.trim();
+                if (entrada.includes('@')) document.getElementById('recuperar-email').value = entrada.toLowerCase();
+                document.getElementById('recuperar-email').focus();
+            }
+        };
+
+        window.enviarRecuperacion = async function() {
+            const correo = document.getElementById('recuperar-email').value.trim().toLowerCase();
+            const msg = document.getElementById('recuperar-msg');
+            const btn = document.getElementById('btn-recuperar');
+            msg.classList.add('hidden');
+            if (!correo || !correo.includes('@')) {
+                msg.className = "text-xs text-center text-red-600";
+                msg.innerText = "Escribe un correo válido.";
+                msg.classList.remove('hidden');
+                return;
+            }
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+            try {
+                await sendPasswordResetEmail(auth, correo);
+                msg.className = "text-xs text-center text-green-700";
+                msg.innerText = "Listo. Revisa tu correo (y la carpeta de spam).";
+                msg.classList.remove('hidden');
+            } catch (error) {
+                msg.className = "text-xs text-center text-red-600";
+                msg.innerText = (error.code === "auth/user-not-found") ? "No hay una cuenta con ese correo." : "No se pudo enviar. Intenta de nuevo.";
+                msg.classList.remove('hidden');
+                console.error(error);
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar enlace';
+            }
+        };
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = resolverCorreo(document.getElementById('email-input').value);
+            const entrada = document.getElementById('email-input').value;
             const password = document.getElementById('password-input').value;
             const rememberMe = document.getElementById('remember-me').checked;
             const errorBox = document.getElementById('login-error');
@@ -1881,6 +1940,14 @@
             btnLogin.disabled = true;
 
             try {
+                const email = await resolverCorreoLogin(entrada);
+                if (!email) {
+                    errorBox.classList.remove('hidden');
+                    document.getElementById('login-error-text').innerText = "Usuario no encontrado. Revisa el usuario o ingresa con tu correo.";
+                    btnLogin.innerHTML = '<span>Ingresar al Sistema</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
+                    btnLogin.disabled = false;
+                    return;
+                }
                 const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
                 await setPersistence(auth, persistenceType);
                 await signInWithEmailAndPassword(auth, email, password);
@@ -3008,14 +3075,14 @@
 
         window.crearUsuario = async function() {
             const nombre = document.getElementById('nuevo-nombre').value.trim();
-            const correoEntrada = document.getElementById('nuevo-correo').value.trim();
-            const clave  = document.getElementById('nuevo-clave').value;
+            const usuario = normalizarUsuario(document.getElementById('nuevo-usuario').value || nombre);
+            const correo  = document.getElementById('nuevo-correo').value.trim().toLowerCase();
+            const clave   = document.getElementById('nuevo-clave').value;
             const btn = document.getElementById('btn-crear-usuario');
 
             if (!nombre) { showToast("Escribe el nombre de la persona.", true); return; }
-            // Si no escriben usuario, se genera a partir del nombre.
-            const correo = resolverCorreo(correoEntrada || nombre);
-            if (!correo || correo.startsWith('@')) { showToast("El nombre no permite generar un usuario. Escribe uno manualmente.", true); return; }
+            if (!usuario) { showToast("Escribe un usuario válido para ingresar.", true); return; }
+            if (!correo || !correo.includes('@')) { showToast("Escribe un correo válido (para recuperar la contraseña).", true); return; }
             if (clave.length < 6) { showToast("La contraseña debe tener al menos 6 caracteres.", true); return; }
 
             btn.disabled = true;
@@ -3024,6 +3091,10 @@
             // App secundaria para no cerrar la sesión de la administradora
             let secondaryApp = null;
             try {
+                // El usuario debe ser único
+                const yaExiste = await getDoc(doc(db, "logins", usuario));
+                if (yaExiste.exists()) { showToast(`El usuario "${usuario}" ya existe. Elige otro.`, true); return; }
+
                 secondaryApp = initializeApp(firebaseConfig, "Secondary_" + Date.now());
                 const secondaryAuth = getAuth(secondaryApp);
                 await setPersistence(secondaryAuth, inMemoryPersistence);
@@ -3032,6 +3103,7 @@
 
                 const perfil = {
                     nombre: nombre,
+                    usuario: usuario,
                     correo: correo,
                     activo: true,
                     admin: false,
@@ -3040,21 +3112,23 @@
                 MODULOS.forEach(m => { perfil[m.id] = nuevoPermisosSel[m.id] === true; perfil[m.id + '_edit'] = nuevoPermisosSel[m.id + '_edit'] === true; });
 
                 await setDoc(doc(db, "usuarios", uid), perfil);
+                await setDoc(doc(db, "logins", usuario), { correo: correo, uid: uid });
                 await signOut(secondaryAuth);
 
                 document.getElementById('nuevo-nombre').value = '';
+                document.getElementById('nuevo-usuario').value = '';
                 document.getElementById('nuevo-correo').value = '';
                 document.getElementById('nuevo-clave').value = '';
                 nuevoPermisosSel = {};
                 MODULOS.forEach(m => { nuevoPermisosSel[m.id] = true; nuevoPermisosSel[m.id + '_edit'] = true; });
                 renderNuevoPermisos();
 
-                showToast(`Usuario "${nombre}" creado. Ingresa con: ${correo.split('@')[0]}`);
+                showToast(`Usuario "${nombre}" creado. Ingresa con: ${usuario}`);
                 cargarUsuarios();
             } catch (error) {
                 let msg = "No se pudo crear el usuario.";
-                if (error.code === "auth/email-already-in-use") msg = `El usuario "${correo.split('@')[0]}" ya existe. Escribe un usuario distinto en el campo Usuario.`;
-                else if (error.code === "auth/invalid-email") msg = "El usuario no es válido.";
+                if (error.code === "auth/email-already-in-use") msg = "Ese correo ya está registrado en otra cuenta.";
+                else if (error.code === "auth/invalid-email") msg = "El correo no es válido.";
                 else if (error.code === "auth/weak-password") msg = "La contraseña es demasiado débil.";
                 showToast(msg, true);
                 console.error("Error creando usuario:", error);
@@ -3179,12 +3253,10 @@
 
         window.restablecerClave = async function(correo) {
             if (!correo) { showToast("Este usuario no tiene correo registrado.", true); return; }
-            const esAlias = correo.includes('+') && correo.toLowerCase().indexOf(CORREO_SERVICIO.split('@')[0].toLowerCase()) === 0;
-            const destino = esAlias ? CORREO_SERVICIO : correo;
-            if (!confirm(`Se enviará el enlace de restablecimiento a:\n${destino}`)) return;
+            if (!confirm(`Se enviará el enlace de restablecimiento a:\n${correo}`)) return;
             try {
                 await sendPasswordResetEmail(auth, correo);
-                showToast(`Enlace de restablecimiento enviado a ${destino}.`);
+                showToast(`Enlace de restablecimiento enviado a ${correo}.`);
             } catch (error) {
                 showToast("No se pudo enviar el correo.", true);
                 console.error(error);
