@@ -25,6 +25,9 @@
         .fmt-lbl { display:block; font-size:0.7rem; font-weight:600; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:0.25rem; }
         .fmt-in { width:100%; border:1px solid #d1d5db; border-radius:0.5rem; padding:0.5rem 0.75rem; background:#f9fafb; font-size:0.875rem; outline:none; }
         .fmt-in:focus { border-color:#154390; box-shadow:0 0 0 2px rgba(21,67,144,0.2); background:#fff; }
+        /* Oculta el ojo/limpiar nativo del navegador para dejar solo el de la app */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear { display:none; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans antialiased">
@@ -84,6 +87,10 @@
                     </div>
                     <button type="button" onclick="enviarRecuperacion()" id="btn-recuperar" class="w-full py-2 bg-[#154390] text-white rounded-lg font-semibold hover:bg-blue-800 flex justify-center items-center gap-2"><i class="fa-solid fa-paper-plane"></i> Enviar enlace</button>
                     <p id="recuperar-msg" class="text-xs text-center hidden"></p>
+                    <div class="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3 text-center">
+                        <p class="text-sm sm:text-base font-extrabold text-yellow-800 flex items-center justify-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> REVISA LA CARPETA DE SPAM</p>
+                        <p class="text-xs text-yellow-700 mt-1 font-semibold">Si no ves el correo en tu bandeja de entrada, búscalo en <span class="uppercase">correo no deseado / spam</span>.</p>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1538,6 +1545,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        // Correos de Firebase (restablecer contraseña, etc.) en español
+        auth.languageCode = 'es';
 
         // ==========================================
         // CONFIGURACIÓN DE ADMINISTRACIÓN Y PERMISOS
