@@ -442,6 +442,22 @@
                 <h2 class="text-xl font-bold text-gray-800 text-center">Consulta clínica</h2>
                 <p class="text-gray-500 text-center text-sm">Historia de consulta: examen, diagnóstico y tratamiento.</p>
             </button>
+
+            <button id="card-fmt-endoscopia" onclick="openEndoscopia()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 text-center">Endoscopia de recto y colon</h2>
+                <p class="text-gray-500 text-center text-sm">Reporte de endoscopia con hallazgos e imágenes.</p>
+            </button>
+
+            <button id="card-fmt-endoscopia-alta" onclick="openEndoscopiaAlta()" class="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 text-center">Endoscopia digestiva alta</h2>
+                <p class="text-gray-500 text-center text-sm">Tracto GI superior: esófago, estómago y duodeno.</p>
+            </button>
         </div>
 
         <!-- MÓDULO MONITOREO ANESTÉSICO -->
@@ -880,6 +896,115 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
                 </button>
                 <button onclick="exportarConsultaPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- MÓDULO ENDOSCOPIA -->
+        <div id="fmt-endoscopia" class="hidden space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button onclick="volverSelectorFormatos()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                    <h2 class="text-lg font-bold text-[#154390]">Endoscopia de recto y colon</h2>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="nuevoEndoscopia()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-file-circle-plus"></i> Nuevo
+                    </button>
+                    <button onclick="abrirEndoscopiaGuardados()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-folder-open"></i> Guardados
+                    </button>
+                </div>
+            </div>
+
+            <div id="endo-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Reportes guardados</h2>
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
+                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="endo-desde" class="js-ver fmt-in"></div>
+                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="endo-hasta" class="js-ver fmt-in"></div>
+                    <div class="flex gap-2">
+                        <button onclick="abrirEndoscopiaGuardados()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                        <button onclick="limpiarFiltroEndoscopia()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                    </div>
+                </div>
+                <div id="endo-lista-container" class="space-y-2"></div>
+            </div>
+
+            <div id="e-secciones" class="space-y-4 sm:space-y-6"></div>
+
+            <!-- Imágenes adjuntas -->
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-images"></i> Imágenes del procedimiento</h2>
+                <p class="text-xs text-gray-400 mt-1 mb-3">Adjunta fotos del procedimiento. Se comprimen automáticamente para guardarlas.</p>
+                <input type="file" id="endo-file" accept="image/*" multiple class="hidden" onchange="agregarImagenesEndo(event)">
+                <div id="endo-dropzone" onclick="document.getElementById('endo-file').click()" class="js-editar border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400 cursor-pointer hover:border-[#154390] hover:bg-blue-50/30 transition-colors">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl mb-1"></i>
+                    <p class="text-sm">Arrastra imágenes aquí o haz clic para seleccionar</p>
+                </div>
+                <div id="endo-imagenes" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"></div>
+            </section>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="guardarEndoscopia()" id="btn-guardar-endo" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
+                </button>
+                <button onclick="exportarEndoscopiaPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- MÓDULO ENDOSCOPIA ALTA -->
+        <div id="fmt-endoscopia-alta" class="hidden space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button onclick="volverSelectorFormatos()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-stethoscope"></i></div>
+                    <h2 class="text-lg font-bold text-[#154390]">Endoscopia digestiva alta</h2>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="nuevoEndoscopiaAlta()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-file-circle-plus"></i> Nuevo
+                    </button>
+                    <button onclick="abrirEndoscopiaAltaGuardados()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-folder-open"></i> Guardados
+                    </button>
+                </div>
+            </div>
+
+            <div id="endoalta-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Reportes guardados</h2>
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
+                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="endoalta-desde" class="js-ver fmt-in"></div>
+                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="endoalta-hasta" class="js-ver fmt-in"></div>
+                    <div class="flex gap-2">
+                        <button onclick="abrirEndoscopiaAltaGuardados()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                        <button onclick="limpiarFiltroEndoscopiaAlta()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                    </div>
+                </div>
+                <div id="endoalta-lista-container" class="space-y-2"></div>
+            </div>
+
+            <div id="ea-secciones" class="space-y-4 sm:space-y-6"></div>
+
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-images"></i> Imágenes del procedimiento</h2>
+                <p class="text-xs text-gray-400 mt-1 mb-3">Adjunta fotos del procedimiento. Se comprimen automáticamente para guardarlas.</p>
+                <input type="file" id="ea-file" accept="image/*" multiple class="hidden" onchange="agregarImagenesEndoAlta(event)">
+                <div id="ea-dropzone" onclick="document.getElementById('ea-file').click()" class="js-editar border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400 cursor-pointer hover:border-[#154390] hover:bg-blue-50/30 transition-colors">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl mb-1"></i>
+                    <p class="text-sm">Arrastra imágenes aquí o haz clic para seleccionar</p>
+                </div>
+                <div id="endoalta-imagenes" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"></div>
+            </section>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="guardarEndoscopiaAlta()" id="btn-guardar-endoalta" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
+                </button>
+                <button onclick="exportarEndoscopiaAltaPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Descargar PDF
                 </button>
             </div>
@@ -1426,7 +1551,9 @@
             { id: "fmt_monitoreo",  nombre: "Monitoreo anestésico",    icono: "fa-heart-pulse",  card: "card-fmt-monitoreo",  grupo: "Formatos clínicos" },
             { id: "fmt_ortopedico", nombre: "Examen ortopédico",       icono: "fa-bone",         card: "card-fmt-ortopedico", grupo: "Formatos clínicos" },
             { id: "fmt_neuro",      nombre: "Valoración neurológica",  icono: "fa-brain",        card: "card-fmt-neuro",      grupo: "Formatos clínicos" },
-            { id: "fmt_consulta",   nombre: "Consulta clínica",        icono: "fa-notes-medical", card: "card-fmt-consulta",  grupo: "Formatos clínicos" }
+            { id: "fmt_consulta",   nombre: "Consulta clínica",        icono: "fa-notes-medical", card: "card-fmt-consulta",  grupo: "Formatos clínicos" },
+            { id: "fmt_endoscopia", nombre: "Endoscopia recto y colon", icono: "fa-magnifying-glass-chart", card: "card-fmt-endoscopia", grupo: "Formatos clínicos" },
+            { id: "fmt_endoscopia_alta", nombre: "Endoscopia digestiva alta", icono: "fa-stethoscope", card: "card-fmt-endoscopia-alta", grupo: "Formatos clínicos" }
         ];
 
         // ▸ MODO_ESTRICTO = false: si un usuario NO tiene documento en "usuarios",
@@ -1480,7 +1607,7 @@
         };
 
         window.openFormatos = function() {
-            if (!(tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro') || tienePermiso('fmt_consulta'))) { showToast("No tienes acceso a este módulo.", true); return; }
+            if (!(tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro') || tienePermiso('fmt_consulta') || tienePermiso('fmt_endoscopia') || tienePermiso('fmt_endoscopia_alta'))) { showToast("No tienes acceso a este módulo.", true); return; }
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('inventory-screen').classList.add('hidden');
             document.getElementById('orders-screen').classList.add('hidden');
@@ -1710,7 +1837,7 @@
             // La tarjeta "Formatos clínicos" se ve si tiene acceso a algún formato
             const cardFormatos = document.getElementById('card-formatos');
             if (cardFormatos) {
-                const verFormatos = tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro') || tienePermiso('fmt_consulta');
+                const verFormatos = tienePermiso('fmt_monitoreo') || tienePermiso('fmt_ortopedico') || tienePermiso('fmt_neuro') || tienePermiso('fmt_consulta') || tienePermiso('fmt_endoscopia') || tienePermiso('fmt_endoscopia_alta');
                 if (verFormatos) cardFormatos.classList.remove('hidden');
                 else cardFormatos.classList.add('hidden');
             }
@@ -3156,6 +3283,8 @@
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-consulta').classList.add('hidden');
+            document.getElementById('fmt-endoscopia').classList.add('hidden');
+            document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-monitoreo').classList.remove('hidden');
             prepararFormularioMonitoreo();
             abrirFormatosGuardados();
@@ -3167,6 +3296,8 @@
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-consulta').classList.add('hidden');
+            document.getElementById('fmt-endoscopia').classList.add('hidden');
+            document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-selector').classList.remove('hidden');
         };
 
@@ -3832,6 +3963,8 @@
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
             document.getElementById('fmt-consulta').classList.add('hidden');
+            document.getElementById('fmt-endoscopia').classList.add('hidden');
+            document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.remove('hidden');
             prepararFormularioOrto();
             abrirOrtoGuardados();
@@ -4407,6 +4540,8 @@
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-consulta').classList.add('hidden');
+            document.getElementById('fmt-endoscopia').classList.add('hidden');
+            document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.remove('hidden');
             prepararFormularioNeuro();
             abrirNeuroGuardados();
@@ -4842,6 +4977,8 @@
             document.getElementById('fmt-monitoreo').classList.add('hidden');
             document.getElementById('fmt-ortopedico').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.add('hidden');
+            document.getElementById('fmt-endoscopia').classList.add('hidden');
+            document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-consulta').classList.remove('hidden');
             prepararFormularioConsulta();
             abrirConsultaGuardados();
@@ -5172,6 +5309,513 @@
                 console.error(error);
             }
         };
+
+        // ==========================================================
+        // FORMATO ENDOSCOPIA DE RECTO Y COLON (colección: formatos_endoscopia)
+        // ==========================================================
+        // ==========================================================
+        // FORMATOS DE ENDOSCOPIA (motor genérico: baja y alta)
+        // ==========================================================
+        const COD_LESION = ['', '0 · normal', '1 · medio', '2 · moderado', '3 · severo'];
+
+        const ENDO_SECCIONES = [
+            { id: 'datos', titulo: 'Datos del procedimiento', icono: 'fa-clipboard', campos: [
+                { id: 'fecha', label: 'Fecha de realización', tipo: 'fecha' },
+                { id: 'historia', label: 'Número de historia', tipo: 'texto' },
+                { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
+                { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto' },
+                { id: 'endoscopio', label: 'Endoscopio usado', tipo: 'texto' },
+                { id: 'materiales', label: 'Pinzas y materiales usados', tipo: 'texto' },
+                { id: 'indicaciones', label: 'Indicaciones para el procedimiento', tipo: 'area' },
+            ] },
+            { id: 'complicaciones', titulo: 'Complicaciones / problemas', icono: 'fa-triangle-exclamation', campos: [
+                { id: 'complic', label: 'Complicaciones / problemas', tipo: 'checks', op: ['Ninguno', 'Perforación', 'Sangrado excesivo', 'Complicaciones anestésicas', 'Tiempo excesivo', 'Otro'] },
+                { id: 'complic_com', label: 'Comentarios', tipo: 'area' },
+            ] },
+            { id: 'limitaciones', titulo: 'Limitaciones del examen (¿por qué?)', icono: 'fa-circle-question', lista: true, campos: [
+                { id: 'no_completo', label: 'No se pudo completar el examen', tipo: 'texto' },
+                { id: 'no_biopsia', label: 'No se obtuvo una buena biopsia', tipo: 'texto' },
+                { id: 'no_cuerpo', label: 'No se logró retirar el cuerpo extraño', tipo: 'texto' },
+                { id: 'vis_inadecuada', label: 'Visualización inadecuada', tipo: 'texto' },
+            ] },
+            { id: 'docmuestra', titulo: 'Documentación y muestras', icono: 'fa-vials', campos: [
+                { id: 'documentacion', label: 'Documentación', tipo: 'checks', op: ['Video', 'Fotografía'] },
+                { id: 'muestra', label: 'Muestra', tipo: 'checks', op: ['Biopsia', 'Citología de cepillo', 'Lavado', 'Aspiración', 'Retiro de cuerpo extraño'] },
+            ] },
+            { id: 'recto', titulo: 'Recto', icono: 'fa-magnifying-glass', campos: [
+                { id: 'recto_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Contractura', 'Hernia hiatal'] },
+                { id: 'recto_lesiones', tipo: 'lesiones', lesiones: ['Hiperemia/vasculitis', 'Decoloración', 'Friabilidad', 'Hemorragia', 'Erosión/úlcera', 'Contenido (moco/bilis/comida)', 'Dilatación', 'Otro'] },
+            ] },
+            { id: 'colon_asc', titulo: 'Colon ascendente', icono: 'fa-magnifying-glass', campos: [
+                { id: 'colonasc_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
+                { id: 'colonasc_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Cont. (moco/bilis/alimento)', 'Otro'] },
+            ] },
+            { id: 'colon_trans', titulo: 'Colon transverso', icono: 'fa-magnifying-glass', campos: [
+                { id: 'colontrans_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
+                { id: 'colontrans_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Friabilidad', 'Textura', 'Hemorragia', 'Erosión/úlcera', 'Cont. (moco/bilis/alimento)', 'Otro'] },
+            ] },
+            { id: 'cierre', titulo: 'Conclusiones', icono: 'fa-file-signature', campos: [
+                { id: 'conclusiones', label: 'Conclusiones', tipo: 'area' },
+                { id: 'recomendaciones', label: 'Comentarios y recomendaciones', tipo: 'area' },
+                { id: 'firma', label: 'Firma', tipo: 'texto' },
+            ] },
+        ];
+
+        const ENDOALTA_SECCIONES = [
+            { id: 'datos', titulo: 'Datos del procedimiento', icono: 'fa-clipboard', campos: [
+                { id: 'fecha', label: 'Fecha de realización', tipo: 'fecha' },
+                { id: 'historia', label: 'Número de historia', tipo: 'texto' },
+                { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
+                { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto' },
+                { id: 'endoscopio', label: 'Endoscopio usado', tipo: 'texto' },
+                { id: 'materiales', label: 'Pinzas y materiales usados', tipo: 'texto' },
+                { id: 'indicaciones', label: 'Indicaciones para el procedimiento', tipo: 'area' },
+            ] },
+            { id: 'complicaciones', titulo: 'Complicaciones / problemas', icono: 'fa-triangle-exclamation', campos: [
+                { id: 'complic', label: 'Complicaciones / problemas', tipo: 'checks', op: ['Ninguno', 'Perforación', 'Sangrado excesivo', 'Complicaciones anestésicas', 'Tiempo excesivo', 'Otro'] },
+                { id: 'complic_com', label: 'Comentarios', tipo: 'area' },
+            ] },
+            { id: 'limitaciones', titulo: 'Limitaciones del examen (¿por qué?)', icono: 'fa-circle-question', lista: true, campos: [
+                { id: 'no_completo', label: 'No se pudo completar el examen', tipo: 'texto' },
+                { id: 'no_biopsia', label: 'No se obtuvo una buena biopsia', tipo: 'texto' },
+                { id: 'no_cuerpo', label: 'No se logró retirar el cuerpo extraño', tipo: 'texto' },
+                { id: 'vis_inadecuada', label: 'Visualización inadecuada', tipo: 'texto' },
+            ] },
+            { id: 'docmuestra', titulo: 'Documentación y muestras', icono: 'fa-vials', campos: [
+                { id: 'documentacion', label: 'Documentación', tipo: 'checks', op: ['Video', 'Fotografía'] },
+                { id: 'muestra', label: 'Muestra', tipo: 'checks', op: ['Biopsia', 'Citología de cepillo', 'Lavado', 'Aspiración', 'Retiro de cuerpo extraño'] },
+            ] },
+            { id: 'esofago', titulo: 'Esófago', icono: 'fa-magnifying-glass', campos: [
+                { id: 'esofago_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Contractura', 'Hernia hiatal'] },
+                { id: 'esofago_lesiones', tipo: 'lesiones', lesiones: ['Hiperemia/vasculitis', 'Decoloración', 'Friabilidad', 'Hemorragia', 'Erosión/úlcera', 'Contenido (moco/bilis/comida)', 'Dilatación', 'Esfínter gastroesofágico', 'Otro'] },
+            ] },
+            { id: 'estomago', titulo: 'Estómago', icono: 'fa-magnifying-glass', campos: [
+                { id: 'estomago_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
+                { id: 'estomago_sitio', label: 'Sitio de la lesión', tipo: 'checks', op: ['Fundus', 'Cuerpo', 'Cisura', 'Antro', 'Píloro'] },
+                { id: 'estomago_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Cont. (moco/bilis/alimento)', 'Esfínter gastroesofágico', 'Paso a través de píloro', 'Otro'] },
+            ] },
+            { id: 'duodeno', titulo: 'Duodeno', icono: 'fa-magnifying-glass', campos: [
+                { id: 'duodeno_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
+                { id: 'duodeno_avance', label: '¿Cuánto avanzó el endoscopio?', tipo: 'texto' },
+                { id: 'duodeno_papila', label: '¿Se observó papila? (Sí / No) ¿Cuál?', tipo: 'texto' },
+                { id: 'duodeno_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Friabilidad', 'Textura', 'Hemorragia', 'Erosión/úlcera', 'Cont. (moco/bilis/alimento)', 'Otro'] },
+            ] },
+            { id: 'cierre', titulo: 'Conclusiones', icono: 'fa-file-signature', campos: [
+                { id: 'conclusiones', label: 'Conclusiones', tipo: 'area' },
+                { id: 'recomendaciones', label: 'Comentarios y recomendaciones', tipo: 'area' },
+                { id: 'firma', label: 'Firma', tipo: 'texto' },
+            ] },
+        ];
+
+        const ENDO_REG = {
+            baja: {
+                pref: 'e-', col: 'formatos_endoscopia', secciones: ENDO_SECCIONES, perm: 'fmt_endoscopia', screen: 'fmt-endoscopia',
+                titulo: 'REPORTE ENDOSCOPIA DE RECTO Y COLON',
+                ids: { secc: 'e-secciones', lista: 'endo-lista', cont: 'endo-lista-container', desde: 'endo-desde', hasta: 'endo-hasta', imgs: 'endo-imagenes', dz: 'endo-dropzone', file: 'endo-file', btn: 'btn-guardar-endo' },
+                fns: { quitar: 'quitarImagenEndo', cargar: 'cargarEndoscopia', pdf: 'descargarEndoscopiaPDF', del: 'eliminarEndoscopia' },
+                id: null, imagenes: []
+            },
+            alta: {
+                pref: 'ea-', col: 'formatos_endoscopia_alta', secciones: ENDOALTA_SECCIONES, perm: 'fmt_endoscopia_alta', screen: 'fmt-endoscopia-alta',
+                titulo: 'REPORTE ENDOSCOPIA DEL TRACTO GASTROINTESTINAL SUPERIOR',
+                ids: { secc: 'ea-secciones', lista: 'endoalta-lista', cont: 'endoalta-lista-container', desde: 'endoalta-desde', hasta: 'endoalta-hasta', imgs: 'endoalta-imagenes', dz: 'ea-dropzone', file: 'ea-file', btn: 'btn-guardar-endoalta' },
+                fns: { quitar: 'quitarImagenEndoAlta', cargar: 'cargarEndoscopiaAlta', pdf: 'descargarEndoscopiaAltaPDF', del: 'eliminarEndoscopiaAlta' },
+                id: null, imagenes: []
+            }
+        };
+        const TODAS_PANTALLAS_FMT = ['fmt-monitoreo', 'fmt-ortopedico', 'fmt-neuro', 'fmt-consulta', 'fmt-endoscopia', 'fmt-endoscopia-alta'];
+
+        function endoCampoBase(pref, c) {
+            const dom = pref + c.id;
+            if (c.tipo === 'area') return `<div><label class="fmt-lbl">${c.label}</label><textarea id="${dom}" rows="3" class="fmt-in"></textarea></div>`;
+            if (c.tipo === 'select') {
+                const opts = ['<option value=""></option>'].concat((c.op || []).map(o => `<option>${o}</option>`)).join('');
+                return `<div><label class="fmt-lbl">${c.label}</label><select id="${dom}" class="fmt-in">${opts}</select></div>`;
+            }
+            const t = c.tipo === 'fecha' ? 'date' : 'text';
+            return `<div><label class="fmt-lbl">${c.label}</label><input type="${t}" id="${dom}" class="fmt-in"></div>`;
+        }
+
+        function endoRender(r) {
+            const cont = document.getElementById(r.ids.secc);
+            const P = r.pref;
+            let html = '';
+            r.secciones.forEach(sec => {
+                html += `<section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                    <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid ${sec.icono}"></i> ${sec.titulo}</h2>`;
+                sec.campos.forEach(c => {
+                    if (c.tipo === 'checks') {
+                        html += `<div class="mt-3"><label class="fmt-lbl">${c.label}</label><div class="flex flex-wrap gap-2 mt-1">`;
+                        c.op.forEach((o, i) => {
+                            html += `<label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm cursor-pointer hover:bg-gray-50"><input type="checkbox" id="${P}${c.id}__${i}" value="${o}" class="accent-[#154390]"> ${o}</label>`;
+                        });
+                        html += `</div></div>`;
+                    } else if (c.tipo === 'lesiones') {
+                        html += `<div class="mt-3 overflow-x-auto"><p class="text-xs text-gray-400 mb-1">Código: normal = 0 · medio = 1 · moderado = 2 · severo = 3</p>
+                            <table class="w-full text-sm border border-gray-200 rounded-lg"><thead><tr class="bg-gray-50 text-gray-500 text-xs">
+                            <th class="text-left p-2 border-b border-gray-200">Lesión</th><th class="p-2 border-b border-gray-200 w-32">Código</th><th class="text-left p-2 border-b border-gray-200">Comentarios / localización</th></tr></thead><tbody>`;
+                        c.lesiones.forEach((les, i) => {
+                            const opts = COD_LESION.map((o, k) => `<option value="${k === 0 ? '' : (k - 1)}">${o}</option>`).join('');
+                            html += `<tr><td class="p-2 border-b border-gray-100 font-medium text-gray-700">${les}</td>
+                                <td class="p-2 border-b border-gray-100"><select id="${P}${c.id}__${i}_cod" class="fmt-in py-1">${opts}</select></td>
+                                <td class="p-2 border-b border-gray-100"><input type="text" id="${P}${c.id}__${i}_com" class="fmt-in py-1"></td></tr>`;
+                        });
+                        html += `</tbody></table></div>`;
+                    } else if (sec.lista) {
+                        html += `<div class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 mt-2"><label class="fmt-lbl sm:w-64 sm:shrink-0 sm:pt-2" style="margin-bottom:0">${c.label}</label><textarea id="${P}${c.id}" rows="2" class="fmt-in flex-1"></textarea></div>`;
+                    } else {
+                        html += `<div class="mt-3">${endoCampoBase(P, c)}</div>`;
+                    }
+                });
+                html += `</section>`;
+            });
+            cont.innerHTML = html;
+        }
+
+        function endoRecoger(r) {
+            const P = r.pref, campos = {};
+            r.secciones.forEach(sec => sec.campos.forEach(c => {
+                if (c.tipo === 'checks') {
+                    campos[c.id] = c.op.map((o, i) => document.getElementById(P + c.id + '__' + i)).filter(x => x && x.checked).map(x => x.value);
+                } else if (c.tipo === 'lesiones') {
+                    campos[c.id] = c.lesiones.map((les, i) => ({
+                        lesion: les,
+                        cod: (document.getElementById(P + c.id + '__' + i + '_cod')?.value || ''),
+                        com: (document.getElementById(P + c.id + '__' + i + '_com')?.value || '').trim()
+                    }));
+                } else {
+                    campos[c.id] = (document.getElementById(P + c.id)?.value || '').trim();
+                }
+            }));
+            return { campos, nombre: campos.paciente || '', hc: campos.historia || '', fecha: campos.fecha || '', imagenes: r.imagenes.slice() };
+        }
+
+        function endoVolcar(r, data) {
+            const P = r.pref, campos = data.campos || {};
+            r.secciones.forEach(sec => sec.campos.forEach(c => {
+                if (c.tipo === 'checks') {
+                    const sel = campos[c.id] || [];
+                    c.op.forEach((o, i) => { const el = document.getElementById(P + c.id + '__' + i); if (el) el.checked = sel.includes(o); });
+                } else if (c.tipo === 'lesiones') {
+                    const arr = campos[c.id] || [];
+                    c.lesiones.forEach((les, i) => {
+                        const found = arr[i] || {};
+                        const cod = document.getElementById(P + c.id + '__' + i + '_cod'); if (cod) cod.value = found.cod || '';
+                        const com = document.getElementById(P + c.id + '__' + i + '_com'); if (com) com.value = found.com || '';
+                    });
+                } else {
+                    const el = document.getElementById(P + c.id); if (el) el.value = campos[c.id] || '';
+                }
+            }));
+            r.imagenes = (data.imagenes || []).slice();
+            endoRenderImgs(r);
+        }
+
+        function endoRenderImgs(r) {
+            const cont = document.getElementById(r.ids.imgs);
+            const editable = puedeEditar(r.perm);
+            if (!r.imagenes.length) { cont.innerHTML = '<p class="text-gray-400 italic text-sm col-span-full">Sin imágenes adjuntas.</p>'; return; }
+            cont.innerHTML = r.imagenes.map((img, i) => `
+                <div class="relative group aspect-square">
+                    <img src="${img}" class="w-full h-full object-cover rounded-lg border border-gray-200 bg-gray-50">
+                    ${editable ? `<button onclick="${r.fns.quitar}(${i})" class="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-90 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                </div>`).join('');
+        }
+
+        function endoInitDrop(r) {
+            const dz = document.getElementById(r.ids.dz);
+            if (!dz || dz.dataset.listo) return;
+            dz.dataset.listo = '1';
+            ['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('border-[#154390]', 'bg-blue-50'); }));
+            ['dragleave', 'dragend'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('border-[#154390]', 'bg-blue-50'); }));
+            dz.addEventListener('drop', async e => {
+                e.preventDefault();
+                dz.classList.remove('border-[#154390]', 'bg-blue-50');
+                const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(f => f.type.startsWith('image/'));
+                await endoAgregarArchivos(r, files);
+            });
+        }
+
+        async function endoAgregarArchivos(r, files) {
+            if (!puedeEditar(r.perm)) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!files.length) return;
+            showToast("Procesando imágenes...");
+            for (const f of files) {
+                try { r.imagenes.push(await comprimirImagen(f, 1000, 0.6)); } catch (e) { console.error(e); }
+            }
+            endoRenderImgs(r);
+            const total = r.imagenes.reduce((s, x) => s + x.length, 0);
+            if (total > 850000) showToast("Cuidado: muchas imágenes pueden superar el límite al guardar.", true);
+            else showToast("Imágenes agregadas.");
+        }
+
+        function endoAbrir(r) {
+            if (!tienePermiso(r.perm)) { showToast("No tienes acceso a este formato.", true); return; }
+            document.getElementById('fmt-selector').classList.add('hidden');
+            TODAS_PANTALLAS_FMT.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+            document.getElementById(r.screen).classList.remove('hidden');
+            if (document.getElementById(r.ids.secc).children.length === 0) endoRender(r);
+            const d = new Date();
+            const fEl = document.getElementById(r.pref + 'fecha');
+            if (r.id === null && fEl && !fEl.value) fEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const sEl = document.getElementById(r.pref + 'firma');
+            if (r.id === null && sEl && !sEl.value) sEl.value = 'Juan Carlos Giraldo';
+            endoRenderImgs(r);
+            endoInitDrop(r);
+            endoListaGuardados(r);
+            aplicarModoLectura(r.screen, r.perm);
+        }
+
+        function endoNuevo(r) {
+            r.id = null;
+            r.imagenes = [];
+            endoRender(r);
+            const d = new Date();
+            const fEl = document.getElementById(r.pref + 'fecha');
+            if (fEl) fEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const sEl = document.getElementById(r.pref + 'firma');
+            if (sEl) sEl.value = 'Juan Carlos Giraldo';
+            endoRenderImgs(r);
+            document.getElementById(r.ids.lista).classList.add('hidden');
+            showToast("Reporte nuevo listo.");
+        }
+
+        async function endoGuardar(r) {
+            if (!puedeEditar(r.perm)) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const data = endoRecoger(r);
+            if (!data.nombre && !data.hc) { showToast("Escribe al menos el paciente o el número de historia.", true); return; }
+            if (JSON.stringify(data).length > 1000000) { showToast("El reporte con imágenes supera 1 MB. Quita alguna imagen.", true); return; }
+            const btn = document.getElementById(r.ids.btn);
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const id = r.id || (r.pref.replace('-', '') + "_" + Date.now());
+                data.tipo = r.col;
+                data.actualizado = new Date().toISOString();
+                if (!r.id) data.creado = data.actualizado;
+                await setDoc(doc(db, r.col, id), data, { merge: true });
+                r.id = id;
+                showToast("Reporte guardado en la nube.");
+            } catch (error) {
+                showToast("No se pudo guardar. Revisa tu conexión o las reglas de Firestore.", true);
+                console.error(error);
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube';
+            }
+        }
+
+        function endoLimpiarFiltro(r) {
+            document.getElementById(r.ids.desde).value = '';
+            document.getElementById(r.ids.hasta).value = '';
+            endoListaGuardados(r);
+        }
+
+        async function endoListaGuardados(r) {
+            const panel = document.getElementById(r.ids.lista);
+            const cont = document.getElementById(r.ids.cont);
+            panel.classList.remove('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, r.col));
+                let items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                const desde = document.getElementById(r.ids.desde).value;
+                const hasta = document.getElementById(r.ids.hasta).value;
+                const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
+                if (desde) items = items.filter(it => fechaDe(it) >= desde);
+                if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
+                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay reportes para ese rango de fechas.</div>'; return; }
+                items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
+                cont.innerHTML = '';
+                items.forEach(it => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
+                    row.innerHTML = `
+                        <div class="min-w-0">
+                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin paciente)'}</p>
+                            <p class="text-xs text-gray-500">${it.hc ? 'Historia ' + it.hc + ' · ' : ''}${(it.fecha || '')}${it.imagenes && it.imagenes.length ? ' · 📷 ' + it.imagenes.length : ''}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="${r.fns.cargar}('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                            <button onclick="${r.fns.pdf}('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button onclick="${r.fns.del}('${it.id}', '${(it.nombre || '').replace(/'/g, "\\'")}')" class="js-editar px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>`;
+                    cont.appendChild(row);
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        }
+
+        async function endoCargar(r, id) {
+            try {
+                const snap = await getDoc(doc(db, r.col, id));
+                if (!snap.exists()) { showToast("Ese reporte ya no existe.", true); return; }
+                r.id = id;
+                endoRender(r);
+                endoVolcar(r, snap.data());
+                document.getElementById(r.ids.lista).classList.add('hidden');
+                document.getElementById(r.screen).scrollIntoView({ behavior: 'smooth' });
+                showToast("Reporte cargado.");
+            } catch (error) { showToast("No se pudo abrir el reporte.", true); console.error(error); }
+        }
+
+        async function endoEliminar(r, id, nombre) {
+            if (!puedeEditar(r.perm)) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!confirm(`¿Eliminar el reporte de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, r.col, id));
+                if (r.id === id) endoNuevo(r);
+                showToast("Reporte eliminado.");
+                endoListaGuardados(r);
+            } catch (error) { showToast("No se pudo eliminar.", true); console.error(error); }
+        }
+
+        function construirEndoPDF(titulo, secciones, d) {
+            if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const AZUL = [21, 67, 144], GRIS = [130, 130, 130], BORDE = [180, 180, 180], ENCA = [240, 243, 248];
+            const PW = pdf.internal.pageSize.getWidth(), PH = pdf.internal.pageSize.getHeight();
+            const M = 40, W = PW - 2 * M;
+            const campos = d.campos || {};
+            let y;
+            const altoLogo = logoPDF(pdf, M, 24, 78);
+            pdf.setFont(undefined, 'bold'); pdf.setFontSize(12); pdf.setTextColor(...AZUL);
+            pdf.text(pdf.splitTextToSize(titulo, W - 90), M + 90, 42);
+            pdf.setFont(undefined, 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(...GRIS);
+            pdf.text("Centro de Especialistas Veterinarios · Carrera 22ª N°66-44 · Línea médica 310 831 6247", M + 90, 66);
+            y = Math.max(82, 24 + altoLogo + 10);
+
+            const baseStyles = { fontSize: 8, cellPadding: 4, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5, overflow: 'linebreak' };
+            function tablaDatos(rows) {
+                pdf.autoTable({ startY: y, body: rows.map(r => [r[0], (r[1] || '').toString()]), theme: 'grid', styles: baseStyles,
+                    columnStyles: { 0: { cellWidth: 200, fontStyle: 'bold', fillColor: ENCA, textColor: AZUL } }, margin: { left: M, right: M } });
+                y = pdf.lastAutoTable.finalY;
+            }
+            function tablaOpciones(titulo, opciones, sel) {
+                sel = sel || [];
+                pdf.autoTable({ startY: y, head: [[titulo].concat(opciones)], body: [[''].concat(opciones.map(o => sel.includes(o) ? 'X' : ''))], theme: 'grid',
+                    styles: { fontSize: 7, cellPadding: 3, halign: 'center', textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5, overflow: 'linebreak' },
+                    headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold', fontSize: 6.5 },
+                    columnStyles: { 0: { halign: 'left', fillColor: ENCA, textColor: AZUL, fontStyle: 'bold' } }, bodyStyles: { minCellHeight: 16 },
+                    didParseCell: function (data) { if (data.section === 'body' && data.column.index > 0 && data.cell.raw === 'X') { data.cell.styles.fillColor = AZUL; data.cell.styles.textColor = 255; data.cell.styles.fontStyle = 'bold'; } },
+                    margin: { left: M, right: M } });
+                y = pdf.lastAutoTable.finalY;
+            }
+            function tablaLesiones(arr) {
+                pdf.autoTable({ startY: y, head: [["LESIÓN", "CÓDIGO", "COMENTARIOS Y LOCALIZACIÓN"]],
+                    body: (arr || []).map(l => [l.lesion, (l.cod === '' || l.cod == null) ? '' : String(l.cod), l.com || '']),
+                    theme: 'grid', styles: baseStyles, headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold' },
+                    columnStyles: { 0: { cellWidth: 175, fontStyle: 'bold' }, 1: { cellWidth: 50, halign: 'center' } }, margin: { left: M, right: M } });
+                y = pdf.lastAutoTable.finalY;
+            }
+            function tit(t) { if (y + 34 > PH - 40) { pdf.addPage(); y = 44; } y += 10; pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL); pdf.text(t, M, y); y += 4; }
+            function leyenda() { pdf.setFont(undefined, 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(120, 120, 120); pdf.text("Código: normal = 0 · medio = 1 · moderado = 2 · severo = 3", M, y + 9); y += 12; }
+            const marca = v => ((v || '').toString().trim() ? '(X) ' : '( ) ');
+
+            let pending = [];
+            const flush = () => { if (pending.length) { tablaDatos(pending); pending = []; } };
+            secciones.forEach(sec => {
+                const esSeg = sec.campos.some(c => c.tipo === 'lesiones');
+                if (esSeg) { flush(); tit(sec.titulo); }
+                sec.campos.forEach(c => {
+                    if (c.tipo === 'checks') {
+                        flush();
+                        let pt = c.label;
+                        if (/_hallazgo$/.test(c.id)) pt = sec.titulo;
+                        else if (/_sitio$/.test(c.id)) pt = 'Sitio de la lesión';
+                        tablaOpciones(pt.toUpperCase(), c.op, campos[c.id]);
+                    } else if (c.tipo === 'lesiones') {
+                        flush(); leyenda(); tablaLesiones(campos[c.id]);
+                    } else if (sec.lista) {
+                        pending.push([marca(campos[c.id]) + c.label.toUpperCase(), campos[c.id]]);
+                    } else {
+                        pending.push([c.label, campos[c.id]]);
+                    }
+                });
+            });
+            flush();
+
+            const imgs = d.imagenes || [];
+            if (imgs.length) {
+                tit("IMÁGENES DEL PROCEDIMIENTO");
+                y += 6;
+                const cols = 2, gap = 12, box = (W - gap) / cols;
+                imgs.forEach((img, i) => {
+                    const col = i % cols;
+                    if (col === 0 && y + box > PH - 44) { pdf.addPage(); y = 44; }
+                    const cx = M + col * (box + gap);
+                    let w = box, h = box;
+                    try { const p = pdf.getImageProperties(img); const rt = p.width / p.height; if (rt >= 1) { h = box / rt; } else { w = box * rt; } } catch (e) { }
+                    const ox = cx + (box - w) / 2, oy = y + (box - h) / 2;
+                    try { pdf.addImage(img, 'JPEG', ox, oy, w, h); } catch (e) { }
+                    if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
+                });
+            }
+
+            const credito = "Este formulario estándar fue desarrollado por el Grupo de Estandarización Gastrointestinal de WSAVA (Dres. Washabau, Willard, Hall, Jergens, Day, Mansell, Wilcox, Minami, Guilford y Biltzer).";
+            pdf.setFont(undefined, 'italic'); pdf.setFontSize(7); pdf.setTextColor(...GRIS);
+            const lineasCred = pdf.splitTextToSize(credito, W);
+            if (y + lineasCred.length * 9 + 16 > PH - 40) { pdf.addPage(); y = 44; }
+            y += 14; pdf.text(lineasCred, M, y); y += lineasCred.length * 9;
+
+            const totalPag = pdf.internal.getNumberOfPages();
+            for (let p = 1; p <= totalPag; p++) {
+                pdf.setPage(p);
+                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.6); pdf.line(M, PH - 34, M + W, PH - 34);
+                pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(...GRIS);
+                pdf.text("Página " + p + " de " + totalPag, PW - M, PH - 22, { align: 'right' });
+            }
+            return pdf;
+        }
+
+        function endoExportar(r) {
+            const d = endoRecoger(r);
+            if (!d.nombre && !d.hc) { showToast("Escribe al menos el paciente o el número de historia.", true); return; }
+            showToast("Generando PDF...");
+            const pdf = construirEndoPDF(r.titulo, r.secciones, d);
+            if (!pdf) return;
+            pdf.save(`Endoscopia_${(d.nombre || 'paciente').replace(/[^a-zA-Z0-9]/g, '_')}_${d.fecha || ''}.pdf`);
+        }
+
+        async function endoDescargarPDF(r, id) {
+            try {
+                showToast("Generando PDF...");
+                const snap = await getDoc(doc(db, r.col, id));
+                if (!snap.exists()) { showToast("Ese reporte ya no existe.", true); return; }
+                const d = snap.data();
+                const pdf = construirEndoPDF(r.titulo, r.secciones, d);
+                if (!pdf) return;
+                pdf.save(`Endoscopia_${(d.nombre || 'paciente').replace(/[^a-zA-Z0-9]/g, '_')}_${d.fecha || ''}.pdf`);
+            } catch (error) { showToast("No se pudo generar el PDF.", true); console.error(error); }
+        }
+
+        // Wrappers ENDOSCOPIA BAJA (recto y colon)
+        window.openEndoscopia = () => endoAbrir(ENDO_REG.baja);
+        window.nuevoEndoscopia = () => endoNuevo(ENDO_REG.baja);
+        window.guardarEndoscopia = () => endoGuardar(ENDO_REG.baja);
+        window.limpiarFiltroEndoscopia = () => endoLimpiarFiltro(ENDO_REG.baja);
+        window.abrirEndoscopiaGuardados = () => endoListaGuardados(ENDO_REG.baja);
+        window.cargarEndoscopia = (id) => endoCargar(ENDO_REG.baja, id);
+        window.eliminarEndoscopia = (id, n) => endoEliminar(ENDO_REG.baja, id, n);
+        window.exportarEndoscopiaPDF = () => endoExportar(ENDO_REG.baja);
+        window.descargarEndoscopiaPDF = (id) => endoDescargarPDF(ENDO_REG.baja, id);
+        window.agregarImagenesEndo = (ev) => { const f = Array.from(ev.target.files || []); ev.target.value = ''; return endoAgregarArchivos(ENDO_REG.baja, f); };
+        window.quitarImagenEndo = (i) => { if (!puedeEditar(ENDO_REG.baja.perm)) { showToast("No tienes permiso para editar aquí.", true); return; } ENDO_REG.baja.imagenes.splice(i, 1); endoRenderImgs(ENDO_REG.baja); };
+
+        // Wrappers ENDOSCOPIA ALTA (tracto superior)
+        window.openEndoscopiaAlta = () => endoAbrir(ENDO_REG.alta);
+        window.nuevoEndoscopiaAlta = () => endoNuevo(ENDO_REG.alta);
+        window.guardarEndoscopiaAlta = () => endoGuardar(ENDO_REG.alta);
+        window.limpiarFiltroEndoscopiaAlta = () => endoLimpiarFiltro(ENDO_REG.alta);
+        window.abrirEndoscopiaAltaGuardados = () => endoListaGuardados(ENDO_REG.alta);
+        window.cargarEndoscopiaAlta = (id) => endoCargar(ENDO_REG.alta, id);
+        window.eliminarEndoscopiaAlta = (id, n) => endoEliminar(ENDO_REG.alta, id, n);
+        window.exportarEndoscopiaAltaPDF = () => endoExportar(ENDO_REG.alta);
+        window.descargarEndoscopiaAltaPDF = (id) => endoDescargarPDF(ENDO_REG.alta, id);
+        window.agregarImagenesEndoAlta = (ev) => { const f = Array.from(ev.target.files || []); ev.target.value = ''; return endoAgregarArchivos(ENDO_REG.alta, f); };
+        window.quitarImagenEndoAlta = (i) => { if (!puedeEditar(ENDO_REG.alta.perm)) { showToast("No tienes permiso para editar aquí.", true); return; } ENDO_REG.alta.imagenes.splice(i, 1); endoRenderImgs(ENDO_REG.alta); };
 
         // ==========================================
         // 8. BORRADORES AUTOMÁTICOS DE FORMATOS
