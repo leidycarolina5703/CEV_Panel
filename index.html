@@ -39,10 +39,10 @@
             
             <form id="login-form" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Correo Electrónico</label>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Usuario o correo</label>
                     <div class="relative">
-                        <i class="fa-solid fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                        <input type="email" id="email-input" required class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent bg-gray-50" placeholder="usuario@clinica.com">
+                        <i class="fa-solid fa-user absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="email-input" required autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent bg-gray-50" placeholder="tu usuario o correo">
                     </div>
                 </div>
                 
@@ -1035,8 +1035,9 @@
                     <input type="text" id="nuevo-nombre" placeholder="Nombre de la persona" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Correo</label>
-                    <input type="email" id="nuevo-correo" placeholder="usuario@clinica.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Usuario o correo</label>
+                    <input type="text" id="nuevo-correo" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ej: leidy  (o un correo completo)" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+                    <p class="text-[11px] text-gray-400 mt-1">Si escribes solo un nombre, se usará <span class="font-mono">nombre@cevmascotas.app</span> internamente.</p>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Contraseña inicial</label>
@@ -1852,9 +1853,20 @@
             document.getElementById('login-error-text').innerText = msg;
         }
 
+        // Permite iniciar sesión con un nombre corto (se le agrega un dominio interno)
+        // o con un correo completo si trae "@". Compatible con las cuentas actuales.
+        const DOMINIO_INTERNO = 'cevmascotas.app';
+        function resolverCorreo(entrada) {
+            let v = (entrada || '').trim();
+            if (!v) return '';
+            if (v.includes('@')) return v.toLowerCase();
+            v = v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9._-]/g, '');
+            return v + '@' + DOMINIO_INTERNO;
+        }
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email-input').value;
+            const email = resolverCorreo(document.getElementById('email-input').value);
             const password = document.getElementById('password-input').value;
             const rememberMe = document.getElementById('remember-me').checked;
             const errorBox = document.getElementById('login-error');
@@ -2992,12 +3004,13 @@
 
         window.crearUsuario = async function() {
             const nombre = document.getElementById('nuevo-nombre').value.trim();
-            const correo = document.getElementById('nuevo-correo').value.trim().toLowerCase();
+            const correoEntrada = document.getElementById('nuevo-correo').value.trim();
+            const correo = resolverCorreo(correoEntrada);
             const clave  = document.getElementById('nuevo-clave').value;
             const btn = document.getElementById('btn-crear-usuario');
 
             if (!nombre) { showToast("Escribe el nombre de la persona.", true); return; }
-            if (!correo) { showToast("Escribe el correo.", true); return; }
+            if (!correoEntrada) { showToast("Escribe el usuario o el correo.", true); return; }
             if (clave.length < 6) { showToast("La contraseña debe tener al menos 6 caracteres.", true); return; }
 
             btn.disabled = true;
