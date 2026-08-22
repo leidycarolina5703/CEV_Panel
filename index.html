@@ -3208,7 +3208,7 @@
                                 <button onclick="toggleActivoUsuario('${u.uid}', ${activo})" class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1 ${activo ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'}">
                                     <i class="fa-solid ${activo ? 'fa-ban' : 'fa-circle-check'}"></i> ${activo ? 'Desactivar' : 'Activar'}
                                 </button>
-                                <button onclick="eliminarUsuario('${u.uid}', '${(u.nombre || u.correo || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 transition-colors flex items-center gap-1">
+                                <button onclick="eliminarUsuario('${u.uid}', '${(u.nombre || u.correo || '').replace(/'/g, "\\'")}', '${(u.usuario || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 transition-colors flex items-center gap-1">
                                     <i class="fa-solid fa-trash-can"></i> Eliminar
                                 </button>
                             </div>
@@ -3288,12 +3288,14 @@
             }
         };
 
-        window.eliminarUsuario = async function(uid, nombre) {
-            if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nDejará de aparecer en la lista y no podrá volver a iniciar sesión.`)) return;
+        window.eliminarUsuario = async function(uid, nombre, usuario) {
+            if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nDejará de aparecer en la lista y no podrá volver a iniciar sesión. El nombre de usuario quedará libre para reutilizarlo.`)) return;
             try {
                 // Baja segura: se marca eliminado e inactivo. onAuthStateChanged
                 // bloquea el acceso al ver activo:false.
                 await setDoc(doc(db, "usuarios", uid), { activo: false, eliminado: true }, { merge: true });
+                // Libera el nombre de usuario (índice de acceso) para poder reutilizarlo.
+                if (usuario) { try { await deleteDoc(doc(db, "logins", usuario)); } catch (e) { console.error(e); } }
                 showToast(`Usuario "${nombre}" eliminado.`);
                 cargarUsuarios();
             } catch (error) {
