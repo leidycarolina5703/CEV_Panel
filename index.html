@@ -1422,7 +1422,7 @@
         <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Egreso</h2>
             <div class="sm:w-1/2">
-                <label class="fmt-lbl">Fecha de egreso / salida <span class="text-red-500">*</span></label>
+                <label class="fmt-lbl">Fecha de egreso / salida <span class="text-gray-400 font-normal">(opcional)</span></label>
                 <input type="date" id="cta-fecha-egreso" class="fmt-in">
             </div>
         </section>
@@ -6439,7 +6439,6 @@
                 validarDatosCuentaHosp();
                 return;
             }
-            if (!data.fechaEgreso) { showToast("Falta la Fecha de egreso / salida.", true); return; }
             if (!data.items.length) { showToast("Agrega al menos un insumo con cantidad.", true); return; }
             const btn = document.getElementById('btn-guardar-cuenta');
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
