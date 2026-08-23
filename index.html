@@ -159,6 +159,16 @@
                 </div>
             </button>
 
+            <button id="card-cuentas" onclick="openCuentasHosp()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-[#154390] transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-4xl group-hover:bg-[#154390] group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Cuentas de cobro hospitalización</h2>
+                    <p class="text-gray-500 text-center text-sm">Suma insumos y servicios de hospitalización y calcula el total.</p>
+                </div>
+            </button>
+
         </div>
     </div>
 
@@ -1300,6 +1310,137 @@
     </div>
 
     <!-- ============================================================= -->
+    <!-- PANTALLA: CUENTAS DE COBRO HOSPITALIZACIÓN                     -->
+    <!-- ============================================================= -->
+    <div id="cuentas-screen" class="hidden max-w-4xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <button onclick="salirCuentasHosp()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                <h2 class="text-lg font-bold text-[#154390]">Cuentas de cobro hospitalización</h2>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="nuevaCuentaHosp()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
+                <button onclick="abrirCuentasGuardadasHosp()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 border border-gray-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
+                <button onclick="exportarAgregadosExcel()" title="Descargar en Excel los insumos/laboratorios agregados a mano en todas las cuentas" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-2 border border-green-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-file-excel"></i> Excel agregados</button>
+            </div>
+        </div>
+
+        <div id="cta-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</h2>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
+                <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="cta-desde" class="js-ver fmt-in"></div>
+                <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="cta-hasta" class="js-ver fmt-in"></div>
+                <div class="flex gap-2">
+                    <button onclick="abrirCuentasGuardadasHosp()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                    <button onclick="limpiarFiltroCuentasHosp()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todas</button>
+                </div>
+            </div>
+            <div id="cta-lista-container" class="space-y-2"></div>
+        </div>
+
+        <!-- Datos del paciente -->
+        <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-paw"></i> Datos del paciente</h2>
+            <p id="cta-ult-edicion" class="text-[11px] text-gray-400 mb-2 min-h-[1rem]"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><label class="fmt-lbl">Fecha de ingreso <span class="text-red-500">*</span></label><input type="date" id="cta-fecha" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
+                <div><label class="fmt-lbl">Nombre del paciente <span class="text-red-500">*</span></label><input type="text" id="cta-paciente" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
+                <div><label class="fmt-lbl">Propietario <span class="text-red-500">*</span></label><input type="text" id="cta-propietario" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
+                <div><label class="fmt-lbl">Historia clínica <span class="text-red-500">*</span></label><input type="number" inputmode="numeric" min="0" step="1" id="cta-historia" oninput="validarDatosCuentaHosp()" class="fmt-in" placeholder="Solo números"></div>
+            </div>
+        </section>
+
+        <div id="cta-aviso-datos" class="hidden bg-amber-50 border-2 border-amber-300 rounded-xl p-3 text-center text-amber-800 font-semibold text-sm">
+            <i class="fa-solid fa-lock"></i> Completa Fecha de ingreso, Paciente, Propietario e Historia clínica para poder registrar insumos y medicamentos.
+        </div>
+
+        <!-- Agregar insumo nuevo -->
+        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-plus"></i> Agregar un insumo que no está en la lista</h2>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-end mt-3">
+                <div class="flex-1"><label class="fmt-lbl">Nombre del insumo</label><input type="text" id="cta-extra-nombre" class="fmt-in" placeholder="Ej: Medicamento especial"></div>
+                <div class="w-full sm:w-40"><label class="fmt-lbl">Valor unitario</label><input type="number" min="0" id="cta-extra-valor" class="fmt-in" placeholder="0"></div>
+                <div class="w-full sm:w-40"><label class="fmt-lbl">Va en</label><select id="cta-extra-grupo" class="fmt-in"><option value="Insumos">Insumos</option><option value="Laboratorio">Laboratorio</option></select></div>
+                <button onclick="agregarInsumoExtraHosp()" class="js-editar px-4 py-2 bg-[#154390] text-white rounded-lg font-semibold hover:bg-[#0f3268] flex items-center justify-center gap-2 h-[42px]"><i class="fa-solid fa-plus"></i> Agregar</button>
+            </div>
+        </section>
+
+        <!-- Catálogo + cantidades -->
+        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Insumos y servicios</h2>
+            <div class="relative mb-2">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                <input type="text" id="cta-buscar" oninput="filtrarCatalogoHosp()" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50" placeholder="Buscar insumo o examen...">
+            </div>
+            <p class="text-[11px] text-gray-400 mb-1">Escribe la cantidad usada en cada ítem. Solo los que tengan cantidad suman al total.</p>
+            <div id="cta-lista-extra"></div>
+            <div id="cta-catalogo" class="max-h-[420px] overflow-y-auto pr-1"></div>
+        </section>
+
+
+
+        <!-- Totales -->
+        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 sticky bottom-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-1">
+                        <span class="text-sm text-gray-600">Mascotas (insumos)</span>
+                        <span id="cta-sub-mascotas" class="text-sm font-semibold text-gray-800">$ 0</span>
+                    </div>
+                    <div class="flex justify-between items-center gap-2">
+                        <span class="text-sm text-gray-600 shrink-0">CX (cirugía)</span>
+                        <input type="number" min="0" id="cta-cx" oninput="recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-100 py-1">
+                        <span class="text-sm text-gray-600">CX (total)</span>
+                        <span id="cta-sub-cx" class="text-sm font-semibold text-gray-800">$ 0</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-1">
+                        <span class="text-sm text-gray-600">Laboratorio</span>
+                        <span id="cta-sub-lab" class="text-sm font-semibold text-gray-800">$ 0</span>
+                    </div>
+                </div>
+                <div class="space-y-1.5 sm:text-right sm:border-l sm:border-gray-100 sm:pl-6">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Total</span>
+                        <span id="cta-total" class="text-lg font-bold text-gray-800">$ 0</span>
+                    </div>
+                    <div class="flex justify-between items-center gap-2">
+                        <span class="text-sm text-gray-600 shrink-0">Depósito / abono</span>
+                        <input type="number" min="0" id="cta-deposito" oninput="recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
+                    </div>
+                    <div class="flex justify-between items-center pt-1 border-t border-gray-200">
+                        <span class="text-sm font-semibold text-gray-700">Resta por pagar</span>
+                        <span id="cta-resta" class="text-xl font-extrabold text-[#154390]">$ 0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fecha de egreso -->
+        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Egreso</h2>
+            <div class="sm:w-1/2">
+                <label class="fmt-lbl">Fecha de egreso / salida <span class="text-red-500">*</span></label>
+                <input type="date" id="cta-fecha-egreso" class="fmt-in">
+            </div>
+        </section>
+
+        <!-- Historial de cambios -->
+        <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios</h2>
+            <div id="cta-historial" class="max-h-56 overflow-y-auto"></div>
+        </section>
+
+        <div id="cta-estado-guardado" class="text-xs text-right min-h-[1rem] font-semibold"></div>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="guardarCuentaHosp()" id="btn-guardar-cuenta" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube</button>
+            <button onclick="exportarCuentaHospPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
     <!-- PANTALLA: CUENTAS GUARDADAS DEL LABORATORIO                    -->
     <!-- ============================================================= -->
     <div id="lab-guardadas-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
@@ -1576,6 +1717,7 @@
             { id: "evidencias",   nombre: "Evidencias Medicamentos", icono: "fa-pills",        card: "card-evidencias",  grupo: "Farmacia" },
             { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos",     grupo: "Farmacia" },
             { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" },
+            { id: "cuentas_hosp", nombre: "Cuentas de cobro hospitalización", icono: "fa-file-invoice-dollar", card: "card-cuentas" },
             { id: "agenda",       nombre: "Agendamiento de visitas", icono: "fa-calendar-check",  card: "card-agenda" },
             { id: "fmt_monitoreo",  nombre: "Monitoreo anestésico",    icono: "fa-heart-pulse",  card: "card-fmt-monitoreo",  grupo: "Formatos clínicos" },
             { id: "fmt_ortopedico", nombre: "Examen ortopédico",       icono: "fa-bone",         card: "card-fmt-ortopedico", grupo: "Formatos clínicos" },
@@ -1593,6 +1735,7 @@
 
         let esAdmin = false;
         let permisosActuales = {};
+        let usuarioSesion = null; // { nombre, correo } de quien tiene la sesión abierta
 
         function correoEsAdmin(email) {
             return ADMIN_EMAILS.map(e => e.toLowerCase()).includes((email || "").toLowerCase());
@@ -1657,6 +1800,7 @@
             document.getElementById('evidencias-screen').classList.add('hidden');
             document.getElementById('farmacia-screen').classList.add('hidden');
             document.getElementById('agenda-screen').classList.add('hidden');
+            document.getElementById('cuentas-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
         };
 
@@ -1792,6 +1936,11 @@
                 }
 
                 if (datosUsuario && datosUsuario.admin === true) esAdmin = true;
+
+                usuarioSesion = {
+                    nombre: (datosUsuario && (datosUsuario.nombre || datosUsuario.usuario)) || (user.email ? user.email.split('@')[0] : 'usuario'),
+                    correo: user.email || ''
+                };
 
                 // Interruptor activo/inactivo (no aplica a la administradora)
                 if (!esAdmin && datosUsuario && datosUsuario.activo === false) {
@@ -5920,6 +6069,576 @@
         window.agregarImagenesEndoAlta = (ev) => { const f = Array.from(ev.target.files || []); ev.target.value = ''; return endoAgregarArchivos(ENDO_REG.alta, f); };
         window.quitarImagenEndoAlta = (i) => { if (!puedeEditar(ENDO_REG.alta.perm)) { showToast("No tienes permiso para editar aquí.", true); return; } ENDO_REG.alta.imagenes.splice(i, 1); endoRenderImgs(ENDO_REG.alta); };
 
+        // ==========================================================
+        // MÓDULO: CUENTAS DE COBRO HOSPITALIZACIÓN (colección: cuentas_hospital)
+        // ==========================================================
+        const CATALOGO_CUENTAS = [{"n": "CONSULTA NO PROGRAMADA", "v": 115000, "g": "Insumos"}, {"n": "RX", "v": 97000, "g": "Insumos"}, {"n": "2DX", "v": 67000, "g": "Laboratorio"}, {"n": "MATERIALES", "v": 17000, "g": "Insumos"}, {"n": "RX CONTROL  (1/2)", "v": 49000, "g": "Insumos"}, {"n": "4DX", "v": 100000, "g": "Laboratorio"}, {"n": "CATHETER", "v": 20000, "g": "Insumos"}, {"n": "OXIGENOTERAPIA XHORA", "v": 5000, "g": "Insumos"}, {"n": "ACIDO FOLICO", "v": 90000, "g": "Laboratorio"}, {"n": "TAPON", "v": 5000, "g": "Insumos"}, {"n": "XILASYNA 1ML", "v": 15000, "g": "Insumos"}, {"n": "ALBUMINA", "v": 36000, "g": "Laboratorio"}, {"n": "VENOCLISIS", "v": 20000, "g": "Insumos"}, {"n": "PROPOFOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "AMILOIDE FELINO", "v": 95000, "g": "Laboratorio"}, {"n": "VENOBOMBA", "v": 63000, "g": "Insumos"}, {"n": "LIDOCAINA 1ML", "v": 6000, "g": "Insumos"}, {"n": "AMONÍACO", "v": 63000, "g": "Laboratorio"}, {"n": "COBAN(VENDAJEVET)", "v": 5000, "g": "Insumos"}, {"n": "TRAMADOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "ANÁLISIS DE LÍQUIDO", "v": 50000, "g": "Laboratorio"}, {"n": "COBAN ROLLO", "v": 20000, "g": "Insumos"}, {"n": "MORFINA-AMPOLLA X 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 1", "v": 100000, "g": "Laboratorio"}, {"n": "EXTENSION", "v": 15000, "g": "Insumos"}, {"n": "HIDROMORFONA 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 2", "v": 145000, "g": "Laboratorio"}, {"n": "HARTMAN 1L", "v": 25000, "g": "Insumos"}, {"n": "BUTORFARNOL 1ML", "v": 90000, "g": "Insumos"}, {"n": "ASA 3", "v": 200000, "g": "Laboratorio"}, {"n": "HARTMAN 500ML (SUERO)", "v": 20000, "g": "Insumos"}, {"n": "MIDAZOLAN 1ML", "v": 22000, "g": "Insumos"}, {"n": "ASA 4", "v": 280000, "g": "Laboratorio"}, {"n": "JERINGA 1-3-5ML", "v": 1000, "g": "Insumos"}, {"n": "KETAMINA 1ML", "v": 18000, "g": "Insumos"}, {"n": "BACAF", "v": 45000, "g": "Laboratorio"}, {"n": "JERINGA 10-20-60ML", "v": 6000, "g": "Insumos"}, {"n": "MELOXICAM 1ML INY", "v": 8000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 1", "v": 105000, "g": "Laboratorio"}, {"n": "PERFUSORA 20/50", "v": 73000, "g": "Insumos"}, {"n": "DIPIRONA 1ML", "v": 4000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 2", "v": 140000, "g": "Laboratorio"}, {"n": "KIT NEBU", "v": 15000, "g": "Insumos"}, {"n": "OMEPRAZOL 1ML INY", "v": 3000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 1", "v": 180000, "g": "Laboratorio"}, {"n": "NEBULIZACION", "v": 15000, "g": "Insumos"}, {"n": "CERENIA 1ML INY", "v": 20000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 2", "v": 220000, "g": "Laboratorio"}, {"n": "SONDA", "v": 12000, "g": "Insumos"}, {"n": "ONDANSETRON AMPOLLA X 4ML", "v": 20000, "g": "Insumos"}, {"n": "BILIRRUBINA", "v": 36000, "g": "Laboratorio"}, {"n": "GUANTES PAR(EXAMEN)", "v": 500, "g": "Insumos"}, {"n": "NEXGARD", "v": 74000, "g": "Insumos"}, {"n": "CARTUCHO EDAN", "v": 40000, "g": "Laboratorio"}, {"n": "GUANTE ESTERIL(CIRUGIA)", "v": 4000, "g": "Insumos"}, {"n": "CEFALOTINA 1ML", "v": 3000, "g": "Insumos"}, {"n": "HOSP. GENERAL(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "AMPICILINA AMPOLLA X 10ML", "v": 15000, "g": "Insumos"}, {"n": "CIANOCOBALAMINA", "v": 90000, "g": "Laboratorio"}, {"n": "HOSP. UCI(CUIDADO PACIENTE)", "v": 35000, "g": "Insumos"}, {"n": "ENOXAPARINA", "v": 45000, "g": "Insumos"}, {"n": "CITOLOGÍAS", "v": 28000, "g": "Laboratorio"}, {"n": "HOSP. INFECCIOSO(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "METILPREDNISOLONA AMPOLLA  X 10ML", "v": 35000, "g": "Insumos"}, {"n": "COLESTEROL", "v": 36000, "g": "Laboratorio"}, {"n": "AGUJA", "v": 300, "g": "Insumos"}, {"n": "ACIFLUX", "v": 38000, "g": "Insumos"}, {"n": "CONVULSIVO", "v": 220000, "g": "Laboratorio"}, {"n": "SUTURA ABSORBIBLE", "v": 55000, "g": "Insumos"}, {"n": "COMPRESAS", "v": 20000, "g": "Insumos"}, {"n": "COPROLÓGICO", "v": 20000, "g": "Laboratorio"}, {"n": "VENDAJE (PEQUEÑO)", "v": 30000, "g": "Insumos"}, {"n": "PREVICOX 227", "v": 13000, "g": "Insumos"}, {"n": "CORTISOL", "v": 96000, "g": "Laboratorio"}, {"n": "VENDAJE (MEDIANO)", "v": 40000, "g": "Insumos"}, {"n": "PREVICOX 57", "v": 7000, "g": "Insumos"}, {"n": "CREATININA SECA", "v": 36000, "g": "Laboratorio"}, {"n": "VENDAJE (GRANDE)", "v": 50000, "g": "Insumos"}, {"n": "PREGABALINA ML", "v": 5000, "g": "Insumos"}, {"n": "CUADRO HEMÁTICO", "v": 38000, "g": "Laboratorio"}, {"n": "ECOGRAFIA", "v": 97000, "g": "Insumos"}, {"n": "PREGABALINA 25", "v": 5000, "g": "Insumos"}, {"n": "CULTIVO + ANTIBIOGRAMA", "v": 92000, "g": "Laboratorio"}, {"n": "ECOGRAFIA CONTROL", "v": 65000, "g": "Insumos"}, {"n": "PREGABALINA 75", "v": 9000, "g": "Insumos"}, {"n": "CULTIVO DE GÉRMENES COMUNES", "v": 92000, "g": "Laboratorio"}, {"n": "ECO FAST (CONTROL)", "v": 49000, "g": "Insumos"}, {"n": "ENROFLOXICINA", "v": 6000, "g": "Insumos"}, {"n": "CULTIVO DE HONGOS", "v": 92000, "g": "Laboratorio"}, {"n": "ECOCARDIO", "v": 126000, "g": "Insumos"}, {"n": "ACIDOTRAVEXANICO AMPOLLA X 5ML", "v": 20000, "g": "Insumos"}, {"n": "DIFERENCIAL DE PROTEINAS", "v": 71000, "g": "Laboratorio"}, {"n": "ROYAL RECOVERY", "v": 35000, "g": "Insumos"}, {"n": "BAYTRIL", "v": 8300, "g": "Insumos"}, {"n": "DIMERO D", "v": 95000, "g": "Laboratorio"}, {"n": "TOTAL F", "v": 10000, "g": "Insumos"}, {"n": "POTASIO", "v": 7000, "g": "Insumos"}, {"n": "EDAN GASES ARTERIALES/VENOSOS", "v": 85000, "g": "Laboratorio"}, {"n": "MIDAZOLAM", "v": 20000, "g": "Insumos"}, {"n": "BURETROL", "v": 9000, "g": "Insumos"}, {"n": "FOSFORO", "v": 36000, "g": "Laboratorio"}, {"n": "COLLAR FEROMONAS", "v": 95000, "g": "Insumos"}, {"n": "ARENA 1KG", "v": 6000, "g": "Insumos"}, {"n": "FRUCTOSAMINA", "v": 100000, "g": "Laboratorio"}, {"n": "BUPIVACAINA", "v": 15000, "g": "Insumos"}, {"n": "CICLORAC SPRAY", "v": 42000, "g": "Insumos"}, {"n": "GERIÁTRICO CANINO", "v": 315000, "g": "Laboratorio"}, {"n": "VESTIDO XS", "v": 30000, "g": "Insumos"}, {"n": "LIPIDOS", "v": 2000, "g": "Insumos"}, {"n": "GGT", "v": 36000, "g": "Laboratorio"}, {"n": "VESTIDO S", "v": 45000, "g": "Insumos"}, {"n": "EUTHANEX 1ML", "v": 13000, "g": "Insumos"}, {"n": "GLUCOSA", "v": 15000, "g": "Laboratorio"}, {"n": "VESTIDO M", "v": 50000, "g": "Insumos"}, {"n": "TRAZODONA TABLETA", "v": 3000, "g": "Insumos"}, {"n": "GRAM", "v": 34000, "g": "Laboratorio"}, {"n": "VESTIDO L", "v": 55000, "g": "Insumos"}, {"n": "PAÑAL O TAPETE", "v": 4000, "g": "Insumos"}, {"n": "HEMATOCRITO Y P TOTALES", "v": 10000, "g": "Laboratorio"}, {"n": "VESTIDO XL", "v": 60000, "g": "Insumos"}, {"n": "FORTIFLORA", "v": 7000, "g": "Insumos"}, {"n": "HEMOCULTIVO", "v": 92000, "g": "Laboratorio"}, {"n": "VESTIDO XXL", "v": 68000, "g": "Insumos"}, {"n": "CLORURO DE SODIO", "v": 8000, "g": "Insumos"}, {"n": "JERINGA EDAN", "v": 16000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XS", "v": 15000, "g": "Insumos"}, {"n": "FLUIMUCIL AMPOLLA X 3ML", "v": 15000, "g": "Insumos"}, {"n": "LIPASA", "v": 100000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO S", "v": 20000, "g": "Insumos"}, {"n": "TOTAL F SUSPENSION", "v": 10000, "g": "Insumos"}, {"n": "NIVELES DE FENOBARBITAL", "v": 130000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO M", "v": 25000, "g": "Insumos"}, {"n": "REVOLUTION PLUS", "v": 70000, "g": "Insumos"}, {"n": "PARCIAL DE ORINA", "v": 28000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO L", "v": 28000, "g": "Insumos"}, {"n": "NEUROPROTECCION (VITAMINA A-E-C-OMEGA-GINGO)", "v": 10000, "g": "Insumos"}, {"n": "PCR HEMOTRÓPICOS", "v": 0, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XL", "v": 30000, "g": "Insumos"}, {"n": "TRIHEPAT", "v": 5000, "g": "Insumos"}, {"n": "PCR", "v": 290000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XXL", "v": 35000, "g": "Insumos"}, {"n": "SUCRALFATO", "v": 5000, "g": "Insumos"}, {"n": "PERFIL HEPÁTICO", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION GASTROINTESTINAL 100GR", "v": 10000, "g": "Insumos"}, {"n": "MIRTAZAPINA", "v": 15000, "g": "Insumos"}, {"n": "PERFIL RENAL", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION RECOVERY 100 GR", "v": 10000, "g": "Insumos"}, {"n": "SILDENAFILO", "v": 5000, "g": "Insumos"}, {"n": "PROTEINA C", "v": 95000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH ANATRA 100 GR", "v": 10000, "g": "Insumos"}, {"n": "CEFTRAXONA  AMPOLLA X 10ML", "v": 20000, "g": "Insumos"}, {"n": "PT Y PPT (COAGULACIÓN)", "v": 75000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "LYRICA", "v": 5000, "g": "Insumos"}, {"n": "QUÍMICAS (ALT-AST-FA-CREA-UREA)", "v": 25000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT PORK PINEAPPLE MAIALE", "v": 10000, "g": "Insumos"}, {"n": "FLUNARIZINA", "v": 9000, "g": "Insumos"}, {"n": "ROTOR HEPÁTICO", "v": 120000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "DOXICICLINA (NEODOXIL)", "v": 5000, "g": "Insumos"}, {"n": "ROTOR RENAL", "v": 100000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT TACCHINO  100 GR", "v": 10000, "g": "Insumos"}, {"n": "ADRENALINA AMPOLLA", "v": 4000, "g": "Insumos"}, {"n": "ROTOR URGENCIAS", "v": 90000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION DIABETIC 400GR", "v": 28000, "g": "Insumos"}, {"n": "SDMA (DIMETILARGININA SIMÉTRICA)", "v": 180000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION GASTROINTESTIN 400GR", "v": 28000, "g": "Insumos"}, {"n": "ÁCIDO TRANEXANICO", "v": 20000, "g": "Insumos"}, {"n": "SUERO ANTÓLOGO", "v": 16000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RECOVERY 150 GR", "v": 12000, "g": "Insumos"}, {"n": "REVOLUTION PLUS 2.5 A 5", "v": 65000, "g": "Insumos"}, {"n": "T4 TOTAL + COLESTEROL T", "v": 126000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RENAL 150 GR", "v": 12000, "g": "Insumos"}, {"n": "BLADURIL", "v": 14000, "g": "Insumos"}, {"n": "TEST DISTEMPER-MOQUILLO", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME ADULT TONNO E ALGHE QU", "v": 12000, "g": "Insumos"}, {"n": "VITAMINA K (KAVITEX)", "v": 4000, "g": "Insumos"}, {"n": "TEST PARVOVIRUS", "v": 57000, "g": "Laboratorio"}, {"n": "MONGE SUPREME CAT RISO TE VERDE 80 GR", "v": 12000, "g": "Insumos"}, {"n": "GLUCONATO DE CALCIO", "v": 4000, "g": "Insumos"}, {"n": "TEST SIDA/LEUCEMIA", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME KITTEN TUN CARROT QUINO", "v": 12000, "g": "Insumos"}, {"n": "INSULINA", "v": 5000, "g": "Insumos"}, {"n": "TIEMPO DE COAGULACIÓN EN TUBO", "v": 3000, "g": "Laboratorio"}, {"n": "MONGE VET SOLUTION  HYPO MONOPROTEIN 400 GR", "v": 28000, "g": "Insumos"}, {"n": "DEXTROSA", "v": 300, "g": "Insumos"}, {"n": "TRIGLICÉRIDOS", "v": 36000, "g": "Laboratorio"}, {"n": "LATA E/N CANINO", "v": 30000, "g": "Insumos"}, {"n": "FUROSEMIDA", "v": 2000, "g": "Insumos"}, {"n": "TSH CANINA", "v": 96000, "g": "Laboratorio"}, {"n": "LATA I/D CANINO", "v": 34500, "g": "Insumos"}, {"n": "FITOVETE CREMA", "v": 43000, "g": "Insumos"}, {"n": "UPC", "v": 100000, "g": "Laboratorio"}, {"n": "LATA I/D FELINO", "v": 21000, "g": "Insumos"}, {"n": "METRONIDAZOL X100", "v": 20000, "g": "Insumos"}, {"n": "UREGENCIAS 2", "v": 250000, "g": "Laboratorio"}, {"n": "LATA E/N FELINO", "v": 19000, "g": "Insumos"}, {"n": "YOHINBINA", "v": 10000, "g": "Insumos"}, {"n": "URGENCIAS 1", "v": 155000, "g": "Laboratorio"}, {"n": "I/D SECO CANINO", "v": 29000, "g": "Insumos"}, {"n": "ATROPINA", "v": 9000, "g": "Insumos"}, {"n": "LATA A/D FELINO Y CANINO", "v": 25000, "g": "Insumos"}, {"n": "BISMOPET", "v": 43000, "g": "Insumos"}, {"n": "I/D SECO FELINO", "v": 47000, "g": "Insumos"}, {"n": "MEDICAMENTOS OTROS", "v": 36500, "g": "Insumos"}, {"n": "CHURU", "v": 5000, "g": "Insumos"}, {"n": "BFEX", "v": 28000, "g": "Insumos"}, {"n": "NUTRA LIFE (1CUCHARA 11GR)", "v": 500, "g": "Insumos"}, {"n": "ENEMA", "v": 25000, "g": "Insumos"}, {"n": "ROYAL CANIN RECOVERY", "v": 34000, "g": "Insumos"}, {"n": "TRIMETROPIN", "v": 5000, "g": "Insumos"}, {"n": "ACEVICAL DISPOSICION CUERPO X 1KG", "v": 8000, "g": "Insumos"}, {"n": "SULFAZALASINA", "v": 4000, "g": "Insumos"}, {"n": "PATOLOGIA", "v": 250000, "g": "Insumos"}, {"n": "DEXAMETASONA", "v": 4000, "g": "Insumos"}, {"n": "LLAVE 3VIAS", "v": 10000, "g": "Insumos"}, {"n": "SMECTA", "v": 5000, "g": "Insumos"}, {"n": "PAQUETE SONDA GATO", "v": 138000, "g": "Insumos"}, {"n": "TIAMINA", "v": 20000, "g": "Insumos"}, {"n": "VACUNAS", "v": 85000, "g": "Insumos"}, {"n": "ONE", "v": 10000, "g": "Insumos"}, {"n": "ANEST. INHALADA (ISORANY)", "v": 120000, "g": "Insumos"}, {"n": "PREDNISOLONA 20", "v": 3500, "g": "Insumos"}, {"n": "TUBO ENDROTRAQUEAL", "v": 18000, "g": "Insumos"}, {"n": "SUPOSITORIOS", "v": 7000, "g": "Insumos"}, {"n": "CARBON ACTIVADO", "v": 20000, "g": "Insumos"}, {"n": "SERETIDE (INALADOR)", "v": 115000, "g": "Insumos"}, {"n": "CEFALEXINA 500MG", "v": 1000, "g": "Insumos"}, {"n": "HIDROSIN", "v": 5000, "g": "Insumos"}, {"n": "DESCENSOR", "v": 3000, "g": "Insumos"}, {"n": "ENALAPRIL", "v": 1000, "g": "Insumos"}, {"n": "COMPLEJO B", "v": 25000, "g": "Insumos"}, {"n": "PERIACTIN", "v": 5000, "g": "Insumos"}, {"n": "DITOPAX", "v": 5000, "g": "Insumos"}, {"n": "FENOBARBITAL ML", "v": 23000, "g": "Insumos"}, {"n": "METAMUSIL", "v": 5000, "g": "Insumos"}, {"n": "PREDNISOLONA 5MG", "v": 3500, "g": "Insumos"}, {"n": "MELOXICAN GOTAS", "v": 24000, "g": "Insumos"}];
+        let cuentaHospId = null;
+        let cuentaHospExtra = []; // insumos agregados manualmente: {n, v, cant}
+        let cuentaHospHistorial = []; // registro completo de cambios: {por, correo, fecha, accion, total}
+        let cuentaHospDirty = false;       // hay cambios sin guardar
+        let cuentaHospEsNueva = true;      // si es cuenta nueva (para el historial)
+        let cuentaHospAutosaveTimer = null;
+        let cuentaHospListo = false;       // listeners ya instalados
+
+        function marcarCambioCuentaHosp() {
+            cuentaHospDirty = true;
+            const est = document.getElementById('cta-estado-guardado');
+            if (est) est.innerHTML = '<span class="text-amber-600"><i class="fa-solid fa-circle" style="font-size:7px"></i> Cambios sin guardar…</span>';
+            clearTimeout(cuentaHospAutosaveTimer);
+            cuentaHospAutosaveTimer = setTimeout(autoguardarCuentaHosp, 2000);
+        }
+
+        async function autoguardarCuentaHosp() {
+            if (!puedeEditar('cuentas_hosp')) return;
+            const data = recogerCuentaHosp();
+            if (!data.paciente && !data.historia) return; // aún no hay nada identificable
+            try {
+                const id = cuentaHospId || ("cuenta_" + Date.now());
+                const ahora = new Date().toISOString();
+                data.actualizado = ahora;
+                data.modificadoPor = usuarioSesion ? usuarioSesion.nombre : '';
+                data.modificadoCorreo = usuarioSesion ? usuarioSesion.correo : '';
+                if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
+                data.historial = cuentaHospHistorial; // el autoguardado NO agrega historial
+                await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
+                cuentaHospId = id;
+                cuentaHospDirty = false;
+                const est = document.getElementById('cta-estado-guardado');
+                if (est) est.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-cloud"></i> Guardado automáticamente</span>';
+            } catch (e) { console.error('autoguardado', e); }
+        }
+
+        window.salirCuentasHosp = function() {
+            if (cuentaHospDirty && !confirm("Tienes cambios sin guardar. ¿Salir de todas formas?")) return;
+            clearTimeout(cuentaHospAutosaveTimer);
+            cuentaHospDirty = false;
+            goToDashboard();
+        };
+
+
+        window.validarDatosCuentaHosp = function() {
+            const ok = ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-historia']
+                .every(id => ((document.getElementById(id) || {}).value || '').trim() !== '');
+            const aviso = document.getElementById('cta-aviso-datos');
+            if (aviso) aviso.classList.toggle('hidden', ok);
+            document.querySelectorAll('#cuentas-screen .cta-bloqueable').forEach(sec => {
+                sec.style.opacity = ok ? '' : '0.45';
+                sec.style.pointerEvents = ok ? '' : 'none';
+            });
+            return ok;
+        };
+
+        window.exportarAgregadosExcel = async function() {
+            showToast("Preparando Excel...");
+            try {
+                const snap = await getDocs(collection(db, "cuentas_hospital"));
+                const detalle = [];   // cada aparición
+                const resumen = {};    // por nombre+grupo
+                snap.forEach(d => {
+                    const c = d.data();
+                    (c.items || []).forEach(it => {
+                        if (!it.x) return; // solo los agregados a mano
+                        const grupo = it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
+                        detalle.push({
+                            "Insumo": it.n,
+                            "Grupo": grupo,
+                            "Valor unitario": it.v || 0,
+                            "Cantidad": it.cant || 0,
+                            "Subtotal": (it.v || 0) * (it.cant || 0),
+                            "Paciente": c.paciente || '',
+                            "Historia clínica": c.historia || '',
+                            "Fecha ingreso": c.fecha || '',
+                            "Registrado por": c.modificadoPor || ''
+                        });
+                        const key = grupo + '||' + it.n.toLowerCase();
+                        if (!resumen[key]) resumen[key] = { "Insumo": it.n, "Grupo": grupo, "Valor unitario": it.v || 0, "Veces agregado": 0, "Cantidad total": 0 };
+                        resumen[key]["Veces agregado"] += 1;
+                        resumen[key]["Cantidad total"] += (it.cant || 0);
+                    });
+                });
+                if (!detalle.length) { showToast("No hay insumos agregados a mano todavía.", true); return; }
+                const filasResumen = Object.values(resumen).sort((a, b) => (a.Grupo + a.Insumo).localeCompare(b.Grupo + b.Insumo));
+                const libro = XLSX.utils.book_new();
+                const hojaRes = XLSX.utils.json_to_sheet(filasResumen);
+                hojaRes['!cols'] = [{ wch: 40 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
+                XLSX.utils.book_append_sheet(libro, hojaRes, "Resumen");
+                const hojaDet = XLSX.utils.json_to_sheet(detalle);
+                hojaDet['!cols'] = [{ wch: 40 }, { wch: 12 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 18 }];
+                XLSX.utils.book_append_sheet(libro, hojaDet, "Detalle");
+                const hoy = new Date().toISOString().substring(0, 10);
+                XLSX.writeFile(libro, `Insumos_agregados_a_mano_CEV_${hoy}.xlsx`);
+                showToast(`Excel generado: ${filasResumen.length} distintos, ${detalle.length} registros.`);
+            } catch (error) {
+                showToast("No se pudo generar el Excel. Revisa la conexión.", true);
+                console.error(error);
+            }
+        };
+
+        function renderHistorialHosp() {
+            const cont = document.getElementById('cta-historial');
+            if (!cont) return;
+            if (!cuentaHospHistorial.length) { cont.innerHTML = '<p class="text-gray-400 italic text-sm">Aún no hay cambios registrados.</p>'; return; }
+            cont.innerHTML = cuentaHospHistorial.slice().reverse().map(h => `
+                <div class="flex items-start gap-2 py-1.5 border-b border-gray-100 text-sm">
+                    <i class="fa-solid ${h.accion === 'Creó' ? 'fa-file-circle-plus text-green-600' : 'fa-user-pen text-[#154390]'} mt-0.5"></i>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-gray-700"><b>${h.por || 'Usuario'}</b> ${h.accion === 'Creó' ? 'creó' : 'modificó'} la cuenta</p>
+                        <p class="text-[11px] text-gray-400">${h.fecha ? new Date(h.fecha).toLocaleString('es-CO') : ''}${h.total ? ' · Total ' + fmtCOPHosp(h.total) : ''}</p>
+                    </div>
+                </div>`).join('');
+        }
+
+        const fmtCOPHosp = n => '$ ' + (Math.round(n || 0)).toLocaleString('es-CO');
+
+        window.pasoCantidadHosp = function(idx, delta) {
+            const el = document.getElementById('cta-cant-' + idx);
+            if (!el) return;
+            const nuevo = Math.max(0, (parseInt(el.value) || 0) + delta);
+            el.value = nuevo || '';
+            marcarCambioCuentaHosp();
+            recalcularCuentaHosp();
+        };
+
+        function renderCatalogoCuentasHosp() {
+            const cont = document.getElementById('cta-catalogo');
+            const grupos = ['Insumos', 'Laboratorio'];
+            let html = '';
+            grupos.forEach(g => {
+                const items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx })).filter(it => it.g === g);
+                html += `<div class="cta-grupo" data-grupo="${g}">
+                    <h3 class="text-sm font-bold text-[#154390] bg-blue-50 px-3 py-2 rounded-lg mt-3 mb-1 sticky top-0">${g === 'Insumos' ? 'Insumos y procedimientos' : 'Laboratorio'} <span class="text-gray-400 font-normal">(${items.length})</span></h3>
+                    <div class="divide-y divide-gray-100">`;
+                items.forEach(it => {
+                    html += `<div class="cta-fila flex items-center gap-2 py-1.5 px-1" data-nombre="${it.n.toLowerCase()}">
+                        <div class="flex-1 min-w-0"><p class="text-sm text-gray-700 truncate" title="${it.n}">${it.n}</p><p class="text-[11px] text-gray-400">${fmtCOPHosp(it.v)} c/u</p></div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" onclick="pasoCantidadHosp(${it.idx}, -1)" class="js-editar w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center">−</button>
+                            <input type="number" min="0" step="1" id="cta-cant-${it.idx}" oninput="recalcularCuentaHosp()" class="cta-cant w-12 border border-gray-300 rounded-lg px-1 py-1 text-sm text-center bg-gray-50" placeholder="0">
+                            <button type="button" onclick="pasoCantidadHosp(${it.idx}, 1)" class="js-editar w-7 h-7 rounded-lg bg-blue-100 hover:bg-blue-200 text-[#154390] font-bold flex items-center justify-center">+</button>
+                        </div>
+                        <div class="w-24 text-right text-sm font-semibold text-gray-700" id="cta-sub-${it.idx}">—</div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            });
+            cont.innerHTML = html;
+        }
+
+        window.filtrarCatalogoHosp = function() {
+            const q = (document.getElementById('cta-buscar').value || '').trim().toLowerCase();
+            document.querySelectorAll('#cta-catalogo .cta-fila').forEach(f => {
+                f.style.display = (!q || f.dataset.nombre.includes(q)) ? '' : 'none';
+            });
+            document.querySelectorAll('#cta-catalogo .cta-grupo').forEach(gr => {
+                const visibles = gr.querySelectorAll('.cta-fila:not([style*="none"])').length;
+                gr.style.display = visibles ? '' : 'none';
+            });
+        };
+
+        function renderExtraCuentasHosp() {
+            const cont = document.getElementById('cta-lista-extra');
+            if (!cuentaHospExtra.length) { cont.innerHTML = ''; return; }
+            const editable = puedeEditar('cuentas_hosp');
+            cont.innerHTML = '<h3 class="text-sm font-bold text-[#154390] bg-amber-50 px-3 py-2 rounded-lg mt-3 mb-1">Insumos agregados</h3>' +
+                cuentaHospExtra.map((it, i) => `
+                <div class="flex items-center gap-2 py-1.5 px-1 border-b border-gray-100">
+                    <div class="flex-1 min-w-0"><p class="text-sm text-gray-700 truncate">${it.n} <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${it.g === 'Laboratorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos'}</span></p><p class="text-[11px] text-gray-400">${fmtCOPHosp(it.v)} c/u</p></div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" onclick="pasoExtraHosp(${i}, -1)" class="js-editar w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center">−</button>
+                        <input type="number" min="0" step="1" value="${it.cant || ''}" oninput="cambiarExtraHosp(${i}, this.value)" class="w-12 border border-gray-300 rounded-lg px-1 py-1 text-sm text-center bg-gray-50" placeholder="0">
+                        <button type="button" onclick="pasoExtraHosp(${i}, 1)" class="js-editar w-7 h-7 rounded-lg bg-blue-100 hover:bg-blue-200 text-[#154390] font-bold flex items-center justify-center">+</button>
+                    </div>
+                    <div class="w-24 text-right text-sm font-semibold text-gray-700">${it.cant ? fmtCOPHosp(it.cant * it.v) : '—'}</div>
+                    ${editable ? `<button onclick="editarExtraHosp(${i})" title="Editar" class="w-6 h-6 text-[#154390] hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="quitarExtraHosp(${i})" title="Borrar" class="w-6 h-6 text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>` : '<div class="w-12"></div>'}
+                </div>`).join('');
+        }
+
+        window.editarExtraHosp = function(i) {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const it = cuentaHospExtra[i];
+            if (!it) return;
+            const nuevoNombre = prompt("Nombre del insumo:", it.n);
+            if (nuevoNombre === null) return;
+            if (!nuevoNombre.trim()) { showToast("El nombre no puede quedar vacío.", true); return; }
+            const nuevoValorTxt = prompt("Valor unitario (solo números):", it.v);
+            if (nuevoValorTxt === null) return;
+            const nuevoValor = parseInt(nuevoValorTxt) || 0;
+            if (nuevoValor <= 0) { showToast("Escribe un valor válido.", true); return; }
+            const grupoTxt = prompt("¿Va en 'Insumos' o 'Laboratorio'? Escribe L para Laboratorio, o deja vacío para Insumos:", it.g === 'Laboratorio' ? 'L' : '');
+            if (grupoTxt === null) return;
+            it.n = nuevoNombre.trim();
+            it.v = nuevoValor;
+            it.g = (grupoTxt.trim().toLowerCase().startsWith('l')) ? 'Laboratorio' : 'Insumos';
+            marcarCambioCuentaHosp();
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+            showToast("Insumo actualizado.");
+        };
+
+        window.cambiarExtraHosp = function(i, val) { cuentaHospExtra[i].cant = parseInt(val) || 0; recalcularCuentaHosp(); };
+        window.pasoExtraHosp = function(i, delta) {
+            if (!cuentaHospExtra[i]) return;
+            cuentaHospExtra[i].cant = Math.max(0, (cuentaHospExtra[i].cant || 0) + delta);
+            marcarCambioCuentaHosp();
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+        };
+        window.quitarExtraHosp = function(i) {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!confirm(`¿Borrar "${cuentaHospExtra[i] ? cuentaHospExtra[i].n : 'este insumo'}" de la cuenta?`)) return;
+            cuentaHospExtra.splice(i, 1);
+            marcarCambioCuentaHosp();
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+        };
+
+        window.agregarInsumoExtraHosp = function() {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const n = (document.getElementById('cta-extra-nombre').value || '').trim();
+            const v = parseInt(document.getElementById('cta-extra-valor').value) || 0;
+            const g = document.getElementById('cta-extra-grupo').value === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
+            if (!n) { showToast("Escribe el nombre del insumo.", true); return; }
+            if (v <= 0) { showToast("Escribe un valor válido.", true); return; }
+            cuentaHospExtra.push({ n, v, cant: 1, g });
+            marcarCambioCuentaHosp();
+            document.getElementById('cta-extra-nombre').value = '';
+            document.getElementById('cta-extra-valor').value = '';
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+            showToast("Insumo agregado a " + g + ".");
+        };
+
+        window.recalcularCuentaHosp = function() {
+            let subMascotas = 0, subLab = 0;
+            CATALOGO_CUENTAS.forEach((it, idx) => {
+                const el = document.getElementById('cta-cant-' + idx);
+                const cant = el ? (parseInt(el.value) || 0) : 0;
+                const sub = cant * it.v;
+                const cell = document.getElementById('cta-sub-' + idx);
+                if (cell) cell.innerText = cant ? fmtCOPHosp(sub) : '—';
+                if (it.g === 'Laboratorio') subLab += sub; else subMascotas += sub;
+            });
+            cuentaHospExtra.forEach(it => { const s = (it.cant || 0) * it.v; if (it.g === 'Laboratorio') subLab += s; else subMascotas += s; });
+            const cx = parseInt(document.getElementById('cta-cx').value) || 0;
+            const total = subMascotas + cx + subLab;
+            const deposito = parseInt(document.getElementById('cta-deposito').value) || 0;
+            document.getElementById('cta-sub-mascotas').innerText = fmtCOPHosp(subMascotas);
+            document.getElementById('cta-sub-cx').innerText = fmtCOPHosp(cx);
+            document.getElementById('cta-sub-lab').innerText = fmtCOPHosp(subLab);
+            document.getElementById('cta-total').innerText = fmtCOPHosp(total);
+            document.getElementById('cta-resta').innerText = fmtCOPHosp(total - deposito);
+            return total;
+        };
+
+        function recogerCuentaHosp() {
+            const items = [];
+            let subMascotas = 0, subLab = 0;
+            CATALOGO_CUENTAS.forEach((it, idx) => {
+                const el = document.getElementById('cta-cant-' + idx);
+                const cant = el ? (parseInt(el.value) || 0) : 0;
+                if (cant > 0) { items.push({ n: it.n, v: it.v, cant, g: it.g }); if (it.g === 'Laboratorio') subLab += cant * it.v; else subMascotas += cant * it.v; }
+            });
+            cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) { const g = it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos'; items.push({ n: it.n, v: it.v, cant: it.cant, g, x: true }); if (g === 'Laboratorio') subLab += it.cant * it.v; else subMascotas += it.cant * it.v; } });
+            const cx = parseInt(document.getElementById('cta-cx').value) || 0;
+            const total = subMascotas + cx + subLab;
+            const deposito = parseInt(document.getElementById('cta-deposito').value) || 0;
+            return {
+                paciente: document.getElementById('cta-paciente').value.trim(),
+                historia: document.getElementById('cta-historia').value.trim(),
+                propietario: document.getElementById('cta-propietario').value.trim(),
+                fecha: document.getElementById('cta-fecha').value,
+                fechaEgreso: document.getElementById('cta-fecha-egreso').value,
+                items, cx, subMascotas, subLab, deposito, total, resta: total - deposito,
+                nombre: document.getElementById('cta-paciente').value.trim()
+            };
+        }
+
+        function volcarCuentaHosp(data) {
+            document.getElementById('cta-paciente').value = data.paciente || '';
+            document.getElementById('cta-historia').value = data.historia || '';
+            document.getElementById('cta-propietario').value = data.propietario || '';
+            document.getElementById('cta-fecha').value = data.fecha || '';
+            document.getElementById('cta-fecha-egreso').value = data.fechaEgreso || '';
+            document.getElementById('cta-cx').value = data.cx || '';
+            document.getElementById('cta-deposito').value = data.deposito || '';
+            CATALOGO_CUENTAS.forEach((it, idx) => { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = ''; });
+            cuentaHospExtra = [];
+            (data.items || []).forEach(it => {
+                if (it.x) { cuentaHospExtra.push({ n: it.n, v: it.v, cant: it.cant, g: it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos' }); return; }
+                const idx = CATALOGO_CUENTAS.findIndex(c => c.n === it.n && c.g === it.g);
+                if (idx >= 0) { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = it.cant; }
+                else { cuentaHospExtra.push({ n: it.n, v: it.v, cant: it.cant, g: it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos' }); }
+            });
+            document.getElementById('cta-ult-edicion').innerHTML = (data.modificadoPor)
+                ? `<i class="fa-solid fa-user-pen"></i> Última edición: <b>${data.modificadoPor}</b>${data.actualizado ? ' · ' + new Date(data.actualizado).toLocaleString('es-CO') : ''}`
+                : '';
+            cuentaHospHistorial = (data.historial || []).slice();
+            renderHistorialHosp();
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+            validarDatosCuentaHosp();
+        }
+
+        window.openCuentasHosp = function() {
+            if (!tienePermiso('cuentas_hosp')) { showToast("No tienes acceso a este módulo.", true); return; }
+            ['inventory-screen', 'orders-screen', 'history-screen', 'admin-screen', 'formatos-screen', 'laboratorio-screen', 'lab-guardadas-screen', 'evidencias-screen', 'farmacia-screen', 'agenda-screen', 'dashboard-screen'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+            document.getElementById('cuentas-screen').classList.remove('hidden');
+            if (!cuentaHospListo) {
+                document.getElementById('cuentas-screen').addEventListener('input', marcarCambioCuentaHosp);
+                window.addEventListener('beforeunload', (e) => { if (cuentaHospDirty) { e.preventDefault(); e.returnValue = ''; } });
+                cuentaHospListo = true;
+            }
+            if (document.getElementById('cta-catalogo').children.length === 0) renderCatalogoCuentasHosp();
+            if (cuentaHospId === null && !document.getElementById('cta-fecha').value) {
+                const d = new Date();
+                document.getElementById('cta-fecha').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+            validarDatosCuentaHosp();
+            abrirCuentasGuardadasHosp();
+            aplicarModoLectura('cuentas-screen', 'cuentas_hosp');
+        };
+
+        window.nuevaCuentaHosp = function() {
+            cuentaHospId = null;
+            cuentaHospEsNueva = true;
+            cuentaHospDirty = false;
+            clearTimeout(cuentaHospAutosaveTimer);
+            cuentaHospExtra = [];
+            document.getElementById('cta-paciente').value = '';
+            document.getElementById('cta-historia').value = '';
+            document.getElementById('cta-propietario').value = '';
+            document.getElementById('cta-cx').value = '';
+            document.getElementById('cta-deposito').value = '';
+            document.getElementById('cta-fecha-egreso').value = '';
+            document.getElementById('cta-buscar').value = '';
+            cuentaHospExtra = [];
+            cuentaHospHistorial = [];
+            renderHistorialHosp();
+            document.getElementById('cta-ult-edicion').innerHTML = '';
+            var estN = document.getElementById('cta-estado-guardado'); if (estN) estN.innerHTML = '';
+            CATALOGO_CUENTAS.forEach((it, idx) => { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = ''; });
+            const d = new Date();
+            document.getElementById('cta-fecha').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            filtrarCatalogoHosp();
+            renderExtraCuentasHosp();
+            recalcularCuentaHosp();
+            validarDatosCuentaHosp();
+            document.getElementById('cta-lista').classList.add('hidden');
+            showToast("Cuenta nueva lista.");
+        };
+
+        window.guardarCuentaHosp = async function() {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const data = recogerCuentaHosp();
+            if (!data.fecha || !data.paciente || !data.propietario || !data.historia) {
+                showToast("Completa Fecha de ingreso, Paciente, Propietario e Historia clínica.", true);
+                validarDatosCuentaHosp();
+                return;
+            }
+            if (!data.fechaEgreso) { showToast("Falta la Fecha de egreso / salida.", true); return; }
+            if (!data.items.length) { showToast("Agrega al menos un insumo con cantidad.", true); return; }
+            const btn = document.getElementById('btn-guardar-cuenta');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const id = cuentaHospId || ("cuenta_" + Date.now());
+                const ahora = new Date().toISOString();
+                data.actualizado = ahora;
+                data.modificadoPor = usuarioSesion ? usuarioSesion.nombre : '';
+                data.modificadoCorreo = usuarioSesion ? usuarioSesion.correo : '';
+                if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
+                // Historial completo de cambios (se conserva y se le agrega una entrada)
+                cuentaHospHistorial.push({
+                    por: usuarioSesion ? usuarioSesion.nombre : '',
+                    correo: usuarioSesion ? usuarioSesion.correo : '',
+                    fecha: ahora,
+                    accion: cuentaHospEsNueva ? 'Creó' : 'Modificó',
+                    total: data.total || 0
+                });
+                if (cuentaHospHistorial.length > 200) cuentaHospHistorial = cuentaHospHistorial.slice(-200);
+                data.historial = cuentaHospHistorial;
+                await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
+                cuentaHospId = id;
+                cuentaHospEsNueva = false;
+                cuentaHospDirty = false;
+                clearTimeout(cuentaHospAutosaveTimer);
+                var estG = document.getElementById('cta-estado-guardado'); if (estG) estG.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-cloud"></i> Guardado</span>';
+                renderHistorialHosp();
+                showToast("Cuenta guardada en la nube.");
+            } catch (error) {
+                showToast("No se pudo guardar. Revisa la conexión o las reglas de Firestore.", true);
+                console.error(error);
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube';
+            }
+        };
+
+        window.limpiarFiltroCuentasHosp = function() {
+            document.getElementById('cta-desde').value = '';
+            document.getElementById('cta-hasta').value = '';
+            abrirCuentasGuardadasHosp();
+        };
+
+        window.abrirCuentasGuardadasHosp = async function() {
+            const panel = document.getElementById('cta-lista');
+            const cont = document.getElementById('cta-lista-container');
+            panel.classList.remove('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "cuentas_hospital"));
+                let items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                const desde = document.getElementById('cta-desde').value;
+                const hasta = document.getElementById('cta-hasta').value;
+                const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
+                if (desde) items = items.filter(it => fechaDe(it) >= desde);
+                if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
+                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>'; return; }
+                items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
+                cont.innerHTML = '';
+                items.forEach(it => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
+                    row.innerHTML = `
+                        <div class="min-w-0">
+                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                            <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
+                            ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="cargarCuentaHosp('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                            <button onclick="descargarCuentaHospPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button onclick="eliminarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="js-editar px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>`;
+                    cont.appendChild(row);
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        };
+
+        window.cargarCuentaHosp = async function(id) {
+            try {
+                const snap = await getDoc(doc(db, "cuentas_hospital", id));
+                if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
+                cuentaHospId = id;
+                cuentaHospEsNueva = false;
+                cuentaHospDirty = false;
+                clearTimeout(cuentaHospAutosaveTimer);
+                if (document.getElementById('cta-catalogo').children.length === 0) renderCatalogoCuentasHosp();
+                volcarCuentaHosp(snap.data());
+                var estC = document.getElementById('cta-estado-guardado'); if (estC) estC.innerHTML = '';
+                document.getElementById('cta-lista').classList.add('hidden');
+                document.getElementById('cuentas-screen').scrollIntoView({ behavior: 'smooth' });
+                showToast("Cuenta cargada.");
+            } catch (error) { showToast("No se pudo abrir la cuenta.", true); console.error(error); }
+        };
+
+        window.eliminarCuentaHosp = async function(id, nombre) {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!confirm(`¿Eliminar la cuenta de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
+            try {
+                await deleteDoc(doc(db, "cuentas_hospital", id));
+                if (cuentaHospId === id) nuevaCuentaHosp();
+                showToast("Cuenta eliminada.");
+                abrirCuentasGuardadasHosp();
+            } catch (error) { showToast("No se pudo eliminar.", true); console.error(error); }
+        };
+
+        function construirCuentaHospPDF(d) {
+            if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const AZUL = [21, 67, 144], GRIS = [130, 130, 130], BORDE = [180, 180, 180], ENCA = [240, 243, 248];
+            const PW = pdf.internal.pageSize.getWidth(), PH = pdf.internal.pageSize.getHeight();
+            const M = 40, W = PW - 2 * M;
+            let y;
+            const altoLogo = logoPDF(pdf, M, 24, 78);
+            pdf.setFont(undefined, 'bold'); pdf.setFontSize(13); pdf.setTextColor(...AZUL);
+            pdf.text("CUENTA DE COBRO — HOSPITALIZACIÓN", M + 90, 44);
+            pdf.setFont(undefined, 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(...GRIS);
+            pdf.text("Centro de Especialistas Veterinarios · Carrera 22ª N°66-44 · Línea 310 831 6247", M + 90, 58);
+            y = Math.max(80, 24 + altoLogo + 10);
+
+            pdf.autoTable({
+                startY: y,
+                body: [
+                    ["PACIENTE", d.paciente || '—', "HISTORIA CLÍNICA", d.historia || '—'],
+                    ["PROPIETARIO", d.propietario || '—', "FECHA INGRESO", d.fecha || '—'],
+                    ["FECHA EGRESO", d.fechaEgreso || '—', "", ""],
+                ],
+                theme: 'grid', styles: { fontSize: 8, cellPadding: 4, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
+                columnStyles: { 0: { fontStyle: 'bold', fillColor: ENCA, textColor: AZUL, cellWidth: 100 }, 2: { fontStyle: 'bold', fillColor: ENCA, textColor: AZUL, cellWidth: 100 } },
+                margin: { left: M, right: M }
+            });
+            y = pdf.lastAutoTable.finalY + 10;
+
+            const filas = (d.items || []).map(it => [it.n, String(it.cant), fmtCOPHosp(it.v), fmtCOPHosp(it.v * it.cant)]);
+            pdf.autoTable({
+                startY: y,
+                head: [["INSUMO / SERVICIO", "CANT.", "V. UNITARIO", "SUBTOTAL"]],
+                body: filas.length ? filas : [["(sin insumos)", "", "", ""]],
+                theme: 'grid', styles: { fontSize: 8, cellPadding: 3, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
+                headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold' },
+                columnStyles: { 1: { halign: 'center', cellWidth: 45 }, 2: { halign: 'right', cellWidth: 80 }, 3: { halign: 'right', cellWidth: 90 } },
+                margin: { left: M, right: M }
+            });
+            y = pdf.lastAutoTable.finalY + 8;
+
+            const resumen = [
+                ["MASCOTAS (insumos)", fmtCOPHosp(d.subMascotas || 0)],
+                ["CX (cirugía)", fmtCOPHosp(d.cx || 0)],
+                ["LABORATORIO", fmtCOPHosp(d.subLab || 0)],
+                ["TOTAL", fmtCOPHosp(d.total || 0)],
+                ["DEPÓSITO", fmtCOPHosp(d.deposito || 0)],
+                ["RESTA POR PAGAR", fmtCOPHosp(d.resta || 0)],
+            ];
+            pdf.autoTable({
+                startY: y, body: resumen, theme: 'grid',
+                styles: { fontSize: 9, cellPadding: 5, lineColor: BORDE, lineWidth: 0.5 },
+                columnStyles: { 0: { fontStyle: 'bold', fillColor: ENCA, textColor: AZUL, cellWidth: W - 130, halign: 'right' }, 1: { halign: 'right', fontStyle: 'bold', cellWidth: 130 } },
+                margin: { left: M, right: M },
+                didParseCell: function (data) {
+                    if (data.row.index === 3) { data.cell.styles.fillColor = [235, 239, 246]; }
+                    if (data.row.index === 5) { data.cell.styles.fillColor = AZUL; data.cell.styles.textColor = 255; }
+                }
+            });
+
+            const totalPag = pdf.internal.getNumberOfPages();
+            for (let p = 1; p <= totalPag; p++) {
+                pdf.setPage(p);
+                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.6); pdf.line(M, PH - 34, M + W, PH - 34);
+                pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(...GRIS);
+                pdf.text("Página " + p + " de " + totalPag, PW - M, PH - 22, { align: 'right' });
+            }
+            return pdf;
+        }
+
+        window.exportarCuentaHospPDF = function() {
+            const d = recogerCuentaHosp();
+            if (!d.paciente && !d.historia) { showToast("Escribe al menos el paciente o la historia.", true); return; }
+            showToast("Generando PDF...");
+            const pdf = construirCuentaHospPDF(d);
+            if (!pdf) return;
+            pdf.save(`Cuenta_${(d.paciente || 'paciente').replace(/[^a-zA-Z0-9]/g, '_')}_${d.fecha || ''}.pdf`);
+        };
+
+        window.descargarCuentaHospPDF = async function(id) {
+            try {
+                showToast("Generando PDF...");
+                const snap = await getDoc(doc(db, "cuentas_hospital", id));
+                if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
+                const d = snap.data();
+                const pdf = construirCuentaHospPDF(d);
+                if (!pdf) return;
+                pdf.save(`Cuenta_${(d.paciente || 'paciente').replace(/[^a-zA-Z0-9]/g, '_')}_${d.fecha || ''}.pdf`);
+            } catch (error) { showToast("No se pudo generar el PDF.", true); console.error(error); }
+        };
+
         // ==========================================
         // 8. BORRADORES AUTOMÁTICOS DE FORMATOS
         // ==========================================
@@ -5935,7 +6654,13 @@
             neuro:      { pantalla: 'fmt-neuro',      etiqueta: 'valoración neurológica',
                           recoger: () => recogerNeuro(),   volcar: d => volcarNeuro(d) },
             laboratorio:{ pantalla: 'laboratorio-screen', etiqueta: 'cuenta de cobro',
-                          recoger: () => recogerBorradorLab(), volcar: d => volcarBorradorLab(d) }
+                          recoger: () => recogerBorradorLab(), volcar: d => volcarBorradorLab(d) },
+            consulta:   { pantalla: 'fmt-consulta', etiqueta: 'consulta clínica',
+                          recoger: () => recogerConsulta(), volcar: d => volcarConsulta(d) },
+            endoscopia: { pantalla: 'fmt-endoscopia', etiqueta: 'endoscopia de recto y colon',
+                          recoger: () => endoRecoger(ENDO_REG.baja), volcar: d => endoVolcar(ENDO_REG.baja, d) },
+            endoscopia_alta: { pantalla: 'fmt-endoscopia-alta', etiqueta: 'endoscopia del tracto superior',
+                          recoger: () => endoRecoger(ENDO_REG.alta), volcar: d => endoVolcar(ENDO_REG.alta, d) }
         };
         let borradorTimer = null;
         let hayCambiosSinGuardar = false;
@@ -6088,7 +6813,7 @@
             });
 
             // Al guardar de verdad, el pendiente ya no hace falta
-            [['guardarFormato','monitoreo'], ['guardarOrto','ortopedico'], ['guardarNeuro','neuro']].forEach(([fn, tipo]) => {
+            [['guardarFormato','monitoreo'], ['guardarOrto','ortopedico'], ['guardarNeuro','neuro'], ['guardarConsulta','consulta'], ['guardarEndoscopia','endoscopia'], ['guardarEndoscopiaAlta','endoscopia_alta']].forEach(([fn, tipo]) => {
                 if (!window[fn]) return;
                 const original = window[fn];
                 window[fn] = async function() {
@@ -6098,7 +6823,7 @@
             });
 
             // "Nuevo paciente" también limpia lo pendiente
-            [['nuevoFormato','monitoreo'], ['nuevoOrto','ortopedico'], ['nuevoNeuro','neuro']].forEach(([fn, tipo]) => {
+            [['nuevoFormato','monitoreo'], ['nuevoOrto','ortopedico'], ['nuevoNeuro','neuro'], ['nuevoConsulta','consulta'], ['nuevoEndoscopia','endoscopia'], ['nuevoEndoscopiaAlta','endoscopia_alta']].forEach(([fn, tipo]) => {
                 if (!window[fn]) return;
                 const original = window[fn];
                 window[fn] = function() {
@@ -6109,7 +6834,7 @@
             });
 
             // Al abrir cada formato, revisar si quedó algo pendiente
-            [['openMonitoreo','monitoreo'], ['openOrtopedico','ortopedico'], ['openNeuro','neuro'], ['openLaboratorio','laboratorio']].forEach(([fn, tipo]) => {
+            [['openMonitoreo','monitoreo'], ['openOrtopedico','ortopedico'], ['openNeuro','neuro'], ['openLaboratorio','laboratorio'], ['openConsulta','consulta'], ['openEndoscopia','endoscopia'], ['openEndoscopiaAlta','endoscopia_alta']].forEach(([fn, tipo]) => {
                 if (!window[fn]) return;
                 const original = window[fn];
                 window[fn] = function() {
