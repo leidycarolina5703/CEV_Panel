@@ -325,6 +325,11 @@
                 <div class="w-full sm:w-3/4">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Seleccionar Insumo</label>
                     
+                    <div class="relative mb-2">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="order-item-search" autocomplete="off" oninput="filtrarSelectInsumos()" placeholder="Escribe para buscar el insumo..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
+                    </div>
+
                     <div id="select-container" class="flex flex-col gap-1 w-full">
                         <div class="flex items-center gap-2 w-full">
                             <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
@@ -1787,6 +1792,7 @@
             document.getElementById('admin-screen').classList.add('hidden');
             document.getElementById('formatos-screen').classList.remove('hidden');
             initFormatosApp();
+            if (typeof marcarPendientesFormatos === 'function') marcarPendientesFormatos();
         };
 
         window.goToDashboard = function() {
@@ -2228,19 +2234,19 @@
             { name: "Perfusora de 20", ideal: 2 },
 
             // Caja de jeringas  (post-festivo: 1/3/5 mL → 30)
-            { name: "Jeringa de 1mL", ideal: 20 },
-            { name: "Jeringa de 3mL", ideal: 20 },
-            { name: "Jeringa de 5mL", ideal: 20 },
-            { name: "Jeringa de 10mL", ideal: 10 },
-            { name: "Jeringa de 20mL", ideal: 5 },
-            { name: "Jeringa de 50mL", ideal: 2 },
-            { name: "Jeringa de 60mL", ideal: 2 },
+            { name: "Jeringa de 1ml", ideal: 20 },
+            { name: "Jeringa de 3ml", ideal: 20 },
+            { name: "Jeringa de 5ml", ideal: 20 },
+            { name: "Jeringa de 10ml", ideal: 10 },
+            { name: "Jeringa de 20ml", ideal: 5 },
+            { name: "Jeringa de 50ml", ideal: 2 },
+            { name: "Jeringa de 60ml", ideal: 2 },
 
             // Stand 3 — Sueros  (post-festivo: Hartmann 500 mL → 15)
-            { name: "Hartmann 500 mL", ideal: 10 },
-            { name: "Solución salina 500mL", ideal: 5 },
-            { name: "Solución salina 250mL", ideal: 5 },
-            { name: "Solución salina 100mL", ideal: 5 },
+            { name: "Hartmann 500 ml", ideal: 10 },
+            { name: "Solución salina 500ml", ideal: 5 },
+            { name: "Solución salina 250ml", ideal: 5 },
+            { name: "Solución salina 100ml", ideal: 5 },
 
             // Stand 4  (post-festivo: Hartmann 1 L → 10)
             { name: "Solución Hartmann 1 L", ideal: 5 },
@@ -2584,22 +2590,28 @@
         // 2. SISTEMA DE PEDIDOS A FARMACIA
         // ==========================================
         let listaInsumosFarmacia = [
-            "Adrenalina ampolla", "Aguja", "Ampicilina ampolla x 10 mL", "Anestesia inhalada (Isorano)", 
-            "Arena", "Atropina", "Bladuril", "Buretrol", "Carbón activado", "Catéter", "Cefalexina 500 mg", 
-            "Cefalotina 1 mL", "Ceftriaxona ampolla x 10 mL", "Cerenia 1 mL iny.", "Cloruro de sodio", 
-            "Cobán (vendaje vet)", "Complejo B", "Compresas", "Dexametasona", "Dextrosa", "Dipirona 1 mL", 
-            "Ditopax", "Enalapril", "Enema", "Euthanex 1 mL", "Extensión", "Flunarizina", 
-            "Fluimucil ampolla x 3 mL", "Fortiflora", "Gluconato de calcio", "Guante estéril (cirugía)", 
-            "Guantes par (examen)", "Hartman 1 L", "Hartman 500 mL (suero)", "Hidromorfona 1 mL", 
-            "Jeringa 1-3-5 mL", "Jeringa 10-20-60 mL", "Kit de nebulización", "Lidocaína 1 mL", "Lyrica", 
-            "Llave 3 vías", "Lípidos", "Meloxicam 1 mL iny.", "Metilprednisolona ampolla x 10 mL", 
-            "Nebulización", "Neuroprotección (vitamina A, E, C, Omega, Ginkgo)", "Nutra Life (1 cucharada = 11 g)", 
-            "Omeprazol 1 mL iny.", "Ondansetrón ampolla x 4 mL", "Pañal o tapete", "Perfusora 20/50", 
-            "Periactín", "Potasio", "Pregabalina 25", "Pregabalina 75", "Pregabalina mL", "Propofol 1 mL", 
-            "Sonda", "Sulfazalazina", "Sutura absorbible", "Tapón", "Tiamina", "Tramadol 1 mL", 
-            "Trazodona tableta", "Trihepat", "Venda de algodón", "Venobomba", "Venoclisis", "Vestido L", 
-            "Vestido M", "Vestido S", "Vestido XL", "Vestido XS", "Vestido XXL", "Vitamina K (Kavitex)", 
-            "Xilacina 1 mL"
+            "Catéter 24", "Catéter 22", "Catéter 20", "Catéter 18",
+            "Catéter 16", "Catéter 14", "Llave 3 vías", "Tapones",
+            "Pericraneal pequeño", "Pericraneal grueso", "Microgoteo", "Macrogoteo",
+            "Buretrol", "Venobomba", "Máscara de nebulización", "Sonda gato",
+            "Extensiones", "Sonda 5", "Sonda 6", "Sonda 8",
+            "Sonda 10", "Sonda 12", "Sonda 14", "Sonda 16",
+            "Sonda 18", "Vestido XS", "Vestido S", "Vestido M",
+            "Vestido L", "Vestido XL", "Metronidazol", "Pregabalina 75 mg",
+            "Trimetoprim", "Esomeprazol", "Bladuril", "Mirtazapina",
+            "Ursacol", "Flunarizina", "Cefalexina", "Sulfadiazina",
+            "Trazodona", "Pregabalina 25 mg", "Tramadol", "Domperidona (Domevoro)",
+            "Metronidazol vial 100 mg", "Ampicilina", "Ceftriaxona", "Omeprazol inyectable",
+            "Ampicilina + sulbactam", "Cefalotina", "Gluconato de calcio", "Cloruro de potasio",
+            "Ginkgo biloba", "Melatonina", "Omega 3", "Vitamina C",
+            "Vitamina E", "Ampolla de metilprednisolona", "Ondansetrón", "Ampolla Fluimucil",
+            "Complejo B", "Tiamina", "Cloruro de sodio (ampolla)", "Vendaje Koban",
+            "Vendaje de gasa", "Vendaje Algodón", "Perfusora de 50", "Perfusora de 20",
+            "Jeringa de 1ml", "Jeringa de 3ml", "Jeringa de 5ml", "Jeringa de 10ml",
+            "Jeringa de 20ml", "Jeringa de 50ml", "Jeringa de 60ml", "Hartmann 500 ml",
+            "Solución salina 500ml", "Solución salina 250ml", "Solución salina 100ml", "Solución Hartmann 1 L",
+            "Gelofusine", "Agua estéril", "Libra I/D Canino", "Libra I/D Gato",
+            "Arena gato", "Tapetes"
         ];
 
         let pedidoActual = [];
@@ -2613,18 +2625,30 @@
             }
         }
 
-        window.actualizarSelectInsumos = function() {
+        window.actualizarSelectInsumos = function(filtro) {
             const select = document.getElementById('order-item-select');
+            const q = (filtro || '').trim().toLowerCase();
             select.innerHTML = '<option value="">Seleccione un insumo...</option>';
-            listaInsumosFarmacia.forEach(insumo => {
-                const opt = document.createElement('option');
-                opt.value = insumo;
-                opt.textContent = insumo;
-                select.appendChild(opt);
-            });
+            listaInsumosFarmacia
+                .filter(insumo => !q || insumo.toLowerCase().includes(q))
+                .forEach(insumo => {
+                    const opt = document.createElement('option');
+                    opt.value = insumo;
+                    opt.textContent = insumo;
+                    select.appendChild(opt);
+                });
+            if (!q) { const s = document.getElementById('order-item-search'); if (s) s.value = ''; }
             document.getElementById('btn-delete-custom-list').classList.add('hidden');
             const helpText = document.getElementById('custom-item-help');
             if (helpText) helpText.classList.add('hidden');
+        }
+
+        window.filtrarSelectInsumos = function() {
+            const q = (document.getElementById('order-item-search').value || '').trim().toLowerCase();
+            actualizarSelectInsumos(q);
+            const select = document.getElementById('order-item-select');
+            const matches = listaInsumosFarmacia.filter(i => !q || i.toLowerCase().includes(q));
+            if (q && matches.length === 1) { select.value = matches[0]; verificarInsumoPersonalizado(); }
         }
 
         window.verificarInsumoPersonalizado = function() {
@@ -3551,6 +3575,7 @@
             document.getElementById('fmt-endoscopia').classList.add('hidden');
             document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-selector').classList.remove('hidden');
+            if (typeof marcarPendientesFormatos === 'function') marcarPendientesFormatos();
         };
 
         function prepararFormularioMonitoreo() {
@@ -6100,10 +6125,32 @@
                 data.modificadoPor = usuarioSesion ? usuarioSesion.nombre : '';
                 data.modificadoCorreo = usuarioSesion ? usuarioSesion.correo : '';
                 if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
-                data.historial = cuentaHospHistorial; // el autoguardado NO agrega historial
+                // Historial también con autoguardado, pero agrupando ediciones seguidas:
+                // nueva entrada solo si cambió de persona o pasaron más de 2 minutos; si no, actualiza la última.
+                const nombreU = usuarioSesion ? usuarioSesion.nombre : '';
+                const ultima = cuentaHospHistorial[cuentaHospHistorial.length - 1];
+                const nuevaEntrada = !ultima || ultima.por !== nombreU || !ultima.fecha ||
+                    (Date.now() - new Date(ultima.fecha).getTime() > 120000);
+                if (nuevaEntrada) {
+                    cuentaHospHistorial.push({
+                        por: nombreU,
+                        correo: usuarioSesion ? usuarioSesion.correo : '',
+                        fecha: ahora,
+                        accion: cuentaHospEsNueva ? 'Creó' : 'Modificó',
+                        total: data.total || 0,
+                        auto: true
+                    });
+                    if (cuentaHospEsNueva) cuentaHospEsNueva = false;
+                } else {
+                    ultima.fecha = ahora;
+                    ultima.total = data.total || 0;
+                }
+                if (cuentaHospHistorial.length > 200) cuentaHospHistorial = cuentaHospHistorial.slice(-200);
+                data.historial = cuentaHospHistorial;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
                 cuentaHospId = id;
                 cuentaHospDirty = false;
+                renderHistorialHosp();
                 const est = document.getElementById('cta-estado-guardado');
                 if (est) est.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-cloud"></i> Guardado automáticamente</span>';
             } catch (e) { console.error('autoguardado', e); }
@@ -6720,6 +6767,34 @@
             const b = document.getElementById('borrador-aviso-' + tipo);
             if (b) b.classList.add('hidden');
         }
+
+        // Marca con etiqueta "Pendiente" las tarjetas de formatos que tengan un borrador sin guardar
+        const CARD_POR_TIPO_FMT = {
+            monitoreo: 'card-fmt-monitoreo', ortopedico: 'card-fmt-ortopedico', neuro: 'card-fmt-neuro',
+            consulta: 'card-fmt-consulta', endoscopia: 'card-fmt-endoscopia', endoscopia_alta: 'card-fmt-endoscopia-alta'
+        };
+        window.marcarPendientesFormatos = async function() {
+            const u = auth.currentUser;
+            if (!u) return;
+            for (const tipo of Object.keys(CARD_POR_TIPO_FMT)) {
+                const card = document.getElementById(CARD_POR_TIPO_FMT[tipo]);
+                if (!card) continue;
+                card.classList.add('relative');
+                let badge = document.getElementById('pendiente-badge-' + tipo);
+                try {
+                    const snap = await getDoc(doc(db, "borradores", `${u.uid}_${tipo}`));
+                    if (snap.exists()) {
+                        if (!badge) {
+                            badge = document.createElement('span');
+                            badge.id = 'pendiente-badge-' + tipo;
+                            badge.className = 'absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-300 z-10';
+                            badge.innerHTML = '<i class="fa-solid fa-clock"></i> Pendiente';
+                            card.appendChild(badge);
+                        }
+                    } else if (badge) { badge.remove(); }
+                } catch (e) { /* ignorar */ }
+            }
+        };
 
         // Al entrar al formato, revisa si quedó algo pendiente
         async function revisarBorrador(tipo) {
@@ -7670,9 +7745,16 @@
                 if (r && r.ok) {
                     showToast("Cuenta enviada a " + email);
                     try {
-                        const id = cuentaIdActual || String(Date.now());
-                        await setDoc(doc(db, "cuentas_laboratorio", id), { ...d, emailPropietario: email, creado: new Date().toISOString() });
-                        cuentaIdActual = id;
+                        // Cada envío queda guardado como su propio registro (no sobrescribe los anteriores)
+                        const id = "lab_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                        await setDoc(doc(db, "cuentas_laboratorio", id), {
+                            ...d,
+                            emailPropietario: email,
+                            enviado: true,
+                            fechaEnvio: new Date().toISOString(),
+                            enviadoPor: usuarioSesion ? usuarioSesion.nombre : '',
+                            creado: new Date().toISOString()
+                        });
                     } catch (e) { console.error(e); }
                     if (typeof limpiarBorrador === 'function') await limpiarBorrador('laboratorio');
                 } else {
@@ -7797,7 +7879,7 @@
                         const safeNombre = (it.deudorNombre || '').replace(/'/g, "\\'");
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}</p>
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}${it.enviado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700"><i class="fa-solid fa-envelope"></i> Enviada</span>' : ''}</p>
                                 <p class="text-xs text-gray-500 truncate">Propietario: ${it.deudorNombre || '—'} · <span class="font-semibold text-teal-700">$${fmtMiles(it.valor)}</span></p>
                             </div>
                             <div class="flex gap-2 shrink-0">
