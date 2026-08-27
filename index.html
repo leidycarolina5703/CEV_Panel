@@ -194,16 +194,6 @@
                 <p class="text-gray-500 text-center text-sm">Gestión, conteo y control diario del inventario clínico.</p>
             </button>
 
-            <button id="card-evidencias" onclick="openEvidencias()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
-                <div class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-pills"></i>
-                </div>
-                <div class="text-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Evidencias Medicamentos</h2>
-                    <p class="text-gray-500 text-center text-sm">Evidencia diaria con foto del alistamiento por paciente.</p>
-                </div>
-            </button>
-
             <button id="card-pedidos" onclick="openOrders()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
                 <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fa-solid fa-cart-plus"></i>
@@ -211,6 +201,16 @@
                 <div class="text-center">
                     <h2 class="text-xl font-bold text-gray-800 mb-2">Pedido de Insumos</h2>
                     <p class="text-gray-500 text-center text-sm">Solicita insumos y envía el pedido por Gmail.</p>
+                </div>
+            </button>
+
+            <button id="card-evidencias" onclick="openEvidencias()" class="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-600 transition-all border border-gray-200 flex flex-col items-center justify-center gap-4 group transform hover:-translate-y-1">
+                <div class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-4xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-pills"></i>
+                </div>
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Evidencias Medicamentos</h2>
+                    <p class="text-gray-500 text-center text-sm">Evidencia diaria con foto del alistamiento por paciente.</p>
                 </div>
             </button>
         </div>
@@ -309,7 +309,7 @@
                 </button>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-blue-600 flex items-center justify-center sm:justify-start gap-2">
-                        Pedido a Farmacia
+                        Pedido de farmacia
                     </h1>
                     <p class="text-gray-500 text-xs sm:text-sm mt-1">Crea tu lista y envíala en PDF por correo</p>
                 </div>
@@ -327,12 +327,13 @@
                     
                     <div class="relative mb-2">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="order-item-search" autocomplete="off" oninput="filtrarSelectInsumos()" placeholder="Escribe para buscar el insumo..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
+                        <input type="text" id="order-item-search" autocomplete="off" oninput="filtrarSelectInsumos()" onfocus="filtrarSelectInsumos()" onblur="setTimeout(function(){var d=document.getElementById('order-item-dropdown');if(d)d.classList.add('hidden');},180)" placeholder="Escribe para buscar el insumo..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
+                        <div id="order-item-dropdown" class="hidden absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
                     </div>
 
                     <div id="select-container" class="flex flex-col gap-1 w-full">
                         <div class="flex items-center gap-2 w-full">
-                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
+                            <select id="order-item-select" onchange="verificarInsumoPersonalizado()" class="hidden w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 bg-gray-50 text-sm">
                                 <option value="">Seleccione...</option>
                             </select>
                             
@@ -1719,8 +1720,8 @@
         // ▸ Módulos que se pueden asignar con casillas a cada usuario.
         const MODULOS = [
             { id: "insumos",      nombre: "Registro de Insumos",  icono: "fa-clipboard-check", card: "card-insumos",     grupo: "Farmacia" },
-            { id: "evidencias",   nombre: "Evidencias Medicamentos", icono: "fa-pills",        card: "card-evidencias",  grupo: "Farmacia" },
             { id: "pedidos",      nombre: "Pedido de Insumos",    icono: "fa-cart-plus",       card: "card-pedidos",     grupo: "Farmacia" },
+            { id: "evidencias",   nombre: "Evidencias Medicamentos", icono: "fa-pills",        card: "card-evidencias",  grupo: "Farmacia" },
             { id: "laboratorio",  nombre: "Laboratorio",          icono: "fa-flask-vial",      card: "card-laboratorio" },
             { id: "cuentas_hosp", nombre: "Cuentas de cobro hospitalización", icono: "fa-file-invoice-dollar", card: "card-cuentas" },
             { id: "agenda",       nombre: "Agendamiento de visitas", icono: "fa-calendar-check",  card: "card-agenda" },
@@ -2646,9 +2647,28 @@
         window.filtrarSelectInsumos = function() {
             const q = (document.getElementById('order-item-search').value || '').trim().toLowerCase();
             actualizarSelectInsumos(q);
+            const dd = document.getElementById('order-item-dropdown');
+            if (!dd) return;
+            if (!q) { dd.classList.add('hidden'); dd.innerHTML = ''; return; }
+            const matches = listaInsumosFarmacia.filter(i => i.toLowerCase().includes(q)).slice(0, 40);
+            if (!matches.length) {
+                dd.innerHTML = '<div class="px-3 py-2 text-sm text-gray-400">Sin resultados. Puedes agregarlo como insumo nuevo.</div>';
+                dd.classList.remove('hidden'); return;
+            }
+            dd.innerHTML = matches.map(n =>
+                `<button type="button" onmousedown="event.preventDefault(); elegirInsumoFarmacia('${n.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50">${n}</button>`
+            ).join('');
+            dd.classList.remove('hidden');
+        }
+
+        window.elegirInsumoFarmacia = function(nombre) {
+            document.getElementById('order-item-search').value = nombre;
+            actualizarSelectInsumos(nombre);
             const select = document.getElementById('order-item-select');
-            const matches = listaInsumosFarmacia.filter(i => !q || i.toLowerCase().includes(q));
-            if (q && matches.length === 1) { select.value = matches[0]; verificarInsumoPersonalizado(); }
+            select.value = nombre;
+            verificarInsumoPersonalizado();
+            const dd = document.getElementById('order-item-dropdown');
+            if (dd) dd.classList.add('hidden');
         }
 
         window.verificarInsumoPersonalizado = function() {
