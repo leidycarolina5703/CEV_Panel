@@ -1340,7 +1340,7 @@
             <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
                 <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="cta-desde" class="js-ver fmt-in"></div>
                 <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="cta-hasta" class="js-ver fmt-in"></div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                     <button onclick="abrirCuentasGuardadasHosp()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
                     <button onclick="limpiarFiltroCuentasHosp()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todas</button>
                 </div>
@@ -1387,6 +1387,12 @@
             <div id="cta-catalogo" class="max-h-[420px] overflow-y-auto pr-1"></div>
         </section>
 
+        <!-- Resumen de lo que lleva el paciente -->
+        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-clipboard-list"></i> Detalle de la hospitalización</h2>
+            <div id="cta-resumen"></div>
+        </section>
+
 
 
         <!-- Totales -->
@@ -1399,7 +1405,7 @@
                     </div>
                     <div class="flex justify-between items-center gap-2">
                         <span class="text-sm text-gray-600 shrink-0">CX (cirugía)</span>
-                        <input type="number" min="0" id="cta-cx" oninput="recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
+                        <input type="text" inputmode="numeric" id="cta-cx" oninput="formatearMilesInput(this); recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
                     </div>
                     <div class="flex justify-between items-center border-b border-gray-100 py-1">
                         <span class="text-sm text-gray-600">CX (total)</span>
@@ -1417,7 +1423,7 @@
                     </div>
                     <div class="flex justify-between items-center gap-2">
                         <span class="text-sm text-gray-600 shrink-0">Depósito / abono</span>
-                        <input type="number" min="0" id="cta-deposito" oninput="recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
+                        <input type="text" inputmode="numeric" id="cta-deposito" oninput="formatearMilesInput(this); recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
                     </div>
                     <div class="flex justify-between items-center pt-1 border-t border-gray-200">
                         <span class="text-sm font-semibold text-gray-700">Resta por pagar</span>
@@ -1432,7 +1438,7 @@
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Egreso</h2>
             <div class="sm:w-1/2">
                 <label class="fmt-lbl">Fecha de egreso / salida <span class="text-gray-400 font-normal">(opcional)</span></label>
-                <input type="date" id="cta-fecha-egreso" class="fmt-in">
+                <input type="date" id="cta-fecha-egreso" onchange="marcarCambioCuentaHosp(); autoguardarCuentaHosp();" class="fmt-in">
             </div>
         </section>
 
@@ -1979,6 +1985,9 @@
                     // Sin documento: acceso completo salvo que MODO_ESTRICTO esté activo
                     MODULOS.forEach(m => { permisosActuales[m.id] = !MODO_ESTRICTO; permisosActuales[m.id + '_edit'] = !MODO_ESTRICTO; });
                 }
+
+                // Permiso especial: borrar cuentas de hospitalización (solo admin o quien lo tenga concedido)
+                permisosActuales['cuentas_hosp_borrar'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_borrar'] === true : false);
 
                 aplicarPermisosEnPanel();
 
@@ -3404,11 +3413,25 @@
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2">${u.admin ? '<span class="text-xs text-gray-400 italic">La administradora tiene acceso a todo.</span>' : permisosBtns}</div>
+                        ${u.admin ? '' : `<label class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 text-xs font-medium text-gray-600 cursor-pointer">
+                            <input type="checkbox" ${u.cuentas_hosp_borrar === true ? 'checked' : ''} onchange="setPermisoBorrarHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-red-600">
+                            <i class="fa-solid fa-trash-can text-red-500"></i> Puede <b>borrar</b> cuentas de hospitalización
+                        </label>`}
                     `;
                     cont.appendChild(card);
                 });
             } catch (error) {
                 cont.innerHTML = '<div class="text-center py-6 text-red-500 bg-red-50 rounded-xl border border-red-200 text-sm"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br><b>Error al cargar usuarios</b><br>Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        };
+
+        window.setPermisoBorrarHosp = async function(uid, permitido) {
+            try {
+                await setDoc(doc(db, "usuarios", uid), { cuentas_hosp_borrar: permitido === true }, { merge: true });
+                showToast(permitido ? "Permiso de borrar concedido." : "Permiso de borrar retirado.");
+            } catch (error) {
+                showToast("No se pudo actualizar el permiso.", true);
                 console.error(error);
             }
         };
@@ -6122,6 +6145,54 @@
         let cuentaHospEsNueva = true;      // si es cuenta nueva (para el historial)
         let cuentaHospAutosaveTimer = null;
         let cuentaHospListo = false;       // listeners ya instalados
+        let cuentaHospPrevio = { items: [], cx: 0, deposito: 0 };     // estado del último guardado
+        let cuentaHospEntryBase = { items: [], cx: 0, deposito: 0 };  // estado al iniciar la entrada actual del historial
+
+        function snapDeCuentaHosp(data) {
+            return { items: (data.items || []).map(it => ({ n: it.n, g: it.g, cant: it.cant })), cx: data.cx || 0, deposito: data.deposito || 0 };
+        }
+
+        function diffCuentaHosp(prev, act) {
+            const cambios = [];
+            const clave = it => it.n + '||' + it.g;
+            const mp = {}, ma = {};
+            (prev.items || []).forEach(it => mp[clave(it)] = it);
+            (act.items || []).forEach(it => ma[clave(it)] = it);
+            Object.keys(ma).forEach(k => {
+                const a = ma[k], p = mp[k];
+                if (!p) cambios.push(`Agregó ${a.cant}× ${a.n}`);
+                else if (p.cant !== a.cant) cambios.push(`${a.n}: ${p.cant} → ${a.cant}`);
+            });
+            Object.keys(mp).forEach(k => { if (!ma[k]) cambios.push(`Quitó ${mp[k].n}`); });
+            if ((prev.cx || 0) !== (act.cx || 0)) cambios.push(`CX: ${fmtCOPHosp(prev.cx || 0)} → ${fmtCOPHosp(act.cx || 0)}`);
+            if ((prev.deposito || 0) !== (act.deposito || 0)) cambios.push(`Depósito: ${fmtCOPHosp(prev.deposito || 0)} → ${fmtCOPHosp(act.deposito || 0)}`);
+            return cambios;
+        }
+
+        function registrarHistorialHosp(data, ahora, forzarNueva) {
+            const nombreU = usuarioSesion ? usuarioSesion.nombre : '';
+            const correoU = usuarioSesion ? usuarioSesion.correo : '';
+            const actSnap = snapDeCuentaHosp(data);
+            const ultima = cuentaHospHistorial[cuentaHospHistorial.length - 1];
+            const nuevaEntrada = forzarNueva || !ultima || ultima.por !== nombreU || !ultima.fecha ||
+                (Date.now() - new Date(ultima.fecha).getTime() > 120000);
+            if (nuevaEntrada) {
+                cuentaHospEntryBase = cuentaHospPrevio;
+                const detalles = diffCuentaHosp(cuentaHospEntryBase, actSnap);
+                cuentaHospHistorial.push({
+                    por: nombreU, correo: correoU, fecha: ahora,
+                    accion: cuentaHospEsNueva ? 'Creó' : 'Modificó',
+                    total: data.total || 0, detalles
+                });
+                if (cuentaHospEsNueva) cuentaHospEsNueva = false;
+            } else {
+                ultima.fecha = ahora;
+                ultima.total = data.total || 0;
+                ultima.detalles = diffCuentaHosp(cuentaHospEntryBase, actSnap);
+            }
+            if (cuentaHospHistorial.length > 200) cuentaHospHistorial = cuentaHospHistorial.slice(-200);
+            cuentaHospPrevio = actSnap;
+        }
 
         function marcarCambioCuentaHosp() {
             cuentaHospDirty = true;
@@ -6142,27 +6213,7 @@
                 data.modificadoPor = usuarioSesion ? usuarioSesion.nombre : '';
                 data.modificadoCorreo = usuarioSesion ? usuarioSesion.correo : '';
                 if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
-                // Historial también con autoguardado, pero agrupando ediciones seguidas:
-                // nueva entrada solo si cambió de persona o pasaron más de 2 minutos; si no, actualiza la última.
-                const nombreU = usuarioSesion ? usuarioSesion.nombre : '';
-                const ultima = cuentaHospHistorial[cuentaHospHistorial.length - 1];
-                const nuevaEntrada = !ultima || ultima.por !== nombreU || !ultima.fecha ||
-                    (Date.now() - new Date(ultima.fecha).getTime() > 120000);
-                if (nuevaEntrada) {
-                    cuentaHospHistorial.push({
-                        por: nombreU,
-                        correo: usuarioSesion ? usuarioSesion.correo : '',
-                        fecha: ahora,
-                        accion: cuentaHospEsNueva ? 'Creó' : 'Modificó',
-                        total: data.total || 0,
-                        auto: true
-                    });
-                    if (cuentaHospEsNueva) cuentaHospEsNueva = false;
-                } else {
-                    ultima.fecha = ahora;
-                    ultima.total = data.total || 0;
-                }
-                if (cuentaHospHistorial.length > 200) cuentaHospHistorial = cuentaHospHistorial.slice(-200);
+                registrarHistorialHosp(data, ahora, false);
                 data.historial = cuentaHospHistorial;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
                 cuentaHospId = id;
@@ -6249,19 +6300,45 @@
                     <div class="flex-1 min-w-0">
                         <p class="text-gray-700"><b>${h.por || 'Usuario'}</b> ${h.accion === 'Creó' ? 'creó' : 'modificó'} la cuenta</p>
                         <p class="text-[11px] text-gray-400">${h.fecha ? new Date(h.fecha).toLocaleString('es-CO') : ''}${h.total ? ' · Total ' + fmtCOPHosp(h.total) : ''}</p>
+                        ${(h.detalles && h.detalles.length) ? '<ul class="mt-0.5 text-[11px] text-gray-500 list-disc list-inside space-y-0.5">' + h.detalles.slice(0, 15).map(d => `<li>${d}</li>`).join('') + (h.detalles.length > 15 ? `<li>… (+${h.detalles.length - 15} más)</li>` : '') + '</ul>' : ''}
                     </div>
                 </div>`).join('');
         }
 
         const fmtCOPHosp = n => '$ ' + (Math.round(n || 0)).toLocaleString('es-CO');
 
+        // Muestra separador de miles mientras se escribe (ej. 250.000)
+        window.formatearMilesInput = function(el) {
+            const num = (el.value || '').replace(/\D/g, '');
+            el.value = num ? parseInt(num, 10).toLocaleString('es-CO') : '';
+        };
+        // Lee el número real de un campo con miles (quita los puntos)
+        const leerMilesHosp = id => {
+            const el = document.getElementById(id);
+            return el ? (parseInt((el.value || '').replace(/\D/g, ''), 10) || 0) : 0;
+        };
+
         window.pasoCantidadHosp = function(idx, delta) {
             const el = document.getElementById('cta-cant-' + idx);
             if (!el) return;
             const nuevo = Math.max(0, (parseInt(el.value) || 0) + delta);
             el.value = nuevo || '';
+            el.dataset.prev = nuevo;
             marcarCambioCuentaHosp();
             recalcularCuentaHosp();
+            if (delta > 0 && nuevo > 0 && CATALOGO_CUENTAS[idx]) showToast(`Agregaste ${delta} unidad${delta === 1 ? '' : 'es'} de ${CATALOGO_CUENTAS[idx].n}. Total: ${nuevo}.`);
+        };
+
+        window.avisoAgregadoHosp = function(idx) {
+            const el = document.getElementById('cta-cant-' + idx);
+            if (!el || !CATALOGO_CUENTAS[idx]) return;
+            const cant = parseInt(el.value) || 0;
+            const prev = parseInt(el.dataset.prev || '0') || 0;
+            el.dataset.prev = cant;
+            if (cant <= 0) return;
+            const delta = cant - prev;
+            if (delta > 0) showToast(`Agregaste ${delta} unidad${delta === 1 ? '' : 'es'} de ${CATALOGO_CUENTAS[idx].n}. Total: ${cant}.`);
+            else showToast(`${CATALOGO_CUENTAS[idx].n}: ${cant} en total.`);
         };
 
         function renderCatalogoCuentasHosp() {
@@ -6278,7 +6355,7 @@
                         <div class="flex-1 min-w-0"><p class="text-sm text-gray-700 truncate" title="${it.n}">${it.n}</p><p class="text-[11px] text-gray-400">${fmtCOPHosp(it.v)} c/u</p></div>
                         <div class="flex items-center gap-1 shrink-0">
                             <button type="button" onclick="pasoCantidadHosp(${it.idx}, -1)" class="js-editar w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center">−</button>
-                            <input type="number" min="0" step="1" id="cta-cant-${it.idx}" oninput="recalcularCuentaHosp()" class="cta-cant w-12 border border-gray-300 rounded-lg px-1 py-1 text-sm text-center bg-gray-50" placeholder="0">
+                            <input type="number" min="0" step="1" id="cta-cant-${it.idx}" oninput="recalcularCuentaHosp()" onchange="avisoAgregadoHosp(${it.idx})" class="cta-cant w-12 border border-gray-300 rounded-lg px-1 py-1 text-sm text-center bg-gray-50" placeholder="0">
                             <button type="button" onclick="pasoCantidadHosp(${it.idx}, 1)" class="js-editar w-7 h-7 rounded-lg bg-blue-100 hover:bg-blue-200 text-[#154390] font-bold flex items-center justify-center">+</button>
                         </div>
                         <div class="w-24 text-right text-sm font-semibold text-gray-700" id="cta-sub-${it.idx}">—</div>
@@ -6348,6 +6425,7 @@
             marcarCambioCuentaHosp();
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
+            if (delta > 0 && cuentaHospExtra[i].cant > 0) showToast(`Agregaste ${delta} unidad${delta === 1 ? '' : 'es'} de ${cuentaHospExtra[i].n}. Total: ${cuentaHospExtra[i].cant}.`);
         };
         window.quitarExtraHosp = function(i) {
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
@@ -6385,16 +6463,35 @@
                 if (it.g === 'Laboratorio') subLab += sub; else subMascotas += sub;
             });
             cuentaHospExtra.forEach(it => { const s = (it.cant || 0) * it.v; if (it.g === 'Laboratorio') subLab += s; else subMascotas += s; });
-            const cx = parseInt(document.getElementById('cta-cx').value) || 0;
+            const cx = leerMilesHosp('cta-cx');
             const total = subMascotas + cx + subLab;
-            const deposito = parseInt(document.getElementById('cta-deposito').value) || 0;
+            const deposito = leerMilesHosp('cta-deposito');
             document.getElementById('cta-sub-mascotas').innerText = fmtCOPHosp(subMascotas);
             document.getElementById('cta-sub-cx').innerText = fmtCOPHosp(cx);
             document.getElementById('cta-sub-lab').innerText = fmtCOPHosp(subLab);
             document.getElementById('cta-total').innerText = fmtCOPHosp(total);
             document.getElementById('cta-resta').innerText = fmtCOPHosp(total - deposito);
+            renderResumenHosp();
             return total;
         };
+
+        function renderResumenHosp() {
+            const cont = document.getElementById('cta-resumen');
+            if (!cont) return;
+            const ins = [], lab = [];
+            CATALOGO_CUENTAS.forEach((it, idx) => {
+                const el = document.getElementById('cta-cant-' + idx);
+                const cant = el ? (parseInt(el.value) || 0) : 0;
+                if (cant > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant, sub: cant * it.v });
+            });
+            cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant: it.cant, sub: it.cant * it.v }); });
+            if (!ins.length && !lab.length) { cont.innerHTML = '<p class="text-gray-400 italic text-sm">Todavía no has agregado insumos ni servicios.</p>'; return; }
+            const fila = x => `<div class="flex justify-between gap-2 text-sm py-0.5 border-b border-gray-50"><span class="text-gray-700"><span class="font-semibold text-[#154390]">${x.cant}×</span> ${x.n}</span><span class="text-gray-600 whitespace-nowrap">${fmtCOPHosp(x.sub)}</span></div>`;
+            let html = '';
+            if (ins.length) html += `<h4 class="text-xs font-bold text-[#154390] mt-1 mb-1 uppercase">Insumos y servicios (${ins.length})</h4>${ins.map(fila).join('')}`;
+            if (lab.length) html += `<h4 class="text-xs font-bold text-teal-700 mt-3 mb-1 uppercase">Laboratorio (${lab.length})</h4>${lab.map(fila).join('')}`;
+            cont.innerHTML = html;
+        }
 
         function recogerCuentaHosp() {
             const items = [];
@@ -6405,9 +6502,9 @@
                 if (cant > 0) { items.push({ n: it.n, v: it.v, cant, g: it.g }); if (it.g === 'Laboratorio') subLab += cant * it.v; else subMascotas += cant * it.v; }
             });
             cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) { const g = it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos'; items.push({ n: it.n, v: it.v, cant: it.cant, g, x: true }); if (g === 'Laboratorio') subLab += it.cant * it.v; else subMascotas += it.cant * it.v; } });
-            const cx = parseInt(document.getElementById('cta-cx').value) || 0;
+            const cx = leerMilesHosp('cta-cx');
             const total = subMascotas + cx + subLab;
-            const deposito = parseInt(document.getElementById('cta-deposito').value) || 0;
+            const deposito = leerMilesHosp('cta-deposito');
             return {
                 paciente: document.getElementById('cta-paciente').value.trim(),
                 historia: document.getElementById('cta-historia').value.trim(),
@@ -6425,8 +6522,8 @@
             document.getElementById('cta-propietario').value = data.propietario || '';
             document.getElementById('cta-fecha').value = data.fecha || '';
             document.getElementById('cta-fecha-egreso').value = data.fechaEgreso || '';
-            document.getElementById('cta-cx').value = data.cx || '';
-            document.getElementById('cta-deposito').value = data.deposito || '';
+            document.getElementById('cta-cx').value = data.cx ? Number(data.cx).toLocaleString('es-CO') : '';
+            document.getElementById('cta-deposito').value = data.deposito ? Number(data.deposito).toLocaleString('es-CO') : '';
             CATALOGO_CUENTAS.forEach((it, idx) => { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = ''; });
             cuentaHospExtra = [];
             (data.items || []).forEach(it => {
@@ -6439,6 +6536,8 @@
                 ? `<i class="fa-solid fa-user-pen"></i> Última edición: <b>${data.modificadoPor}</b>${data.actualizado ? ' · ' + new Date(data.actualizado).toLocaleString('es-CO') : ''}`
                 : '';
             cuentaHospHistorial = (data.historial || []).slice();
+            cuentaHospPrevio = snapDeCuentaHosp(data);
+            cuentaHospEntryBase = snapDeCuentaHosp(data);
             renderHistorialHosp();
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
@@ -6481,6 +6580,8 @@
             document.getElementById('cta-buscar').value = '';
             cuentaHospExtra = [];
             cuentaHospHistorial = [];
+            cuentaHospPrevio = { items: [], cx: 0, deposito: 0 };
+            cuentaHospEntryBase = { items: [], cx: 0, deposito: 0 };
             renderHistorialHosp();
             document.getElementById('cta-ult-edicion').innerHTML = '';
             var estN = document.getElementById('cta-estado-guardado'); if (estN) estN.innerHTML = '';
@@ -6513,15 +6614,7 @@
                 data.modificadoPor = usuarioSesion ? usuarioSesion.nombre : '';
                 data.modificadoCorreo = usuarioSesion ? usuarioSesion.correo : '';
                 if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
-                // Historial completo de cambios (se conserva y se le agrega una entrada)
-                cuentaHospHistorial.push({
-                    por: usuarioSesion ? usuarioSesion.nombre : '',
-                    correo: usuarioSesion ? usuarioSesion.correo : '',
-                    fecha: ahora,
-                    accion: cuentaHospEsNueva ? 'Creó' : 'Modificó',
-                    total: data.total || 0
-                });
-                if (cuentaHospHistorial.length > 200) cuentaHospHistorial = cuentaHospHistorial.slice(-200);
+                registrarHistorialHosp(data, ahora, true);
                 data.historial = cuentaHospHistorial;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
                 cuentaHospId = id;
@@ -6561,6 +6654,7 @@
                 if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
                 if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>'; return; }
                 items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
+                const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
                 cont.innerHTML = '';
                 items.forEach(it => {
                     const row = document.createElement('div');
@@ -6568,13 +6662,13 @@
                     row.innerHTML = `
                         <div class="min-w-0">
                             <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
-                            <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
+                            <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')}${it.fechaEgreso ? ' → ' + it.fechaEgreso : ''} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
                             ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
                         </div>
                         <div class="flex gap-2 shrink-0">
                             <button onclick="cargarCuentaHosp('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
                             <button onclick="descargarCuentaHospPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
-                            <button onclick="eliminarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="js-editar px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>
+                            ${puedeBorrar ? `<button onclick="eliminarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                         </div>`;
                     cont.appendChild(row);
                 });
@@ -6602,7 +6696,7 @@
         };
 
         window.eliminarCuentaHosp = async function(id, nombre) {
-            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (permisosActuales['cuentas_hosp_borrar'] !== true) { showToast("No tienes permiso para borrar cuentas.", true); return; }
             if (!confirm(`¿Eliminar la cuenta de "${nombre || 'este paciente'}"? No se puede deshacer.`)) return;
             try {
                 await deleteDoc(doc(db, "cuentas_hospital", id));
@@ -8502,6 +8596,56 @@
             document.getElementById('agenda-vista-lista').innerHTML = html;
         }
 
+        // ===== Festivos de Colombia (fijos, Ley Emiliani y basados en Pascua) =====
+        const FESTIVOS_CACHE = {};
+        function calcularPascua(year) {
+            const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+            const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+            const h = (19 * a + b - d - g + 15) % 30;
+            const i = Math.floor(c / 4), k = c % 4;
+            const l = (32 + 2 * e + 2 * i - h - k) % 7;
+            const m = Math.floor((a + 11 * h + 22 * l) / 451);
+            const mes = Math.floor((h + l - 7 * m + 114) / 31);
+            const dia = ((h + l - 7 * m + 114) % 31) + 1;
+            return new Date(year, mes - 1, dia);
+        }
+        function festivosColombia(year) {
+            if (FESTIVOS_CACHE[year]) return FESTIVOS_CACHE[year];
+            const f = {};
+            const claveISO = dt => dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, '0') + "-" + String(dt.getDate()).padStart(2, '0');
+            const add = (dt, nombre) => { f[claveISO(dt)] = nombre; };
+            const lunesSiguiente = (y, m, d) => { const dt = new Date(y, m - 1, d); const dow = dt.getDay(); if (dow !== 1) dt.setDate(dt.getDate() + ((8 - dow) % 7)); return dt; };
+            // Fijos
+            add(new Date(year, 0, 1), "Año Nuevo");
+            add(new Date(year, 4, 1), "Día del Trabajo");
+            add(new Date(year, 6, 20), "Día de la Independencia");
+            add(new Date(year, 7, 7), "Batalla de Boyacá");
+            add(new Date(year, 11, 8), "Inmaculada Concepción");
+            add(new Date(year, 11, 25), "Navidad");
+            // Ley Emiliani (se trasladan al lunes)
+            add(lunesSiguiente(year, 1, 6), "Reyes Magos");
+            add(lunesSiguiente(year, 3, 19), "Día de San José");
+            add(lunesSiguiente(year, 6, 29), "San Pedro y San Pablo");
+            add(lunesSiguiente(year, 8, 15), "Asunción de la Virgen");
+            add(lunesSiguiente(year, 10, 12), "Día de la Raza");
+            add(lunesSiguiente(year, 11, 1), "Todos los Santos");
+            add(lunesSiguiente(year, 11, 11), "Independencia de Cartagena");
+            // Basados en Pascua
+            const pascua = calcularPascua(year);
+            const rel = dias => { const dt = new Date(pascua); dt.setDate(dt.getDate() + dias); return dt; };
+            add(rel(-3), "Jueves Santo");
+            add(rel(-2), "Viernes Santo");
+            add(rel(43), "Ascensión del Señor");
+            add(rel(64), "Corpus Christi");
+            add(rel(71), "Sagrado Corazón");
+            FESTIVOS_CACHE[year] = f;
+            return f;
+        }
+        function esFestivoCO(iso) {
+            const y = parseInt(iso.slice(0, 4), 10);
+            return festivosColombia(y)[iso] || null;
+        }
+
         function renderSemanaAgenda() {
             agendaRowH = alturaHora();
             const editable = puedeEditar('agenda');
@@ -8523,8 +8667,11 @@
 
             let html = `<div class="grid sticky top-0 z-20 bg-white shadow-sm" style="${cols}"><div class="bg-white"></div>`;
             dias.forEach((dt, i) => {
-                const esHoy = isoDe(dt) === hoyISO;
-                html += `<div class="text-center py-1 text-[11px] font-semibold border-b-2 bg-white ${esHoy ? 'text-emerald-700 border-emerald-500' : 'text-gray-600 border-gray-100'}">${DIAS_SEMANA[i].slice(0, 3)}<br><span class="text-sm">${dt.getDate()}</span></div>`;
+                const fISO = isoDe(dt);
+                const esHoy = fISO === hoyISO;
+                const fest = esFestivoCO(fISO);
+                const clase = esHoy ? 'text-emerald-700 border-emerald-500' : (fest ? 'text-red-600 border-red-300' : 'text-gray-600 border-gray-100');
+                html += `<div class="text-center py-1 text-[11px] font-semibold border-b-2 bg-white ${clase}" ${fest ? `title="Festivo: ${fest}"` : ''}>${DIAS_SEMANA[i].slice(0, 3)}<br><span class="text-sm">${dt.getDate()}</span>${fest ? '<br><span class="text-[8px] text-red-500 leading-none">festivo</span>' : ''}</div>`;
             });
             html += '</div>';
             html += `<div class="grid" style="${cols}">`;
@@ -8532,7 +8679,8 @@
             dias.forEach(dt => {
                 const fecha = isoDe(dt);
                 const esHoy = fecha === hoyISO;
-                html += `<div class="relative border-l border-gray-100 ${esHoy ? 'bg-emerald-50/40' : ''}" style="height:${totalH}px">`;
+                const fest = esFestivoCO(fecha);
+                html += `<div class="relative border-l border-gray-100 ${esHoy ? 'bg-emerald-50/40' : (fest ? 'bg-red-50/40' : '')}" style="height:${totalH}px">`;
                 html += slotsHTML(fecha, hMin, hMax, agendaRowH, editable);
                 citasSemana.filter(c => c.fecha === fecha).forEach(c => {
                     const [hh, mm] = (c.hora || '0:0').split(':').map(Number);
