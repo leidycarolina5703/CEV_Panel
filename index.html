@@ -13,8 +13,6 @@
         /* Respaldo: si Tailwind no alcanza a cargar (conexión lenta), esta regla
            garantiza que las pantallas ocultas NO se muestren apiladas. */
         .hidden { display: none !important; }
-        details[open] > summary .fa-chevron-down { transform: rotate(180deg); }
-        summary::-webkit-details-marker { display: none; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f3f4f6; }
         ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
@@ -284,7 +282,29 @@
             <div id="resumen-reponer" class="space-y-1"></div>
         </div>
 
-        <div id="orders-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-bold text-[#154390] mb-3 sm:mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-file-excel text-green-600"></i> Exportar a Excel
+            </h2>
+            <div class="flex flex-col sm:flex-row items-end gap-3">
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Inicio</label>
+                    <input type="date" id="export-start" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-gray-700 text-sm">
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
+                    <input type="date" id="export-end" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-gray-700 text-sm">
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <button onclick="generarExcel()" class="w-full px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Descargar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="orders-screen" class="hidden max-w-3xl mx-auto p-2 sm:p-6 space-y-4 sm:space-y-6 pb-12">
         <header class="bg-white rounded-xl shadow-md p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-200">
             <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left w-full sm:w-auto">
                 <button onclick="openFarmacia()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors shrink-0">
@@ -1275,7 +1295,10 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button onclick="guardarCuenta()" class="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors border border-gray-200 flex justify-center items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Guardar
+            </button>
             <button onclick="descargarCuentaPDF()" class="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-md flex justify-center items-center gap-2">
                 <i class="fa-solid fa-file-pdf"></i> Descargar PDF
             </button>
@@ -1312,39 +1335,19 @@
             </div>
         </div>
 
-        <div id="cta-encurso" class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-            <h2 class="text-lg font-bold text-emerald-700 mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-heart-pulse"></i> Hospitalizaciones en curso</h2>
-            <div id="cta-encurso-container" class="space-y-2"></div>
-        </div>
-
         <div id="cta-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-            <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center justify-between gap-2">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</span>
-                <button onclick="cerrarGuardadasHosp()" class="text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Cerrar</button>
-            </h2>
-            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
-                <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-[#154390]"></i> Consultar por rango de fechas</p>
-                <div class="flex flex-wrap items-end gap-2">
-                    <div class="flex-1 min-w-[120px]">
-                        <label class="fmt-lbl">Desde</label>
-                        <input type="date" id="cta-desde" class="fmt-in text-sm py-1.5">
-                    </div>
-                    <div class="flex-1 min-w-[120px]">
-                        <label class="fmt-lbl">Hasta</label>
-                        <input type="date" id="cta-hasta" class="fmt-in text-sm py-1.5">
-                    </div>
-                    <button onclick="abrirCuentasGuardadasHosp()" class="px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
-                </div>
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <button onclick="rangoRapidoCuentasHosp('hoy')" class="px-3 py-1 bg-white text-[#154390] rounded-full text-xs font-semibold border border-blue-200 hover:bg-blue-50">Hoy</button>
-                    <button onclick="rangoRapidoCuentasHosp('mes')" class="px-3 py-1 bg-white text-[#154390] rounded-full text-xs font-semibold border border-blue-200 hover:bg-blue-50">Este mes</button>
-                    <button onclick="rangoRapidoCuentasHosp('todo')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
+            <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</h2>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
+                <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="cta-desde" class="js-ver fmt-in"></div>
+                <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="cta-hasta" class="js-ver fmt-in"></div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="abrirCuentasGuardadasHosp()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                    <button onclick="limpiarFiltroCuentasHosp()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todas</button>
                 </div>
             </div>
             <div id="cta-lista-container" class="space-y-2"></div>
         </div>
 
-        <div id="cta-form">
         <!-- Datos del paciente -->
         <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-paw"></i> Datos del paciente</h2>
@@ -1433,32 +1436,22 @@
         <!-- Fecha de egreso -->
         <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Egreso</h2>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-sm text-[#154390] flex items-start gap-2">
-                <i class="fa-solid fa-circle-info mt-0.5"></i>
-                <span>Coloca la <b>fecha de egreso del paciente</b> para que la cuenta se guarde y pase a <b>Cuentas guardadas</b>.</span>
-            </div>
             <div class="sm:w-1/2">
-                <label class="fmt-lbl">Fecha de egreso / salida</label>
-                <input type="date" id="cta-fecha-egreso" onchange="egresoCambioHosp()" class="fmt-in">
+                <label class="fmt-lbl">Fecha de egreso / salida <span class="text-gray-400 font-normal">(opcional)</span></label>
+                <input type="date" id="cta-fecha-egreso" onchange="marcarCambioCuentaHosp(); autoguardarCuentaHosp();" class="fmt-in">
             </div>
         </section>
 
         <!-- Historial de cambios -->
         <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-            <details>
-                <summary class="text-base sm:text-lg font-bold text-[#154390] flex items-center gap-2 cursor-pointer list-none select-none">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios
-                    <i class="fa-solid fa-chevron-down text-sm text-gray-400 ml-auto transition-transform"></i>
-                </summary>
-                <div id="cta-historial" class="max-h-56 overflow-y-auto mt-3 pt-3 border-t border-gray-100"></div>
-            </details>
+            <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios</h2>
+            <div id="cta-historial" class="max-h-56 overflow-y-auto"></div>
         </section>
 
         <div id="cta-estado-guardado" class="text-xs text-right min-h-[1rem] font-semibold"></div>
         <div class="flex flex-col sm:flex-row gap-3">
             <button onclick="guardarCuentaHosp()" id="btn-guardar-cuenta" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube</button>
             <button onclick="exportarCuentaHospPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
-        </div>
         </div>
     </div>
 
@@ -1881,7 +1874,6 @@
             document.getElementById('lab-guardadas-screen').classList.add('hidden');
             document.getElementById('laboratorio-screen').classList.remove('hidden');
             initLaboratorioApp();
-            if (typeof activarAutoguardadoLab === 'function') activarAutoguardadoLab();
         };
 
         function tienePermiso(modulo) {
@@ -6145,7 +6137,7 @@
         // ==========================================================
         // MÓDULO: CUENTAS DE COBRO HOSPITALIZACIÓN (colección: cuentas_hospital)
         // ==========================================================
-        const CATALOGO_CUENTAS = [{"n": "CONSULTA NO PROGRAMADA", "v": 115000, "g": "Insumos"}, {"n": "RX", "v": 97000, "g": "Insumos"}, {"n": "2DX", "v": 67000, "g": "Laboratorio"}, {"n": "MATERIALES", "v": 17000, "g": "Insumos"}, {"n": "RX CONTROL  (1/2)", "v": 49000, "g": "Insumos"}, {"n": "4DX", "v": 100000, "g": "Laboratorio"}, {"n": "CATÉTER", "v": 20000, "g": "Insumos"}, {"n": "OXIGENOTERAPIA XHORA", "v": 5000, "g": "Insumos"}, {"n": "ACIDO FOLICO", "v": 90000, "g": "Laboratorio"}, {"n": "TAPON", "v": 5000, "g": "Insumos"}, {"n": "XILACINA 1ML", "v": 15000, "g": "Insumos"}, {"n": "ALBUMINA", "v": 36000, "g": "Laboratorio"}, {"n": "VENOCLISIS", "v": 20000, "g": "Insumos"}, {"n": "PROPOFOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "AMILOIDE FELINO", "v": 95000, "g": "Laboratorio"}, {"n": "VENOBOMBA", "v": 63000, "g": "Insumos"}, {"n": "LIDOCAINA 1ML", "v": 6000, "g": "Insumos"}, {"n": "AMONÍACO", "v": 63000, "g": "Laboratorio"}, {"n": "COBAN(VENDAJEVET)", "v": 5000, "g": "Insumos"}, {"n": "TRAMADOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "ANÁLISIS DE LÍQUIDO", "v": 50000, "g": "Laboratorio"}, {"n": "COBAN ROLLO", "v": 20000, "g": "Insumos"}, {"n": "MORFINA-AMPOLLA X 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 1", "v": 100000, "g": "Laboratorio"}, {"n": "EXTENSION", "v": 15000, "g": "Insumos"}, {"n": "HIDROMORFONA 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 2", "v": 145000, "g": "Laboratorio"}, {"n": "HARTMAN 1L", "v": 25000, "g": "Insumos"}, {"n": "BUTORFANOL 1ML", "v": 90000, "g": "Insumos"}, {"n": "ASA 3", "v": 200000, "g": "Laboratorio"}, {"n": "HARTMAN 500ML (SUERO)", "v": 20000, "g": "Insumos"}, {"n": "MIDAZOLAM 1ML", "v": 22000, "g": "Insumos"}, {"n": "ASA 4", "v": 280000, "g": "Laboratorio"}, {"n": "JERINGA 1ML", "v": 1000, "g": "Insumos"}, {"n": "JERINGA 3ML", "v": 1000, "g": "Insumos"}, {"n": "JERINGA 5ML", "v": 1000, "g": "Insumos"}, {"n": "KETAMINA 1ML", "v": 18000, "g": "Insumos"}, {"n": "BACAF", "v": 45000, "g": "Laboratorio"}, {"n": "JERINGA 10ML", "v": 6000, "g": "Insumos"}, {"n": "JERINGA 20ML", "v": 6000, "g": "Insumos"}, {"n": "JERINGA 60ML", "v": 6000, "g": "Insumos"}, {"n": "MELOXICAM 1ML INY", "v": 8000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 1", "v": 105000, "g": "Laboratorio"}, {"n": "PERFUSORA 20", "v": 73000, "g": "Insumos"}, {"n": "PERFUSORA 50", "v": 73000, "g": "Insumos"}, {"n": "DIPIRONA 1ML", "v": 4000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 2", "v": 140000, "g": "Laboratorio"}, {"n": "KIT NEBU", "v": 15000, "g": "Insumos"}, {"n": "OMEPRAZOL 1ML INY", "v": 3000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 1", "v": 180000, "g": "Laboratorio"}, {"n": "NEBULIZACION", "v": 15000, "g": "Insumos"}, {"n": "CERENIA 1ML INY", "v": 20000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 2", "v": 220000, "g": "Laboratorio"}, {"n": "SONDA", "v": 12000, "g": "Insumos"}, {"n": "ONDANSETRON AMPOLLA X 4ML", "v": 20000, "g": "Insumos"}, {"n": "BILIRRUBINA", "v": 36000, "g": "Laboratorio"}, {"n": "GUANTES PAR(EXAMEN)", "v": 500, "g": "Insumos"}, {"n": "NEXGARD", "v": 74000, "g": "Insumos"}, {"n": "CARTUCHO EDAN", "v": 40000, "g": "Laboratorio"}, {"n": "GUANTE ESTERIL(CIRUGIA)", "v": 4000, "g": "Insumos"}, {"n": "CEFALOTINA 1ML", "v": 3000, "g": "Insumos"}, {"n": "HOSP. GENERAL(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "AMPICILINA AMPOLLA X 10ML", "v": 15000, "g": "Insumos"}, {"n": "CIANOCOBALAMINA", "v": 90000, "g": "Laboratorio"}, {"n": "HOSP. UCI(CUIDADO PACIENTE)", "v": 35000, "g": "Insumos"}, {"n": "ENOXAPARINA", "v": 45000, "g": "Insumos"}, {"n": "CITOLOGÍAS", "v": 28000, "g": "Laboratorio"}, {"n": "HOSP. INFECCIOSO(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "METILPREDNISOLONA AMPOLLA  X 10ML", "v": 35000, "g": "Insumos"}, {"n": "COLESTEROL", "v": 36000, "g": "Laboratorio"}, {"n": "AGUJA", "v": 300, "g": "Insumos"}, {"n": "ACIFLUX", "v": 38000, "g": "Insumos"}, {"n": "CONVULSIVO", "v": 220000, "g": "Laboratorio"}, {"n": "SUTURA ABSORBIBLE", "v": 55000, "g": "Insumos"}, {"n": "COMPRESAS", "v": 20000, "g": "Insumos"}, {"n": "COPROLÓGICO", "v": 20000, "g": "Laboratorio"}, {"n": "VENDAJE (PEQUEÑO)", "v": 30000, "g": "Insumos"}, {"n": "PREVICOX 227", "v": 13000, "g": "Insumos"}, {"n": "CORTISOL", "v": 96000, "g": "Laboratorio"}, {"n": "VENDAJE (MEDIANO)", "v": 40000, "g": "Insumos"}, {"n": "PREVICOX 57", "v": 7000, "g": "Insumos"}, {"n": "CREATININA SECA", "v": 36000, "g": "Laboratorio"}, {"n": "VENDAJE (GRANDE)", "v": 50000, "g": "Insumos"}, {"n": "PREGABALINA ML", "v": 5000, "g": "Insumos"}, {"n": "CUADRO HEMÁTICO", "v": 38000, "g": "Laboratorio"}, {"n": "ECOGRAFIA", "v": 97000, "g": "Insumos"}, {"n": "PREGABALINA 25", "v": 5000, "g": "Insumos"}, {"n": "CULTIVO + ANTIBIOGRAMA", "v": 92000, "g": "Laboratorio"}, {"n": "ECOGRAFIA CONTROL", "v": 65000, "g": "Insumos"}, {"n": "PREGABALINA 75", "v": 9000, "g": "Insumos"}, {"n": "CULTIVO DE GÉRMENES COMUNES", "v": 92000, "g": "Laboratorio"}, {"n": "ECO FAST (CONTROL)", "v": 49000, "g": "Insumos"}, {"n": "ENROFLOXACINA", "v": 6000, "g": "Insumos"}, {"n": "CULTIVO DE HONGOS", "v": 92000, "g": "Laboratorio"}, {"n": "ECOCARDIO", "v": 126000, "g": "Insumos"}, {"n": "ÁCIDO TRANEXÁMICO AMPOLLA X 5ML", "v": 20000, "g": "Insumos"}, {"n": "DIFERENCIAL DE PROTEINAS", "v": 71000, "g": "Laboratorio"}, {"n": "ROYAL RECOVERY", "v": 35000, "g": "Insumos"}, {"n": "BAYTRIL", "v": 8300, "g": "Insumos"}, {"n": "DIMERO D", "v": 95000, "g": "Laboratorio"}, {"n": "TOTAL F", "v": 10000, "g": "Insumos"}, {"n": "POTASIO", "v": 7000, "g": "Insumos"}, {"n": "EDAN GASES ARTERIALES/VENOSOS", "v": 85000, "g": "Laboratorio"}, {"n": "MIDAZOLAM", "v": 20000, "g": "Insumos"}, {"n": "BURETROL", "v": 9000, "g": "Insumos"}, {"n": "FOSFORO", "v": 36000, "g": "Laboratorio"}, {"n": "COLLAR FEROMONAS", "v": 95000, "g": "Insumos"}, {"n": "ARENA 1KG", "v": 6000, "g": "Insumos"}, {"n": "FRUCTOSAMINA", "v": 100000, "g": "Laboratorio"}, {"n": "BUPIVACAINA", "v": 15000, "g": "Insumos"}, {"n": "CICLORAC SPRAY", "v": 42000, "g": "Insumos"}, {"n": "GERIÁTRICO CANINO", "v": 315000, "g": "Laboratorio"}, {"n": "VESTIDO XS", "v": 30000, "g": "Insumos"}, {"n": "LIPIDOS", "v": 2000, "g": "Insumos"}, {"n": "GGT", "v": 36000, "g": "Laboratorio"}, {"n": "VESTIDO S", "v": 45000, "g": "Insumos"}, {"n": "EUTHANEX 1ML", "v": 13000, "g": "Insumos"}, {"n": "GLUCOSA", "v": 15000, "g": "Laboratorio"}, {"n": "VESTIDO M", "v": 50000, "g": "Insumos"}, {"n": "TRAZODONA TABLETA", "v": 3000, "g": "Insumos"}, {"n": "GRAM", "v": 34000, "g": "Laboratorio"}, {"n": "VESTIDO L", "v": 55000, "g": "Insumos"}, {"n": "PAÑAL O TAPETE", "v": 4000, "g": "Insumos"}, {"n": "HEMATOCRITO Y P TOTALES", "v": 10000, "g": "Laboratorio"}, {"n": "VESTIDO XL", "v": 60000, "g": "Insumos"}, {"n": "FORTIFLORA", "v": 7000, "g": "Insumos"}, {"n": "HEMOCULTIVO", "v": 92000, "g": "Laboratorio"}, {"n": "VESTIDO XXL", "v": 68000, "g": "Insumos"}, {"n": "CLORURO DE SODIO", "v": 8000, "g": "Insumos"}, {"n": "JERINGA EDAN", "v": 16000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XS", "v": 15000, "g": "Insumos"}, {"n": "FLUIMUCIL AMPOLLA X 3ML", "v": 15000, "g": "Insumos"}, {"n": "LIPASA", "v": 100000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO S", "v": 20000, "g": "Insumos"}, {"n": "TOTAL F SUSPENSION", "v": 10000, "g": "Insumos"}, {"n": "NIVELES DE FENOBARBITAL", "v": 130000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO M", "v": 25000, "g": "Insumos"}, {"n": "REVOLUTION PLUS", "v": 70000, "g": "Insumos"}, {"n": "PARCIAL DE ORINA", "v": 28000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO L", "v": 28000, "g": "Insumos"}, {"n": "NEUROPROTECCIÓN (VITAMINA A-E-C-OMEGA-GINKGO)", "v": 10000, "g": "Insumos"}, {"n": "PCR HEMOTRÓPICOS", "v": 0, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XL", "v": 30000, "g": "Insumos"}, {"n": "TRIHEPAT", "v": 5000, "g": "Insumos"}, {"n": "PCR", "v": 290000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XXL", "v": 35000, "g": "Insumos"}, {"n": "SUCRALFATO", "v": 5000, "g": "Insumos"}, {"n": "PERFIL HEPÁTICO", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION GASTROINTESTINAL 100GR", "v": 10000, "g": "Insumos"}, {"n": "MIRTAZAPINA", "v": 15000, "g": "Insumos"}, {"n": "PERFIL RENAL", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION RECOVERY 100 GR", "v": 10000, "g": "Insumos"}, {"n": "SILDENAFILO", "v": 5000, "g": "Insumos"}, {"n": "PROTEINA C", "v": 95000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH ANATRA 100 GR", "v": 10000, "g": "Insumos"}, {"n": "CEFTRIAXONA AMPOLLA X 10ML", "v": 20000, "g": "Insumos"}, {"n": "PT Y PPT (COAGULACIÓN)", "v": 75000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "LYRICA", "v": 5000, "g": "Insumos"}, {"n": "QUÍMICAS (ALT-AST-FA-CREA-UREA)", "v": 25000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT PORK PINEAPPLE MAIALE", "v": 10000, "g": "Insumos"}, {"n": "FLUNARIZINA", "v": 9000, "g": "Insumos"}, {"n": "ROTOR HEPÁTICO", "v": 120000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "DOXICICLINA (NEODOXIL)", "v": 5000, "g": "Insumos"}, {"n": "ROTOR RENAL", "v": 100000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT TACCHINO  100 GR", "v": 10000, "g": "Insumos"}, {"n": "ADRENALINA AMPOLLA", "v": 4000, "g": "Insumos"}, {"n": "ROTOR URGENCIAS", "v": 90000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION DIABETIC 400GR", "v": 28000, "g": "Insumos"}, {"n": "SDMA (DIMETILARGININA SIMÉTRICA)", "v": 180000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION GASTROINTESTIN 400GR", "v": 28000, "g": "Insumos"}, {"n": "ÁCIDO TRANEXÁMICO", "v": 20000, "g": "Insumos"}, {"n": "SUERO ANTÓLOGO", "v": 16000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RECOVERY 150 GR", "v": 12000, "g": "Insumos"}, {"n": "REVOLUTION PLUS 2.5 A 5", "v": 65000, "g": "Insumos"}, {"n": "T4 TOTAL + COLESTEROL T", "v": 126000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RENAL 150 GR", "v": 12000, "g": "Insumos"}, {"n": "BLADURIL", "v": 14000, "g": "Insumos"}, {"n": "TEST DISTEMPER-MOQUILLO", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME ADULT TONNO E ALGHE QU", "v": 12000, "g": "Insumos"}, {"n": "VITAMINA K (KAVITEX)", "v": 4000, "g": "Insumos"}, {"n": "TEST PARVOVIRUS", "v": 57000, "g": "Laboratorio"}, {"n": "MONGE SUPREME CAT RISO TE VERDE 80 GR", "v": 12000, "g": "Insumos"}, {"n": "GLUCONATO DE CALCIO", "v": 4000, "g": "Insumos"}, {"n": "TEST SIDA/LEUCEMIA", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME KITTEN TUN CARROT QUINO", "v": 12000, "g": "Insumos"}, {"n": "INSULINA", "v": 5000, "g": "Insumos"}, {"n": "TIEMPO DE COAGULACIÓN EN TUBO", "v": 3000, "g": "Laboratorio"}, {"n": "MONGE VET SOLUTION  HYPO MONOPROTEIN 400 GR", "v": 28000, "g": "Insumos"}, {"n": "DEXTROSA", "v": 300, "g": "Insumos"}, {"n": "TRIGLICÉRIDOS", "v": 36000, "g": "Laboratorio"}, {"n": "LATA E/N CANINO", "v": 30000, "g": "Insumos"}, {"n": "FUROSEMIDA", "v": 2000, "g": "Insumos"}, {"n": "TSH CANINA", "v": 96000, "g": "Laboratorio"}, {"n": "LATA I/D CANINO", "v": 34500, "g": "Insumos"}, {"n": "FITOVETE CREMA", "v": 43000, "g": "Insumos"}, {"n": "UPC", "v": 100000, "g": "Laboratorio"}, {"n": "LATA I/D FELINO", "v": 21000, "g": "Insumos"}, {"n": "METRONIDAZOL X100", "v": 20000, "g": "Insumos"}, {"n": "URGENCIAS 2", "v": 250000, "g": "Laboratorio"}, {"n": "LATA E/N FELINO", "v": 19000, "g": "Insumos"}, {"n": "YOHIMBINA", "v": 10000, "g": "Insumos"}, {"n": "URGENCIAS 1", "v": 155000, "g": "Laboratorio"}, {"n": "I/D SECO CANINO", "v": 29000, "g": "Insumos"}, {"n": "ATROPINA", "v": 9000, "g": "Insumos"}, {"n": "LATA A/D FELINO Y CANINO", "v": 25000, "g": "Insumos"}, {"n": "BISMOPET", "v": 43000, "g": "Insumos"}, {"n": "I/D SECO FELINO", "v": 47000, "g": "Insumos"}, {"n": "MEDICAMENTOS OTROS", "v": 36500, "g": "Insumos"}, {"n": "CHURU", "v": 5000, "g": "Insumos"}, {"n": "BFEX", "v": 28000, "g": "Insumos"}, {"n": "NUTRA LIFE (1CUCHARA 11GR)", "v": 500, "g": "Insumos"}, {"n": "ENEMA", "v": 25000, "g": "Insumos"}, {"n": "ROYAL CANIN RECOVERY", "v": 34000, "g": "Insumos"}, {"n": "TRIMETOPRIM", "v": 5000, "g": "Insumos"}, {"n": "ACEVICAL DISPOSICION CUERPO X 1KG", "v": 8000, "g": "Insumos"}, {"n": "SULFASALAZINA", "v": 4000, "g": "Insumos"}, {"n": "PATOLOGIA", "v": 250000, "g": "Insumos"}, {"n": "DEXAMETASONA", "v": 4000, "g": "Insumos"}, {"n": "LLAVE 3VIAS", "v": 10000, "g": "Insumos"}, {"n": "SMECTA", "v": 5000, "g": "Insumos"}, {"n": "PAQUETE SONDA GATO", "v": 138000, "g": "Insumos"}, {"n": "TIAMINA", "v": 20000, "g": "Insumos"}, {"n": "VACUNAS", "v": 85000, "g": "Insumos"}, {"n": "ONE", "v": 10000, "g": "Insumos"}, {"n": "ANEST. INHALADA (ISORANY)", "v": 120000, "g": "Insumos"}, {"n": "PREDNISOLONA 20", "v": 3500, "g": "Insumos"}, {"n": "TUBO ENDOTRAQUEAL", "v": 18000, "g": "Insumos"}, {"n": "SUPOSITORIOS", "v": 7000, "g": "Insumos"}, {"n": "CARBON ACTIVADO", "v": 20000, "g": "Insumos"}, {"n": "SERETIDE (INALADOR)", "v": 115000, "g": "Insumos"}, {"n": "CEFALEXINA 500MG", "v": 1000, "g": "Insumos"}, {"n": "HIDROSIN", "v": 5000, "g": "Insumos"}, {"n": "DESCENSOR", "v": 3000, "g": "Insumos"}, {"n": "ENALAPRIL", "v": 1000, "g": "Insumos"}, {"n": "COMPLEJO B", "v": 25000, "g": "Insumos"}, {"n": "PERIACTIN", "v": 5000, "g": "Insumos"}, {"n": "DITOPAX", "v": 5000, "g": "Insumos"}, {"n": "FENOBARBITAL ML", "v": 23000, "g": "Insumos"}, {"n": "METAMUCIL", "v": 5000, "g": "Insumos"}, {"n": "PREDNISOLONA 5MG", "v": 3500, "g": "Insumos"}, {"n": "MELOXICAM GOTAS", "v": 24000, "g": "Insumos"}];
+        const CATALOGO_CUENTAS = [{"n": "CONSULTA NO PROGRAMADA", "v": 115000, "g": "Insumos"}, {"n": "RX", "v": 97000, "g": "Insumos"}, {"n": "2DX", "v": 67000, "g": "Laboratorio"}, {"n": "MATERIALES", "v": 17000, "g": "Insumos"}, {"n": "RX CONTROL  (1/2)", "v": 49000, "g": "Insumos"}, {"n": "4DX", "v": 100000, "g": "Laboratorio"}, {"n": "CATHETER", "v": 20000, "g": "Insumos"}, {"n": "OXIGENOTERAPIA XHORA", "v": 5000, "g": "Insumos"}, {"n": "ACIDO FOLICO", "v": 90000, "g": "Laboratorio"}, {"n": "TAPON", "v": 5000, "g": "Insumos"}, {"n": "XILASYNA 1ML", "v": 15000, "g": "Insumos"}, {"n": "ALBUMINA", "v": 36000, "g": "Laboratorio"}, {"n": "VENOCLISIS", "v": 20000, "g": "Insumos"}, {"n": "PROPOFOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "AMILOIDE FELINO", "v": 95000, "g": "Laboratorio"}, {"n": "VENOBOMBA", "v": 63000, "g": "Insumos"}, {"n": "LIDOCAINA 1ML", "v": 6000, "g": "Insumos"}, {"n": "AMONÍACO", "v": 63000, "g": "Laboratorio"}, {"n": "COBAN(VENDAJEVET)", "v": 5000, "g": "Insumos"}, {"n": "TRAMADOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "ANÁLISIS DE LÍQUIDO", "v": 50000, "g": "Laboratorio"}, {"n": "COBAN ROLLO", "v": 20000, "g": "Insumos"}, {"n": "MORFINA-AMPOLLA X 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 1", "v": 100000, "g": "Laboratorio"}, {"n": "EXTENSION", "v": 15000, "g": "Insumos"}, {"n": "HIDROMORFONA 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 2", "v": 145000, "g": "Laboratorio"}, {"n": "HARTMAN 1L", "v": 25000, "g": "Insumos"}, {"n": "BUTORFARNOL 1ML", "v": 90000, "g": "Insumos"}, {"n": "ASA 3", "v": 200000, "g": "Laboratorio"}, {"n": "HARTMAN 500ML (SUERO)", "v": 20000, "g": "Insumos"}, {"n": "MIDAZOLAN 1ML", "v": 22000, "g": "Insumos"}, {"n": "ASA 4", "v": 280000, "g": "Laboratorio"}, {"n": "JERINGA 1-3-5ML", "v": 1000, "g": "Insumos"}, {"n": "KETAMINA 1ML", "v": 18000, "g": "Insumos"}, {"n": "BACAF", "v": 45000, "g": "Laboratorio"}, {"n": "JERINGA 10-20-60ML", "v": 6000, "g": "Insumos"}, {"n": "MELOXICAM 1ML INY", "v": 8000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 1", "v": 105000, "g": "Laboratorio"}, {"n": "PERFUSORA 20/50", "v": 73000, "g": "Insumos"}, {"n": "DIPIRONA 1ML", "v": 4000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 2", "v": 140000, "g": "Laboratorio"}, {"n": "KIT NEBU", "v": 15000, "g": "Insumos"}, {"n": "OMEPRAZOL 1ML INY", "v": 3000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 1", "v": 180000, "g": "Laboratorio"}, {"n": "NEBULIZACION", "v": 15000, "g": "Insumos"}, {"n": "CERENIA 1ML INY", "v": 20000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 2", "v": 220000, "g": "Laboratorio"}, {"n": "SONDA", "v": 12000, "g": "Insumos"}, {"n": "ONDANSETRON AMPOLLA X 4ML", "v": 20000, "g": "Insumos"}, {"n": "BILIRRUBINA", "v": 36000, "g": "Laboratorio"}, {"n": "GUANTES PAR(EXAMEN)", "v": 500, "g": "Insumos"}, {"n": "NEXGARD", "v": 74000, "g": "Insumos"}, {"n": "CARTUCHO EDAN", "v": 40000, "g": "Laboratorio"}, {"n": "GUANTE ESTERIL(CIRUGIA)", "v": 4000, "g": "Insumos"}, {"n": "CEFALOTINA 1ML", "v": 3000, "g": "Insumos"}, {"n": "HOSP. GENERAL(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "AMPICILINA AMPOLLA X 10ML", "v": 15000, "g": "Insumos"}, {"n": "CIANOCOBALAMINA", "v": 90000, "g": "Laboratorio"}, {"n": "HOSP. UCI(CUIDADO PACIENTE)", "v": 35000, "g": "Insumos"}, {"n": "ENOXAPARINA", "v": 45000, "g": "Insumos"}, {"n": "CITOLOGÍAS", "v": 28000, "g": "Laboratorio"}, {"n": "HOSP. INFECCIOSO(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "METILPREDNISOLONA AMPOLLA  X 10ML", "v": 35000, "g": "Insumos"}, {"n": "COLESTEROL", "v": 36000, "g": "Laboratorio"}, {"n": "AGUJA", "v": 300, "g": "Insumos"}, {"n": "ACIFLUX", "v": 38000, "g": "Insumos"}, {"n": "CONVULSIVO", "v": 220000, "g": "Laboratorio"}, {"n": "SUTURA ABSORBIBLE", "v": 55000, "g": "Insumos"}, {"n": "COMPRESAS", "v": 20000, "g": "Insumos"}, {"n": "COPROLÓGICO", "v": 20000, "g": "Laboratorio"}, {"n": "VENDAJE (PEQUEÑO)", "v": 30000, "g": "Insumos"}, {"n": "PREVICOX 227", "v": 13000, "g": "Insumos"}, {"n": "CORTISOL", "v": 96000, "g": "Laboratorio"}, {"n": "VENDAJE (MEDIANO)", "v": 40000, "g": "Insumos"}, {"n": "PREVICOX 57", "v": 7000, "g": "Insumos"}, {"n": "CREATININA SECA", "v": 36000, "g": "Laboratorio"}, {"n": "VENDAJE (GRANDE)", "v": 50000, "g": "Insumos"}, {"n": "PREGABALINA ML", "v": 5000, "g": "Insumos"}, {"n": "CUADRO HEMÁTICO", "v": 38000, "g": "Laboratorio"}, {"n": "ECOGRAFIA", "v": 97000, "g": "Insumos"}, {"n": "PREGABALINA 25", "v": 5000, "g": "Insumos"}, {"n": "CULTIVO + ANTIBIOGRAMA", "v": 92000, "g": "Laboratorio"}, {"n": "ECOGRAFIA CONTROL", "v": 65000, "g": "Insumos"}, {"n": "PREGABALINA 75", "v": 9000, "g": "Insumos"}, {"n": "CULTIVO DE GÉRMENES COMUNES", "v": 92000, "g": "Laboratorio"}, {"n": "ECO FAST (CONTROL)", "v": 49000, "g": "Insumos"}, {"n": "ENROFLOXICINA", "v": 6000, "g": "Insumos"}, {"n": "CULTIVO DE HONGOS", "v": 92000, "g": "Laboratorio"}, {"n": "ECOCARDIO", "v": 126000, "g": "Insumos"}, {"n": "ACIDOTRAVEXANICO AMPOLLA X 5ML", "v": 20000, "g": "Insumos"}, {"n": "DIFERENCIAL DE PROTEINAS", "v": 71000, "g": "Laboratorio"}, {"n": "ROYAL RECOVERY", "v": 35000, "g": "Insumos"}, {"n": "BAYTRIL", "v": 8300, "g": "Insumos"}, {"n": "DIMERO D", "v": 95000, "g": "Laboratorio"}, {"n": "TOTAL F", "v": 10000, "g": "Insumos"}, {"n": "POTASIO", "v": 7000, "g": "Insumos"}, {"n": "EDAN GASES ARTERIALES/VENOSOS", "v": 85000, "g": "Laboratorio"}, {"n": "MIDAZOLAM", "v": 20000, "g": "Insumos"}, {"n": "BURETROL", "v": 9000, "g": "Insumos"}, {"n": "FOSFORO", "v": 36000, "g": "Laboratorio"}, {"n": "COLLAR FEROMONAS", "v": 95000, "g": "Insumos"}, {"n": "ARENA 1KG", "v": 6000, "g": "Insumos"}, {"n": "FRUCTOSAMINA", "v": 100000, "g": "Laboratorio"}, {"n": "BUPIVACAINA", "v": 15000, "g": "Insumos"}, {"n": "CICLORAC SPRAY", "v": 42000, "g": "Insumos"}, {"n": "GERIÁTRICO CANINO", "v": 315000, "g": "Laboratorio"}, {"n": "VESTIDO XS", "v": 30000, "g": "Insumos"}, {"n": "LIPIDOS", "v": 2000, "g": "Insumos"}, {"n": "GGT", "v": 36000, "g": "Laboratorio"}, {"n": "VESTIDO S", "v": 45000, "g": "Insumos"}, {"n": "EUTHANEX 1ML", "v": 13000, "g": "Insumos"}, {"n": "GLUCOSA", "v": 15000, "g": "Laboratorio"}, {"n": "VESTIDO M", "v": 50000, "g": "Insumos"}, {"n": "TRAZODONA TABLETA", "v": 3000, "g": "Insumos"}, {"n": "GRAM", "v": 34000, "g": "Laboratorio"}, {"n": "VESTIDO L", "v": 55000, "g": "Insumos"}, {"n": "PAÑAL O TAPETE", "v": 4000, "g": "Insumos"}, {"n": "HEMATOCRITO Y P TOTALES", "v": 10000, "g": "Laboratorio"}, {"n": "VESTIDO XL", "v": 60000, "g": "Insumos"}, {"n": "FORTIFLORA", "v": 7000, "g": "Insumos"}, {"n": "HEMOCULTIVO", "v": 92000, "g": "Laboratorio"}, {"n": "VESTIDO XXL", "v": 68000, "g": "Insumos"}, {"n": "CLORURO DE SODIO", "v": 8000, "g": "Insumos"}, {"n": "JERINGA EDAN", "v": 16000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XS", "v": 15000, "g": "Insumos"}, {"n": "FLUIMUCIL AMPOLLA X 3ML", "v": 15000, "g": "Insumos"}, {"n": "LIPASA", "v": 100000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO S", "v": 20000, "g": "Insumos"}, {"n": "TOTAL F SUSPENSION", "v": 10000, "g": "Insumos"}, {"n": "NIVELES DE FENOBARBITAL", "v": 130000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO M", "v": 25000, "g": "Insumos"}, {"n": "REVOLUTION PLUS", "v": 70000, "g": "Insumos"}, {"n": "PARCIAL DE ORINA", "v": 28000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO L", "v": 28000, "g": "Insumos"}, {"n": "NEUROPROTECCION (VITAMINA A-E-C-OMEGA-GINGO)", "v": 10000, "g": "Insumos"}, {"n": "PCR HEMOTRÓPICOS", "v": 0, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XL", "v": 30000, "g": "Insumos"}, {"n": "TRIHEPAT", "v": 5000, "g": "Insumos"}, {"n": "PCR", "v": 290000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XXL", "v": 35000, "g": "Insumos"}, {"n": "SUCRALFATO", "v": 5000, "g": "Insumos"}, {"n": "PERFIL HEPÁTICO", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION GASTROINTESTINAL 100GR", "v": 10000, "g": "Insumos"}, {"n": "MIRTAZAPINA", "v": 15000, "g": "Insumos"}, {"n": "PERFIL RENAL", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION RECOVERY 100 GR", "v": 10000, "g": "Insumos"}, {"n": "SILDENAFILO", "v": 5000, "g": "Insumos"}, {"n": "PROTEINA C", "v": 95000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH ANATRA 100 GR", "v": 10000, "g": "Insumos"}, {"n": "CEFTRAXONA  AMPOLLA X 10ML", "v": 20000, "g": "Insumos"}, {"n": "PT Y PPT (COAGULACIÓN)", "v": 75000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "LYRICA", "v": 5000, "g": "Insumos"}, {"n": "QUÍMICAS (ALT-AST-FA-CREA-UREA)", "v": 25000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT PORK PINEAPPLE MAIALE", "v": 10000, "g": "Insumos"}, {"n": "FLUNARIZINA", "v": 9000, "g": "Insumos"}, {"n": "ROTOR HEPÁTICO", "v": 120000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "DOXICICLINA (NEODOXIL)", "v": 5000, "g": "Insumos"}, {"n": "ROTOR RENAL", "v": 100000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT TACCHINO  100 GR", "v": 10000, "g": "Insumos"}, {"n": "ADRENALINA AMPOLLA", "v": 4000, "g": "Insumos"}, {"n": "ROTOR URGENCIAS", "v": 90000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION DIABETIC 400GR", "v": 28000, "g": "Insumos"}, {"n": "SDMA (DIMETILARGININA SIMÉTRICA)", "v": 180000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION GASTROINTESTIN 400GR", "v": 28000, "g": "Insumos"}, {"n": "ÁCIDO TRANEXANICO", "v": 20000, "g": "Insumos"}, {"n": "SUERO ANTÓLOGO", "v": 16000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RECOVERY 150 GR", "v": 12000, "g": "Insumos"}, {"n": "REVOLUTION PLUS 2.5 A 5", "v": 65000, "g": "Insumos"}, {"n": "T4 TOTAL + COLESTEROL T", "v": 126000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RENAL 150 GR", "v": 12000, "g": "Insumos"}, {"n": "BLADURIL", "v": 14000, "g": "Insumos"}, {"n": "TEST DISTEMPER-MOQUILLO", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME ADULT TONNO E ALGHE QU", "v": 12000, "g": "Insumos"}, {"n": "VITAMINA K (KAVITEX)", "v": 4000, "g": "Insumos"}, {"n": "TEST PARVOVIRUS", "v": 57000, "g": "Laboratorio"}, {"n": "MONGE SUPREME CAT RISO TE VERDE 80 GR", "v": 12000, "g": "Insumos"}, {"n": "GLUCONATO DE CALCIO", "v": 4000, "g": "Insumos"}, {"n": "TEST SIDA/LEUCEMIA", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME KITTEN TUN CARROT QUINO", "v": 12000, "g": "Insumos"}, {"n": "INSULINA", "v": 5000, "g": "Insumos"}, {"n": "TIEMPO DE COAGULACIÓN EN TUBO", "v": 3000, "g": "Laboratorio"}, {"n": "MONGE VET SOLUTION  HYPO MONOPROTEIN 400 GR", "v": 28000, "g": "Insumos"}, {"n": "DEXTROSA", "v": 300, "g": "Insumos"}, {"n": "TRIGLICÉRIDOS", "v": 36000, "g": "Laboratorio"}, {"n": "LATA E/N CANINO", "v": 30000, "g": "Insumos"}, {"n": "FUROSEMIDA", "v": 2000, "g": "Insumos"}, {"n": "TSH CANINA", "v": 96000, "g": "Laboratorio"}, {"n": "LATA I/D CANINO", "v": 34500, "g": "Insumos"}, {"n": "FITOVETE CREMA", "v": 43000, "g": "Insumos"}, {"n": "UPC", "v": 100000, "g": "Laboratorio"}, {"n": "LATA I/D FELINO", "v": 21000, "g": "Insumos"}, {"n": "METRONIDAZOL X100", "v": 20000, "g": "Insumos"}, {"n": "UREGENCIAS 2", "v": 250000, "g": "Laboratorio"}, {"n": "LATA E/N FELINO", "v": 19000, "g": "Insumos"}, {"n": "YOHINBINA", "v": 10000, "g": "Insumos"}, {"n": "URGENCIAS 1", "v": 155000, "g": "Laboratorio"}, {"n": "I/D SECO CANINO", "v": 29000, "g": "Insumos"}, {"n": "ATROPINA", "v": 9000, "g": "Insumos"}, {"n": "LATA A/D FELINO Y CANINO", "v": 25000, "g": "Insumos"}, {"n": "BISMOPET", "v": 43000, "g": "Insumos"}, {"n": "I/D SECO FELINO", "v": 47000, "g": "Insumos"}, {"n": "MEDICAMENTOS OTROS", "v": 36500, "g": "Insumos"}, {"n": "CHURU", "v": 5000, "g": "Insumos"}, {"n": "BFEX", "v": 28000, "g": "Insumos"}, {"n": "NUTRA LIFE (1CUCHARA 11GR)", "v": 500, "g": "Insumos"}, {"n": "ENEMA", "v": 25000, "g": "Insumos"}, {"n": "ROYAL CANIN RECOVERY", "v": 34000, "g": "Insumos"}, {"n": "TRIMETROPIN", "v": 5000, "g": "Insumos"}, {"n": "ACEVICAL DISPOSICION CUERPO X 1KG", "v": 8000, "g": "Insumos"}, {"n": "SULFAZALASINA", "v": 4000, "g": "Insumos"}, {"n": "PATOLOGIA", "v": 250000, "g": "Insumos"}, {"n": "DEXAMETASONA", "v": 4000, "g": "Insumos"}, {"n": "LLAVE 3VIAS", "v": 10000, "g": "Insumos"}, {"n": "SMECTA", "v": 5000, "g": "Insumos"}, {"n": "PAQUETE SONDA GATO", "v": 138000, "g": "Insumos"}, {"n": "TIAMINA", "v": 20000, "g": "Insumos"}, {"n": "VACUNAS", "v": 85000, "g": "Insumos"}, {"n": "ONE", "v": 10000, "g": "Insumos"}, {"n": "ANEST. INHALADA (ISORANY)", "v": 120000, "g": "Insumos"}, {"n": "PREDNISOLONA 20", "v": 3500, "g": "Insumos"}, {"n": "TUBO ENDROTRAQUEAL", "v": 18000, "g": "Insumos"}, {"n": "SUPOSITORIOS", "v": 7000, "g": "Insumos"}, {"n": "CARBON ACTIVADO", "v": 20000, "g": "Insumos"}, {"n": "SERETIDE (INALADOR)", "v": 115000, "g": "Insumos"}, {"n": "CEFALEXINA 500MG", "v": 1000, "g": "Insumos"}, {"n": "HIDROSIN", "v": 5000, "g": "Insumos"}, {"n": "DESCENSOR", "v": 3000, "g": "Insumos"}, {"n": "ENALAPRIL", "v": 1000, "g": "Insumos"}, {"n": "COMPLEJO B", "v": 25000, "g": "Insumos"}, {"n": "PERIACTIN", "v": 5000, "g": "Insumos"}, {"n": "DITOPAX", "v": 5000, "g": "Insumos"}, {"n": "FENOBARBITAL ML", "v": 23000, "g": "Insumos"}, {"n": "METAMUSIL", "v": 5000, "g": "Insumos"}, {"n": "PREDNISOLONA 5MG", "v": 3500, "g": "Insumos"}, {"n": "MELOXICAN GOTAS", "v": 24000, "g": "Insumos"}];
         let cuentaHospId = null;
         let cuentaHospExtra = []; // insumos agregados manualmente: {n, v, cant}
         let cuentaHospHistorial = []; // registro completo de cambios: {por, correo, fecha, accion, total}
@@ -6569,10 +6561,7 @@
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
             validarDatosCuentaHosp();
-            document.getElementById('cta-lista').classList.add('hidden');
-            document.getElementById('cta-form').classList.remove('hidden');
-            document.getElementById('cta-encurso').classList.remove('hidden');
-            renderEnCursoHosp();
+            abrirCuentasGuardadasHosp();
             aplicarModoLectura('cuentas-screen', 'cuentas_hosp');
         };
 
@@ -6604,8 +6593,6 @@
             recalcularCuentaHosp();
             validarDatosCuentaHosp();
             document.getElementById('cta-lista').classList.add('hidden');
-            document.getElementById('cta-form').classList.remove('hidden');
-            document.getElementById('cta-encurso').classList.remove('hidden');
             showToast("Cuenta nueva lista.");
         };
 
@@ -6636,7 +6623,6 @@
                 clearTimeout(cuentaHospAutosaveTimer);
                 var estG = document.getElementById('cta-estado-guardado'); if (estG) estG.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-cloud"></i> Guardado</span>';
                 renderHistorialHosp();
-                renderEnCursoHosp();
                 showToast("Cuenta guardada en la nube.");
             } catch (error) {
                 showToast("No se pudo guardar. Revisa la conexión o las reglas de Firestore.", true);
@@ -6646,94 +6632,27 @@
             }
         };
 
-        window.rangoRapidoCuentasHosp = function(tipo) {
-            const hoy = new Date();
-            const iso = dd => new Date(dd.getTime() - dd.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-            const desde = document.getElementById('cta-desde');
-            const hasta = document.getElementById('cta-hasta');
-            if (tipo === 'hoy') {
-                desde.value = iso(hoy); hasta.value = iso(hoy);
-            } else if (tipo === 'mes') {
-                desde.value = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
-                hasta.value = iso(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
-            } else {
-                desde.value = ''; hasta.value = '';
-            }
-            abrirCuentasGuardadasHosp();
-        };
-
         window.limpiarFiltroCuentasHosp = function() {
             document.getElementById('cta-desde').value = '';
             document.getElementById('cta-hasta').value = '';
             abrirCuentasGuardadasHosp();
         };
 
-        window.egresoCambioHosp = function() {
-            marcarCambioCuentaHosp();
-            const p = autoguardarCuentaHosp();
-            if (p && p.then) p.then(() => renderEnCursoHosp()); else renderEnCursoHosp();
-        };
-
-        window.renderEnCursoHosp = async function() {
-            const cont = document.getElementById('cta-encurso-container');
-            if (!cont) return;
-            cont.innerHTML = '<div class="text-center py-3"><div class="loader mx-auto mb-1"></div><p class="text-gray-400 text-xs">Cargando...</p></div>';
-            try {
-                const snap = await getDocs(collection(db, "cuentas_hospital"));
-                let items = [];
-                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-                items = items.filter(it => !it.fechaEgreso); // en curso = sin fecha de egreso
-                items.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
-                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-4 text-gray-400 italic text-sm">No hay hospitalizaciones en curso.</div>'; return; }
-                const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
-                cont.innerHTML = '';
-                items.forEach(it => {
-                    const row = document.createElement('div');
-                    row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50";
-                    row.innerHTML = `
-                        <div class="min-w-0">
-                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-emerald-600"></i> ${it.paciente || '(sin paciente)'} <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">En curso</span></p>
-                            <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}Ingreso ${(it.fecha || '')} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
-                        </div>
-                        <div class="flex gap-2 shrink-0">
-                            <button onclick="cargarCuentaHosp('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-white text-emerald-700 hover:bg-emerald-100 rounded-lg border border-emerald-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
-                            <button onclick="descargarCuentaHospPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
-                            ${puedeBorrar ? `<button onclick="eliminarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
-                        </div>`;
-                    cont.appendChild(row);
-                });
-            } catch (error) {
-                cont.innerHTML = '<div class="text-center py-3 text-red-500 text-sm">Error al cargar en curso.</div>';
-                console.error(error);
-            }
-        };
-
-        window.cerrarGuardadasHosp = function() {
-            document.getElementById('cta-lista').classList.add('hidden');
-            document.getElementById('cta-form').classList.remove('hidden');
-            document.getElementById('cta-encurso').classList.remove('hidden');
-            renderEnCursoHosp();
-        };
-
         window.abrirCuentasGuardadasHosp = async function() {
             const panel = document.getElementById('cta-lista');
             const cont = document.getElementById('cta-lista-container');
             panel.classList.remove('hidden');
-            document.getElementById('cta-form').classList.add('hidden');
-            document.getElementById('cta-encurso').classList.add('hidden');
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
             try {
                 const snap = await getDocs(collection(db, "cuentas_hospital"));
                 let items = [];
                 snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-                items = items.filter(it => it.fechaEgreso); // guardadas = ya finalizadas (con egreso)
                 const desde = document.getElementById('cta-desde').value;
                 const hasta = document.getElementById('cta-hasta').value;
                 const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
                 if (desde) items = items.filter(it => fechaDe(it) >= desde);
                 if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
-                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas finalizadas para ese rango.</div>'; return; }
+                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>'; return; }
                 items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
                 const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
                 cont.innerHTML = '';
@@ -6771,8 +6690,6 @@
                 volcarCuentaHosp(snap.data());
                 var estC = document.getElementById('cta-estado-guardado'); if (estC) estC.innerHTML = '';
                 document.getElementById('cta-lista').classList.add('hidden');
-                document.getElementById('cta-form').classList.remove('hidden');
-                document.getElementById('cta-encurso').classList.remove('hidden');
                 document.getElementById('cuentas-screen').scrollIntoView({ behavior: 'smooth' });
                 showToast("Cuenta cargada.");
             } catch (error) { showToast("No se pudo abrir la cuenta.", true); console.error(error); }
@@ -6785,7 +6702,6 @@
                 await deleteDoc(doc(db, "cuentas_hospital", id));
                 if (cuentaHospId === id) nuevaCuentaHosp();
                 showToast("Cuenta eliminada.");
-                renderEnCursoHosp();
                 abrirCuentasGuardadasHosp();
             } catch (error) { showToast("No se pudo eliminar.", true); console.error(error); }
         };
@@ -6836,7 +6752,7 @@
                 ["LABORATORIO", fmtCOPHosp(d.subLab || 0)],
                 ["TOTAL", fmtCOPHosp(d.total || 0)],
                 ["DEPÓSITO", fmtCOPHosp(d.deposito || 0)],
-                ["VALOR A PAGAR", fmtCOPHosp(d.resta || 0)],
+                ["RESTA POR PAGAR", fmtCOPHosp(d.resta || 0)],
             ];
             pdf.autoTable({
                 startY: y, body: resumen, theme: 'grid',
@@ -7940,17 +7856,16 @@
                 if (r && r.ok) {
                     showToast("Cuenta enviada a " + email);
                     try {
-                        // Usa el mismo registro de la cuenta actual (el que ya venía autoguardándose)
-                        const id = cuentaIdActual || ("lab_" + Date.now() + "_" + Math.floor(Math.random() * 1000));
+                        // Cada envío queda guardado como su propio registro (no sobrescribe los anteriores)
+                        const id = "lab_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
                         await setDoc(doc(db, "cuentas_laboratorio", id), {
                             ...d,
                             emailPropietario: email,
                             enviado: true,
                             fechaEnvio: new Date().toISOString(),
                             enviadoPor: usuarioSesion ? usuarioSesion.nombre : '',
-                            actualizado: new Date().toISOString()
-                        }, { merge: true });
-                        cuentaIdActual = id;
+                            creado: new Date().toISOString()
+                        });
                     } catch (e) { console.error(e); }
                     if (typeof limpiarBorrador === 'function') await limpiarBorrador('laboratorio');
                 } else {
@@ -7985,33 +7900,6 @@
                 console.error(e);
             }
         };
-
-        // ---- Autoguardado (red de seguridad, aunque no se envíe) ----
-        let labAutoTimer = null;
-        let labAutoListo = false;
-        function marcarCambioLab() {
-            clearTimeout(labAutoTimer);
-            labAutoTimer = setTimeout(autoguardarLab, 2500);
-        }
-        async function autoguardarLab() {
-            if (!puedeEditar('laboratorio')) return;
-            const d = recogerCuenta();
-            if (!d.deudorNombre && !d.paciente) return; // aún no hay nada identificable
-            if (!(d.valor > 0)) return;
-            try {
-                const esNuevo = !cuentaIdActual;
-                const id = cuentaIdActual || ("lab_" + Date.now() + "_" + Math.floor(Math.random() * 1000));
-                const reg = { ...d, actualizado: new Date().toISOString() };
-                if (esNuevo) reg.creado = reg.actualizado;
-                await setDoc(doc(db, "cuentas_laboratorio", id), reg, { merge: true });
-                cuentaIdActual = id;
-            } catch (e) { console.error('autoguardado lab', e); }
-        }
-        function activarAutoguardadoLab() {
-            if (labAutoListo) return;
-            const sc = document.getElementById('laboratorio-screen');
-            if (sc) { sc.addEventListener('input', marcarCambioLab); sc.addEventListener('change', marcarCambioLab); labAutoListo = true; }
-        }
 
         function formatoFechaLegible(f) {
             if (!f) return 'Sin fecha';
