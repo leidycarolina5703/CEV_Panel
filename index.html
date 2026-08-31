@@ -1309,6 +1309,7 @@
                 <button onclick="nuevaCuentaHosp()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
                 <button onclick="abrirCuentasGuardadasHosp()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 border border-gray-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
                 <button onclick="exportarAgregadosExcel()" title="Descargar en Excel los insumos/laboratorios agregados a mano en todas las cuentas" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-2 border border-green-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-file-excel"></i> Excel agregados</button>
+                <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-2 border border-red-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
             </div>
         </div>
 
@@ -1340,6 +1341,16 @@
             <div id="cta-lista-container" class="space-y-2"></div>
         </div>
 
+        <!-- Cuentas eliminadas (solo administrador) -->
+        <div id="cta-eliminadas" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                <h2 class="text-lg font-bold text-red-700 flex items-center gap-2"><i class="fa-solid fa-trash-can-arrow-up"></i> Cuentas eliminadas</h2>
+                <button onclick="cerrarCuentasEliminadasHosp()" class="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-semibold border border-gray-200 flex items-center gap-2"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info"></i> Aquí quedan las cuentas eliminadas, con quién y cuándo las borró. Puedes restaurarlas.</p>
+            <div id="cta-eliminadas-container" class="space-y-2"></div>
+        </div>
+
         <div id="cta-form">
         <!-- Datos del paciente -->
         <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
@@ -1362,7 +1373,7 @@
         <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-plus"></i> Agregar un insumo que no está en la lista</h2>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-end mt-3">
-                <div class="flex-1"><label class="fmt-lbl">Nombre del insumo</label><input type="text" id="cta-extra-nombre" class="fmt-in" placeholder="Ej: Medicamento especial"></div>
+                <div class="flex-1"><label class="fmt-lbl">Nombre del insumo</label><input type="text" id="cta-extra-nombre" class="fmt-in" style="text-transform:uppercase" placeholder="EJ: MEDICAMENTO ESPECIAL"></div>
                 <div class="w-full sm:w-40"><label class="fmt-lbl">Valor unitario</label><input type="number" min="0" id="cta-extra-valor" class="fmt-in" placeholder="0"></div>
                 <div class="w-full sm:w-40"><label class="fmt-lbl">Va en</label><select id="cta-extra-grupo" class="fmt-in"><option value="Insumos">Insumos</option><option value="Laboratorio">Laboratorio</option></select></div>
                 <button onclick="agregarInsumoExtraHosp()" class="js-editar px-4 py-2 bg-[#154390] text-white rounded-lg font-semibold hover:bg-[#0f3268] flex items-center justify-center gap-2 h-[42px]"><i class="fa-solid fa-plus"></i> Agregar</button>
@@ -1433,12 +1444,21 @@
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Egreso</h2>
             <div class="mb-3 flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-3 py-2 text-sm">
                 <i class="fa-solid fa-circle-info mt-0.5"></i>
-                <span>Coloca la fecha de egreso del paciente para que la cuenta se guarde y pase a Cuentas guardadas.</span>
+                <span>Cuando el paciente se va, dale egreso: la cuenta se cierra y pasa a Cuentas guardadas.</span>
             </div>
-            <div class="sm:w-1/2">
-                <label class="fmt-lbl">Fecha de egreso / salida</label>
-                <input type="date" id="cta-fecha-egreso" onchange="window.egresoCambioHosp()" class="fmt-in">
+            <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                <button type="button" onclick="window.egresarHoyHosp()" class="js-editar px-5 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calendar-check"></i> Dar egreso hoy
+                </button>
+                <div class="sm:w-56">
+                    <label class="fmt-lbl">O elegir otra fecha</label>
+                    <input type="date" id="cta-fecha-egreso" onchange="window.egresoCambioHosp()" class="fmt-in">
+                </div>
+                <button type="button" id="cta-egreso-quitar" onclick="window.quitarEgresoHosp()" class="js-editar hidden px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-semibold hover:bg-amber-100 border border-amber-200 transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i> Quitar egreso
+                </button>
             </div>
+            <p id="cta-egreso-estado" class="mt-2 text-sm"></p>
         </section>
 
         <!-- Historial de cambios (desplegable) -->
@@ -6508,7 +6528,7 @@
             if (nuevoValor <= 0) { showToast("Escribe un valor válido.", true); return; }
             const grupoTxt = prompt("¿Va en 'Insumos' o 'Laboratorio'? Escribe L para Laboratorio, o deja vacío para Insumos:", it.g === 'Laboratorio' ? 'L' : '');
             if (grupoTxt === null) return;
-            it.n = nuevoNombre.trim();
+            it.n = nuevoNombre.trim().toUpperCase();
             it.v = nuevoValor;
             it.g = (grupoTxt.trim().toLowerCase().startsWith('l')) ? 'Laboratorio' : 'Insumos';
             marcarCambioCuentaHosp();
@@ -6543,7 +6563,7 @@
 
         window.agregarInsumoExtraHosp = function() {
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
-            const n = (document.getElementById('cta-extra-nombre').value || '').trim();
+            const n = (document.getElementById('cta-extra-nombre').value || '').trim().toUpperCase();
             const v = parseInt(document.getElementById('cta-extra-valor').value) || 0;
             const g = document.getElementById('cta-extra-grupo').value === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
             if (!n) { showToast("Escribe el nombre del insumo.", true); return; }
@@ -6657,6 +6677,7 @@
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
             validarDatosCuentaHosp();
+            actualizarEstadoEgresoHosp();
         }
 
         window.openCuentasHosp = function() {
@@ -6676,20 +6697,39 @@
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
             validarDatosCuentaHosp();
-            mostrarFormularioHosp();
+            // Botón "Eliminadas": solo visible para el administrador
+            const btnElim = document.getElementById('cta-btn-eliminadas');
+            if (btnElim) btnElim.classList.toggle('hidden', !esAdmin);
+            // Al entrar solo se muestran las "hospitalizaciones en curso" (el formulario aparece con Nueva/Abrir)
+            vistaInicioHosp();
             renderHospEnCurso();
             aplicarModoLectura('cuentas-screen', 'cuentas_hosp');
         };
 
-        // Muestra el formulario de llenado y la sección "en curso"; oculta el panel de guardadas
+        let hospEnFormulario = false;
+
+        // Vista de inicio: solo la lista "en curso" (sin el formulario ni el panel de guardadas)
+        function vistaInicioHosp() {
+            const f = document.getElementById('cta-form'); if (f) f.classList.add('hidden');
+            const e = document.getElementById('cta-encurso'); if (e) e.classList.remove('hidden');
+            const p = document.getElementById('cta-lista'); if (p) p.classList.add('hidden');
+            const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
+            hospEnFormulario = false;
+        }
+
+        // Muestra el formulario de llenado y la sección "en curso"; oculta los paneles
         function mostrarFormularioHosp() {
             const f = document.getElementById('cta-form'); if (f) f.classList.remove('hidden');
             const e = document.getElementById('cta-encurso'); if (e) e.classList.remove('hidden');
             const p = document.getElementById('cta-lista'); if (p) p.classList.add('hidden');
+            const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
+            hospEnFormulario = true;
         }
 
         window.cerrarCuentasGuardadasHosp = function() {
-            mostrarFormularioHosp();
+            // Vuelve a donde estabas: al formulario si había una cuenta abierta, o al inicio
+            if (hospEnFormulario) mostrarFormularioHosp();
+            else vistaInicioHosp();
         };
 
         window.rangoRapidoCuentasHosp = function(tipo) {
@@ -6719,7 +6759,7 @@
                 snap.forEach(d => items.push({ id: d.id, ...d.data() }));
                 items = items.filter(it => !it.eliminado && !(it.fechaEgreso && String(it.fechaEgreso).trim()));
                 const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
-                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay hospitalizaciones en curso.</div>'; return; }
+                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6"><p class="text-gray-400 italic text-sm mb-3">No hay hospitalizaciones en curso.</p><button type="button" onclick="nuevaCuentaHosp()" class="js-editar px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold border border-blue-200 inline-flex items-center gap-2"><i class="fa-solid fa-file-circle-plus"></i> Nueva cuenta</button></div>'; return; }
                 items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
                 const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
                 cont.innerHTML = '';
@@ -6745,37 +6785,88 @@
             }
         };
 
-        // Llamada desde el onchange de la fecha de egreso (global, sin funciones de módulo directas)
+        // Fecha en texto legible: "28 de agosto de 2026"
+        function fechaLegibleHosp(iso) {
+            if (!iso) return '';
+            const p = String(iso).split('-').map(Number);
+            const y = p[0], m = p[1], d = p[2];
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            if (!y || !m || !d) return iso;
+            return `${d} de ${meses[m - 1]} de ${y}`;
+        }
+
+        // Muestra el estado del egreso y el botón "Quitar egreso"
+        function actualizarEstadoEgresoHosp() {
+            const inp = document.getElementById('cta-fecha-egreso');
+            const est = document.getElementById('cta-egreso-estado');
+            const btnQ = document.getElementById('cta-egreso-quitar');
+            const v = inp ? inp.value : '';
+            if (est) est.innerHTML = v
+                ? `<span class="text-green-700 font-semibold"><i class="fa-solid fa-circle-check"></i> Egreso: ${fechaLegibleHosp(v)}</span>`
+                : '<span class="text-gray-400"><i class="fa-regular fa-clock"></i> Sin egreso — el paciente sigue en curso.</span>';
+            if (btnQ) btnQ.classList.toggle('hidden', !v);
+        }
+
+        // Guarda el egreso (o su retiro) y refresca las listas. NO vuelve a preguntar.
+        async function aplicarEgresoHosp() {
+            marcarCambioCuentaHosp();
+            await autoguardarCuentaHosp();
+            await renderHospEnCurso();
+            const panel = document.getElementById('cta-lista');
+            if (panel && !panel.classList.contains('hidden')) await abrirCuentasGuardadasHosp();
+            actualizarEstadoEgresoHosp();
+            const egreso = document.getElementById('cta-fecha-egreso').value;
+            if (egreso) showToast("Egreso registrado. La cuenta pasó a 'Cuentas guardadas'.");
+            else showToast("Se quitó la fecha de egreso. La cuenta vuelve a 'en curso'.");
+        }
+
+        // Botón "Dar egreso hoy": trae la fecha de hoy y pregunta antes de aplicar
+        window.egresarHoyHosp = async function() {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const hoy = hoyISOHosp();
+            const ingreso = document.getElementById('cta-fecha').value;
+            if (ingreso && hoy < ingreso) { showToast("La fecha de ingreso es posterior a hoy. Revisa la fecha de ingreso.", true); return; }
+            if (!confirm(`¿La fecha de egreso es HOY, ${fechaLegibleHosp(hoy)}?\n\nLa cuenta se cerrará y pasará a 'Cuentas guardadas'.`)) return;
+            document.getElementById('cta-fecha-egreso').value = hoy;
+            await aplicarEgresoHosp();
+        };
+
+        // Botón "Quitar egreso": devuelve la cuenta a "en curso"
+        window.quitarEgresoHosp = async function() {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const inp = document.getElementById('cta-fecha-egreso');
+            if (!inp.value) return;
+            if (!confirm("¿Quitar la fecha de egreso y devolver la cuenta a 'Hospitalizaciones en curso'?")) return;
+            inp.value = '';
+            await aplicarEgresoHosp();
+        };
+
+        // onchange del calendario "O elegir otra fecha"
         window.egresoCambioHosp = async function() {
             const inp = document.getElementById('cta-fecha-egreso');
             const egreso = inp.value;
             const ingreso = document.getElementById('cta-fecha').value;
             if (egreso) {
-                // Validación de fechas
                 if (ingreso && egreso < ingreso) {
                     showToast("La fecha de egreso no puede ser anterior a la de ingreso.", true);
                     inp.value = '';
+                    actualizarEstadoEgresoHosp();
                     return;
                 }
                 if (egreso > hoyISOHosp()) {
                     if (!confirm("La fecha de egreso está en el futuro. ¿Deseas continuar de todas formas?")) {
                         inp.value = '';
+                        actualizarEstadoEgresoHosp();
                         return;
                     }
                 }
-                // Confirmar el egreso (cierra la cuenta y la pasa a guardadas)
-                if (!confirm("Al colocar la fecha de egreso, la cuenta se cerrará y pasará a 'Cuentas guardadas'.\n\n¿Confirmas el egreso del paciente?")) {
+                if (!confirm(`¿Confirmas el egreso el ${fechaLegibleHosp(egreso)}?\n\nLa cuenta se cerrará y pasará a 'Cuentas guardadas'.`)) {
                     inp.value = '';
+                    actualizarEstadoEgresoHosp();
                     return;
                 }
             }
-            marcarCambioCuentaHosp();
-            await autoguardarCuentaHosp();
-            // Al poner la fecha de egreso, la cuenta pasa de "en curso" a "guardadas"
-            await renderHospEnCurso();
-            const panel = document.getElementById('cta-lista');
-            if (panel && !panel.classList.contains('hidden')) await abrirCuentasGuardadasHosp();
-            if (egreso) showToast("Egreso registrado. La cuenta pasó a 'Cuentas guardadas'.");
+            await aplicarEgresoHosp();
         };
 
         window.nuevaCuentaHosp = function() {
@@ -6807,6 +6898,7 @@
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
             validarDatosCuentaHosp();
+            actualizarEstadoEgresoHosp();
             mostrarFormularioHosp();
             renderHospEnCurso();
             showToast("Cuenta nueva lista.");
@@ -6876,6 +6968,7 @@
             // Al abrir "Guardadas" se oculta el formulario de llenado y la sección "en curso"
             const f = document.getElementById('cta-form'); if (f) f.classList.add('hidden');
             const e = document.getElementById('cta-encurso'); if (e) e.classList.add('hidden');
+            const elim = document.getElementById('cta-eliminadas'); if (elim) elim.classList.add('hidden');
             panel.classList.remove('hidden');
             cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
             try {
@@ -6976,6 +7069,67 @@
                 const panel = document.getElementById('cta-lista');
                 if (panel && !panel.classList.contains('hidden')) abrirCuentasGuardadasHosp();
             } catch (error) { showToast("No se pudo reabrir la cuenta.", true); console.error(error); }
+        };
+
+        // ===== Cuentas eliminadas (solo administrador) =====
+        window.cerrarCuentasEliminadasHosp = function() {
+            if (hospEnFormulario) mostrarFormularioHosp();
+            else vistaInicioHosp();
+        };
+
+        window.abrirCuentasEliminadasHosp = async function() {
+            if (!esAdmin) { showToast("Solo el administrador puede ver las cuentas eliminadas.", true); return; }
+            const panel = document.getElementById('cta-eliminadas');
+            const cont = document.getElementById('cta-eliminadas-container');
+            const f = document.getElementById('cta-form'); if (f) f.classList.add('hidden');
+            const e = document.getElementById('cta-encurso'); if (e) e.classList.add('hidden');
+            const lst = document.getElementById('cta-lista'); if (lst) lst.classList.add('hidden');
+            panel.classList.remove('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "cuentas_hospital"));
+                let items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                items = items.filter(it => it.eliminado === true);
+                items.sort((a, b) => (b.eliminadoEn || '').localeCompare(a.eliminadoEn || ''));
+                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas eliminadas.</div>'; return; }
+                cont.innerHTML = '';
+                items.forEach(it => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 bg-red-50/40 hover:bg-red-50";
+                    const cuando = it.eliminadoEn ? new Date(it.eliminadoEn).toLocaleString('es-CO') : '';
+                    row.innerHTML = `
+                        <div class="min-w-0">
+                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                            <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')}${it.fechaEgreso ? ' → ' + it.fechaEgreso : ''} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
+                            <p class="text-[11px] text-red-600"><i class="fa-solid fa-trash-can"></i> Eliminó: <b>${it.eliminadoPor || '—'}</b>${cuando ? ' · ' + cuando : ''}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="restaurarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 rounded-lg border border-green-200 flex items-center gap-1"><i class="fa-solid fa-trash-can-arrow-up"></i> Restaurar</button>
+                        </div>`;
+                    cont.appendChild(row);
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(error);
+            }
+        };
+
+        window.restaurarCuentaHosp = async function(id, nombre) {
+            if (!esAdmin) { showToast("Solo el administrador puede restaurar cuentas.", true); return; }
+            if (!confirm(`¿Restaurar la cuenta de "${nombre || 'este paciente'}"?\n\nVolverá a aparecer en las listas (en curso o guardadas, según su fecha de egreso).`)) return;
+            try {
+                const ahora = new Date().toISOString();
+                await setDoc(doc(db, "cuentas_hospital", id), {
+                    eliminado: false,
+                    restauradoPor: usuarioSesion ? usuarioSesion.nombre : '',
+                    restauradoEn: ahora,
+                    actualizado: ahora
+                }, { merge: true });
+                showToast("Cuenta restaurada.");
+                abrirCuentasEliminadasHosp();
+                renderHospEnCurso();
+            } catch (error) { showToast("No se pudo restaurar la cuenta.", true); console.error(error); }
         };
 
         function construirCuentaHospPDF(d) {
