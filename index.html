@@ -28,6 +28,10 @@
         .fmt-lbl { display:block; font-size:0.7rem; font-weight:600; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:0.25rem; }
         .fmt-in { width:100%; border:1px solid #d1d5db; border-radius:0.5rem; padding:0.5rem 0.75rem; background:#f9fafb; font-size:0.875rem; outline:none; }
         .fmt-in:focus { border-color:#154390; box-shadow:0 0 0 2px rgba(21,67,144,0.2); background:#fff; }
+        /* Comentarios de los formatos: mientras están abiertos, la casilla ocupa
+           toda la fila de la cuadrícula para que el cuadro de texto se vea amplio. */
+        .nota-ancha { grid-column: 1 / -1; }
+        .nota-txt { min-height: 7rem; line-height: 1.5; }
         /* Oculta el ojo/limpiar nativo del navegador para dejar solo el de la app */
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear { display:none; }
@@ -682,9 +686,6 @@
                 <button onclick="guardarFormato()" id="btn-guardar-formato" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
                 </button>
-                <button onclick="exportarFormatoExcel()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-file-excel"></i> Descargar Excel
-                </button>
                 <button onclick="exportarFormatoPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Descargar PDF
                 </button>
@@ -803,9 +804,6 @@
                 <button onclick="guardarOrto()" id="btn-guardar-orto" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
                 </button>
-                <button onclick="exportarOrtoExcel()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-file-excel"></i> Descargar Excel
-                </button>
                 <button onclick="exportarOrtoPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Descargar PDF
                 </button>
@@ -861,13 +859,22 @@
             <!-- Secciones generadas -->
             <div id="n-secciones" class="space-y-4 sm:space-y-6"></div>
 
+            <!-- Fotos adjuntas -->
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-images"></i> Fotos</h2>
+                <p class="text-xs text-gray-400 mt-1 mb-3">Adjunta fotos de la valoración. Se comprimen automáticamente para guardarlas.</p>
+                <input type="file" id="n-file" accept="image/*" multiple class="hidden" onchange="agregarImagenesNeuro(event)">
+                <div id="n-dropzone" onclick="document.getElementById('n-file').click()" class="js-editar border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400 cursor-pointer hover:border-[#154390] hover:bg-blue-50/30 transition-colors">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl mb-1"></i>
+                    <p class="text-sm">Arrastra fotos aquí o haz clic para seleccionar</p>
+                </div>
+                <div id="n-imagenes" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"></div>
+            </section>
+
             <!-- Acciones -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <button onclick="guardarNeuro()" id="btn-guardar-neuro" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube
-                </button>
-                <button onclick="exportarNeuroExcel()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-file-excel"></i> Descargar Excel
                 </button>
                 <button onclick="exportarNeuroPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Descargar PDF
@@ -1305,11 +1312,12 @@
                 <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-file-invoice-dollar"></i></div>
                 <h2 class="text-lg font-bold text-[#154390]">Cuentas de cobro hospitalización</h2>
             </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="nuevaCuentaHosp()" class="px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
-                <button onclick="abrirCuentasGuardadasHosp()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 border border-gray-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
-                <button onclick="exportarAgregadosExcel()" title="Descargar en Excel los insumos/laboratorios agregados a mano en todas las cuentas" class="px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-2 border border-green-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-file-excel"></i> Excel agregados</button>
-                <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-2 border border-red-200 w-full sm:w-auto justify-center"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <button onclick="verHospEnCurso()" title="Volver a la lista de hospitalizaciones en curso" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-shield-dog"></i> En curso</button>
+                <button onclick="nuevaCuentaHosp()" class="px-3 py-1.5 text-sm bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-1.5 border border-blue-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
+                <button onclick="abrirCuentasGuardadasHosp()" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
+                <button onclick="exportarAgregadosExcel()" title="Descargar en Excel los insumos/laboratorios agregados a mano en todas las cuentas" class="px-3 py-1.5 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-1.5 border border-green-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Excel agregados</button>
+                <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-1.5 border border-red-200 justify-center whitespace-nowrap"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
             </div>
         </div>
 
@@ -4765,6 +4773,7 @@
                 { id: "desplazamiento", label: "Desplazamiento",          tipo: "si_no" },
                 { id: "simetria",       label: "Apariencia simetría",     tipo: "si_no" },
                 { id: "tono",           label: "Tono",                    tipo: "si_no" },
+                { id: "tono_comentario", label: "Tono — Observaciones",      tipo: "nota" },
                 { id: "ataxia",         label: "Ataxia",                  tipo: "si_no" },
                 { id: "claudica",       label: "Claudica",                tipo: "si_no" },
                 { id: "paresis",        label: "Paresis",                 tipo: "si_no" }
@@ -4779,6 +4788,7 @@
                     { id: "rpl_izq_directo",    label: "Reflejo pupilar luminoso — Izquierdo directo",   tipo: "si_no" },
                     { id: "rpl_izq_consensual", label: "Reflejo pupilar luminoso — Izquierdo consensual",tipo: "si_no" },
                     { id: "amenaza",            label: "Respuesta a la amenaza",                          tipo: "si_no" },
+                    { id: "amenaza_comentario", label: "Respuesta a la amenaza — Observaciones",             tipo: "nota" },
                     { id: "colocacion_visual",  label: "Respuesta de colocación visual",                  tipo: "si_no" },
                     { id: "fijacion",           label: "Respuesta de fijación",                           tipo: "si_no" },
                     { id: "oftalmoscopico",     label: "Examen oftalmoscópico",                           tipo: "si_no" }
@@ -4792,12 +4802,14 @@
                     { id: "ptosis",             label: "Ptosis palpebral",                                tipo: "si_no" }
                 ]},
                 { titulo: "IV Nervio troclear", campos: [
-                    { id: "estrabismo_dorso", label: "Estrabismo dorsolateral / dorsomedial", tipo: "si_no" }
+                    { id: "estrabismo_dorso", label: "Estrabismo dorsolateral / dorsomedial", tipo: "si_no" },
+                    { id: "estrabismo_dorso_comentario", label: "Estrabismo dorsolateral / dorsomedial — Observaciones", tipo: "nota" }
                 ]},
                 { titulo: "V Trigémino", campos: [
                     { id: "mov_mandibula",     label: "Movimiento mandíbula",                tipo: "si_no" },
                     { id: "mandibula_caida",   label: "Mandíbula caída",                     tipo: "si_no" },
                     { id: "atrofia_maseteros", label: "Atrofia maseteros y temporal",        tipo: "si_no" },
+                    { id: "atrofia_maseteros_comentario", label: "Atrofia maseteros y temporal — Observaciones", tipo: "nota" },
                     { id: "reflejo_palpebral", label: "Reflejo palpebral",                   tipo: "si_no" },
                     { id: "reflejo_corneal",   label: "Reflejo corneal",                     tipo: "si_no" }
                 ]},
@@ -4807,6 +4819,7 @@
                 ]},
                 { titulo: "VII Facial", campos: [
                     { id: "f_amenaza",   label: "Reflejo de amenaza",  tipo: "si_no" },
+                    { id: "f_amenaza_comentario", label: "Reflejo de amenaza — Observaciones", tipo: "nota" },
                     { id: "f_palpebral", label: "Reflejo palpebral",   tipo: "si_no" },
                     { id: "f_corneal",   label: "Reflejo corneal",     tipo: "si_no" },
                     { id: "f_palmada",   label: "Reflejo de palmada",  tipo: "si_no" }
@@ -4815,13 +4828,15 @@
                     { id: "c_palmada",   label: "Reflejo palmada",       tipo: "si_no" },
                     { id: "c_bear",      label: "Test BEAR",             tipo: "si_no" },
                     { id: "c_oaes",      label: "Test OAEs",             tipo: "si_no" },
-                    { id: "c_nistagmo",  label: "Nistagmo espontáneo",   tipo: "si_no" }
+                    { id: "c_nistagmo",  label: "Nistagmo espontáneo",   tipo: "si_no" },
+                    { id: "c_nistagmo_comentario", label: "Nistagmo espontáneo — Observaciones", tipo: "nota" }
                 ]},
                 { titulo: "VIII Vestibulococlear — División vestibular", campos: [
                     { id: "v_inclinacion", label: "Inclinación cabeza",    tipo: "si_no" },
                     { id: "v_rolling",     label: "Rolling falling",       tipo: "si_no" },
                     { id: "v_circling",    label: "Circling",              tipo: "si_no" },
-                    { id: "v_nistagmo",    label: "Nistagmo posicional",   tipo: "si_no" }
+                    { id: "v_nistagmo",    label: "Nistagmo posicional",   tipo: "si_no" },
+                    { id: "v_nistagmo_comentario", label: "Nistagmo posicional — Observaciones", tipo: "nota" }
                 ]},
                 { titulo: "IX Glosofaríngeo", campos: [
                     { id: "ix_gag",      label: "Gag reflejo", tipo: "si_no" },
@@ -4841,20 +4856,20 @@
                     { id: "xii_atrofia", label: "Atrofia muscular",                  tipo: "si_no" }
                 ]}
             ]},
-            { id: "posturales", titulo: "Reacciones posturales", icono: "fa-person-walking", campos: [
-                { id: "cuello",          label: "Cuello",                            tipo: "si_no" },
-                { id: "nistagmus",       label: "Nistagmus",                         tipo: "si_no" },
-                { id: "propio",          label: "Propiocepción posicionamiento",     tipo: "si_no" },
-                { id: "propio_mp",       label: "Propiocepción — mp",                tipo: "si_no" },
-                { id: "propio_mt",       label: "Propiocepción — mt",                tipo: "si_no" },
-                { id: "posicionamiento", label: "Posicionamiento",                   tipo: "si_no" },
-                { id: "visual",          label: "Visual",                            tipo: "si_no" },
-                { id: "tactil",          label: "Táctil",                            tipo: "si_no" },
-                { id: "enderezamiento",  label: "Enderezamiento de decúbito",        tipo: "si_no" },
-                { id: "extensor",        label: "Extensor de rechazo",               tipo: "si_no" },
-                { id: "saltos",          label: "Saltos",                            tipo: "si_no" },
-                { id: "carretilla",      label: "Carretilla",                        tipo: "si_no" },
-                { id: "circling",        label: "Test de circling",                  tipo: "si_no" }
+            { id: "posturales", titulo: "Reacciones posturales", icono: "fa-person-walking", nota: "Escribe el hallazgo de cada reacción.", campos: [
+                { id: "cuello",          label: "Cuello",                            tipo: "abierto" },
+                { id: "nistagmus",       label: "Nistagmus",                         tipo: "abierto" },
+                { id: "propio",          label: "Propiocepción posicionamiento",     tipo: "abierto" },
+                { id: "propio_mp",       label: "Propiocepción — mp",                tipo: "abierto" },
+                { id: "propio_mt",       label: "Propiocepción — mt",                tipo: "abierto" },
+                { id: "posicionamiento", label: "Posicionamiento",                   tipo: "abierto" },
+                { id: "visual",          label: "Visual",                            tipo: "abierto" },
+                { id: "tactil",          label: "Táctil",                            tipo: "abierto" },
+                { id: "enderezamiento",  label: "Enderezamiento de decúbito",        tipo: "abierto" },
+                { id: "extensor",        label: "Extensor de rechazo",               tipo: "abierto" },
+                { id: "saltos",          label: "Saltos",                            tipo: "abierto" },
+                { id: "carretilla",      label: "Carretilla",                        tipo: "abierto" },
+                { id: "circling",        label: "Test de circling",                  tipo: "abierto" }
             ]},
             { id: "espinales", titulo: "Reflejos espinales", icono: "fa-bolt", nota: "Escala de 0 a 4.", campos: [
                 { id: "retirada_mti",  label: "Reflejo de retirada — mti",   tipo: "escala" },
@@ -4880,7 +4895,8 @@
                 { id: "mpi", label: "mpi", tipo: "si_no" }
             ]},
             { id: "dolor", titulo: "Dolor profundo y superficial", icono: "fa-hand-dots", campos: [
-                { id: "dolor", label: "Dolor profundo y superficial", tipo: "si_no" }
+                { id: "dolor", label: "Dolor profundo y superficial", tipo: "si_no" },
+                { id: "dolor_comentario", label: "Dolor profundo y superficial — Observaciones", tipo: "nota" }
             ]}
         ];
         const NEURO_DATOS = ["nombre","hc","fecha","edad","sexo"];
@@ -4896,6 +4912,8 @@
             document.getElementById('fmt-endoscopia-alta').classList.add('hidden');
             document.getElementById('fmt-neuro').classList.remove('hidden');
             prepararFormularioNeuro();
+            renderImgsNeuro();
+            initDropNeuro();
             abrirNeuroGuardados();
             aplicarModoLectura('fmt-neuro', 'fmt_neuro');
         };
@@ -4908,14 +4926,63 @@
             }
         }
 
-        function campoNeuroHTML(secId, campo) {
+        // Bloque de comentario que se dibuja DENTRO de la casilla del campo al
+        // que pertenece, para que se vea claro de quién es el comentario.
+        function notaNeuroHTML(secId, nota) {
+            const dom = `n-${secId}-${nota.id}`;
+            return `
+                <button type="button" id="btn-${dom}" onclick="abrirNotaNeuro('${dom}')" class="js-editar mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#154390] bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                    <i class="fa-solid fa-comment-medical"></i> ${nota.boton || 'Agregar observación'}
+                </button>
+                <div id="box-${dom}" class="hidden mt-1.5 border-l-2 border-[#154390] pl-2">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="fmt-lbl mb-0">Observaciones</span>
+                        <button type="button" onclick="quitarNotaNeuro('${dom}')" class="js-editar text-[11px] font-semibold text-gray-400 hover:text-red-600 flex items-center gap-1">
+                            <i class="fa-solid fa-xmark"></i> Quitar
+                        </button>
+                    </div>
+                    <textarea id="${dom}" rows="4" class="fmt-in resize-y nota-txt" placeholder="Escribe aquí la observación..."></textarea>
+                </div>`;
+        }
+
+        // campo + su comentario (si lo tiene) dentro de la misma casilla
+        function campoNeuroHTML(secId, campo, nota) {
             const dom = `n-${secId}-${campo.id}`;
-            if (campo.tipo === "texto") {
-                return `<div><label class="fmt-lbl">${campo.label}</label><input id="${dom}" class="fmt-in"></div>`;
+            const extra = nota ? notaNeuroHTML(secId, nota) : '';
+            let control;
+            if (campo.tipo === "nota") {
+                // Comentario sin campo al que engancharse: casilla propia
+                return `<div id="celda-${dom}">${notaNeuroHTML(secId, campo)}</div>`;
+            } else if (campo.tipo === "abierto") {
+                // Cuadro de comentario siempre visible, sin lista SI/NO
+                control = `<textarea id="${dom}" rows="2" class="fmt-in resize-y" placeholder="Comentario..."></textarea>`;
+            } else if (campo.tipo === "texto") {
+                control = `<input id="${dom}" class="fmt-in">`;
+            } else {
+                const ops = NEURO_OPCIONES[campo.tipo] || [];
+                const opts = ['<option value=""></option>'].concat(ops.map(o => `<option>${o}</option>`)).join('');
+                control = `<select id="${dom}" class="fmt-in">${opts}</select>`;
             }
-            const ops = NEURO_OPCIONES[campo.tipo] || [];
-            const opts = ['<option value=""></option>'].concat(ops.map(o => `<option>${o}</option>`)).join('');
-            return `<div><label class="fmt-lbl">${campo.label}</label><select id="${dom}" class="fmt-in">${opts}</select></div>`;
+            // La casilla lleva id cuando trae comentario: al abrirlo se ensancha
+            const idCelda = nota ? ` id="celda-n-${secId}-${nota.id}"` : '';
+            return `<div${idCelda}><label class="fmt-lbl">${campo.label}</label>${control}${extra}</div>`;
+        }
+
+        // Pinta una lista de campos: si a un campo le sigue uno de tipo "nota",
+        // ese comentario se dibuja dentro de la casilla del campo anterior.
+        function camposNeuroHTML(secId, campos) {
+            let html = '';
+            campos.forEach((c, i) => {
+                if (c.tipo === 'nota') return; // ya va dentro de su campo
+                const sig = campos[i + 1];
+                html += campoNeuroHTML(secId, c, (sig && sig.tipo === 'nota') ? sig : null);
+            });
+            // Comentarios que no tengan un campo delante: se pintan aparte
+            campos.forEach((c, i) => {
+                const ant = campos[i - 1];
+                if (c.tipo === 'nota' && (!ant || ant.tipo === 'nota')) html += campoNeuroHTML(secId, c, null);
+            });
+            return html;
         }
 
         function renderSeccionesNeuro() {
@@ -4927,7 +4994,7 @@
                 if (sec.nota) html += `<p class="text-xs text-gray-500 italic mb-3">${sec.nota}</p>`;
                 if (sec.campos) {
                     html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">`;
-                    sec.campos.forEach(c => { html += campoNeuroHTML(sec.id, c); });
+                    html += camposNeuroHTML(sec.id, sec.campos);
                     html += `</div>`;
                 }
                 if (sec.bloques) {
@@ -4935,13 +5002,107 @@
                         html += `<div class="mt-4 border border-gray-200 rounded-xl p-3 bg-gray-50/50">
                             <p class="text-xs font-bold text-[#154390] uppercase tracking-wide mb-2">${b.titulo}</p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">`;
-                        b.campos.forEach(c => { html += campoNeuroHTML(sec.id, c); });
+                        html += camposNeuroHTML(sec.id, b.campos);
                         html += `</div></div>`;
                     });
                 }
                 html += `</section>`;
             });
             cont.innerHTML = html;
+        }
+
+        // ---- Fotos adjuntas de la valoración ----
+        let neuroImagenes = [];
+
+        function renderImgsNeuro() {
+            const cont = document.getElementById('n-imagenes');
+            if (!cont) return;
+            const editable = puedeEditar('fmt_neuro');
+            if (!neuroImagenes.length) {
+                cont.innerHTML = '<p class="text-gray-400 italic text-sm col-span-full">Sin fotos adjuntas.</p>';
+                return;
+            }
+            cont.innerHTML = neuroImagenes.map((img, i) => `
+                <div class="relative group aspect-square">
+                    <img src="${img}" class="w-full h-full object-cover rounded-lg border border-gray-200 bg-gray-50">
+                    ${editable ? `<button onclick="quitarImagenNeuro(${i})" class="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-90 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                </div>`).join('');
+        }
+
+        function initDropNeuro() {
+            const dz = document.getElementById('n-dropzone');
+            if (!dz || dz.dataset.listo) return;
+            dz.dataset.listo = '1';
+            ['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('border-[#154390]', 'bg-blue-50'); }));
+            ['dragleave', 'dragend'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('border-[#154390]', 'bg-blue-50'); }));
+            dz.addEventListener('drop', async e => {
+                e.preventDefault();
+                dz.classList.remove('border-[#154390]', 'bg-blue-50');
+                const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(f => f.type.startsWith('image/'));
+                await agregarArchivosNeuro(files);
+            });
+        }
+
+        async function agregarArchivosNeuro(files) {
+            if (!puedeEditar('fmt_neuro')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!files.length) return;
+            showToast("Procesando fotos...");
+            for (const f of files) {
+                try { neuroImagenes.push(await comprimirImagen(f, 1000, 0.6)); } catch (e) { console.error(e); }
+            }
+            renderImgsNeuro();
+            marcarCambioBorrador('neuro');
+            const total = neuroImagenes.reduce((s, x) => s + x.length, 0);
+            if (total > 850000) showToast("Cuidado: muchas fotos pueden superar el límite al guardar.", true);
+            else showToast("Fotos agregadas.");
+        }
+
+        window.agregarImagenesNeuro = async function(event) {
+            await agregarArchivosNeuro(Array.from(event.target.files || []));
+            event.target.value = '';
+        };
+
+        window.quitarImagenNeuro = function(i) {
+            if (!puedeEditar('fmt_neuro')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            neuroImagenes.splice(i, 1);
+            renderImgsNeuro();
+            marcarCambioBorrador('neuro');
+        };
+
+        // ---- Comentarios plegables (campos tipo "nota") ----
+        function verNotaNeuro(dom, abierto) {
+            const box = document.getElementById('box-' + dom);
+            const btn = document.getElementById('btn-' + dom);
+            if (!box || !btn) return;
+            box.classList.toggle('hidden', !abierto);
+            btn.classList.toggle('hidden', abierto);
+            // Mientras el comentario está abierto, su casilla ocupa toda la fila
+            // para que el cuadro de texto se vea amplio y no encajonado.
+            const celda = document.getElementById('celda-' + dom);
+            if (celda) celda.classList.toggle('nota-ancha', abierto);
+        }
+
+        window.abrirNotaNeuro = function(dom) {
+            verNotaNeuro(dom, true);
+            const ta = document.getElementById(dom);
+            if (ta) ta.focus();
+        };
+
+        window.quitarNotaNeuro = function(dom) {
+            const ta = document.getElementById(dom);
+            if (ta && ta.value.trim() && !confirm("¿Quitar la observación? Se borrará lo que escribiste.")) return;
+            if (ta) { ta.value = ''; ta.dispatchEvent(new Event('input', { bubbles: true })); }
+            verNotaNeuro(dom, false);
+        };
+
+        // Deja cada comentario desplegado solo si tiene texto (al cargar o al empezar de cero)
+        function sincronizarNotasNeuro() {
+            recorrerCamposNeuro((secId, c) => {
+                if (c.tipo !== 'nota') return;
+                const dom = `n-${secId}-${c.id}`;
+                const ta = document.getElementById(dom);
+                verNotaNeuro(dom, !!(ta && ta.value.trim()));
+            });
         }
 
         function recorrerCamposNeuro(fn) {
@@ -4959,6 +5120,7 @@
                 campos[secId + '_' + c.id] = (document.getElementById(`n-${secId}-${c.id}`)?.value || '').trim();
             });
             data.campos = campos;
+            data.imagenes = neuroImagenes.slice();
             return data;
         }
 
@@ -4969,6 +5131,9 @@
                 const el = document.getElementById(`n-${secId}-${c.id}`);
                 if (el) el.value = campos[secId + '_' + c.id] || '';
             });
+            sincronizarNotasNeuro();
+            neuroImagenes = (data.imagenes || []).slice();
+            renderImgsNeuro();
         }
 
         window.nuevoNeuro = function() {
@@ -4977,6 +5142,9 @@
             recorrerCamposNeuro((secId, c) => {
                 const el = document.getElementById(`n-${secId}-${c.id}`); if (el) el.value = '';
             });
+            sincronizarNotasNeuro();
+            neuroImagenes = [];
+            renderImgsNeuro();
             const d = new Date();
             document.getElementById('n-fecha').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             document.getElementById('neuro-lista').classList.add('hidden');
@@ -5168,6 +5336,32 @@
                     });
                 }
             });
+
+            // Fotos adjuntas, en cuadrícula al final
+            const imgs = d.imagenes || [];
+            if (imgs.length) {
+                const PH = pdf.internal.pageSize.getHeight();
+                const cols = 2, gap = 12, box = (anchoUtil - gap) / cols;
+                // El título y la primera fila de fotos viajan juntos
+                if (y + 20 + box > PH - 44) { pdf.addPage(); y = 44; }
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
+                pdf.text("FOTOS", M, y + 10); y += 20;
+                imgs.forEach((img, i) => {
+                    const col = i % cols;
+                    if (col === 0 && y + box > PH - 44) { pdf.addPage(); y = 44; }
+                    const cx = M + col * (box + gap);
+                    let w = box, h = box;
+                    try {
+                        const p = pdf.getImageProperties(img);
+                        const rt = p.width / p.height;
+                        if (rt >= 1) { h = box / rt; } else { w = box * rt; }
+                    } catch (e) { }
+                    const ox = cx + (box - w) / 2, oy = y + (box - h) / 2;
+                    try { pdf.addImage(img, 'JPEG', ox, oy, w, h); } catch (e) { }
+                    if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
+                });
+            }
+
             sellarLogoPaginas(pdf, M);
             return pdf;
         }
@@ -6725,6 +6919,15 @@
             const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
             hospEnFormulario = true;
         }
+
+        // Botón "En curso": cierra el formulario y los paneles y vuelve a la
+        // lista de hospitalizaciones en curso, refrescándola.
+        window.verHospEnCurso = async function() {
+            vistaInicioHosp();
+            await renderHospEnCurso();
+            const secc = document.getElementById('cta-encurso');
+            if (secc && secc.scrollIntoView) secc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
 
         window.cerrarCuentasGuardadasHosp = function() {
             // Vuelve a donde estabas: al formulario si había una cuenta abierta, o al inicio
