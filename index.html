@@ -31,6 +31,8 @@
         /* Comentarios de los formatos: mientras están abiertos, la casilla ocupa
            toda la fila de la cuadrícula para que el cuadro de texto se vea amplio. */
         .nota-ancha { grid-column: 1 / -1; }
+        /* Señala por un momento la tarjeta de un paciente ya registrado */
+        .bod-resaltada { box-shadow: 0 0 0 3px rgba(217,119,6,.5); }
         .nota-txt { min-height: 7rem; line-height: 1.5; }
         /* Oculta el ojo/limpiar nativo del navegador para dejar solo el de la app */
         input[type="password"]::-ms-reveal,
@@ -1316,6 +1318,7 @@
                 <button onclick="verHospEnCurso()" title="Volver a la lista de hospitalizaciones en curso" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-shield-dog"></i> En curso</button>
                 <button onclick="nuevaCuentaHosp()" class="px-3 py-1.5 text-sm bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-1.5 border border-blue-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
                 <button onclick="abrirCuentasGuardadasHosp()" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
+                <button onclick="abrirInformeHosp()" title="Informe de insumos por rango de fecha y hora" class="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-semibold flex items-center gap-1.5 border border-indigo-200 justify-center whitespace-nowrap"><i class="fa-solid fa-magnifying-glass-chart"></i> Informe</button>
                 <button onclick="exportarAgregadosExcel()" title="Descargar en Excel los insumos/laboratorios agregados a mano en todas las cuentas" class="px-3 py-1.5 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-1.5 border border-green-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Excel agregados</button>
                 <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-1.5 border border-red-200 justify-center whitespace-nowrap"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
             </div>
@@ -1357,6 +1360,53 @@
             </div>
             <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info"></i> Aquí quedan las cuentas eliminadas, con quién y cuándo las borró. Puedes restaurarlas.</p>
             <div id="cta-eliminadas-container" class="space-y-2"></div>
+        </div>
+
+        <!-- Informe por rango de fecha y hora -->
+        <div id="cta-informe" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                <h2 class="text-lg font-bold text-indigo-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass-chart"></i> Informe de insumos</h2>
+                <button onclick="cerrarInformeHosp()" class="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-semibold border border-gray-200 flex items-center gap-2"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info"></i> Elige el rango de <b>fecha y hora</b>. Se incluyen todas las cuentas (en curso y ya egresadas). El filtro usa la fecha y hora en que se creó/registró la cuenta.</p>
+            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                <!-- Fila 1: FECHA -->
+                <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-indigo-600"></i> Fecha</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="fmt-lbl">Desde</label><input type="date" id="inf-fdesde" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Hasta</label><input type="date" id="inf-fhasta" class="fmt-in"></div>
+                </div>
+                <!-- Fila 2: HORA -->
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-regular fa-clock text-indigo-600"></i> Hora</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="fmt-lbl">Desde</label>
+                        <div class="flex items-center gap-1">
+                            <select id="inf-hdesde-h" class="fmt-in"></select>
+                            <span class="font-bold text-gray-500">:</span>
+                            <select id="inf-hdesde-m" class="fmt-in"></select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="fmt-lbl">Hasta</label>
+                        <div class="flex items-center gap-1">
+                            <select id="inf-hhasta-h" class="fmt-in"></select>
+                            <span class="font-bold text-gray-500">:</span>
+                            <select id="inf-hhasta-m" class="fmt-in"></select>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-1">Elige la hora (24h) y los minutos en los menús. El rango de hoy va de 00:00 a 23:59.</p>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <button onclick="generarInformeHosp()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Generar informe</button>
+                    <button onclick="rangoRapidoInforme('hoy')" class="px-3 py-1.5 bg-white text-indigo-700 rounded-full text-xs font-semibold border border-indigo-200 hover:bg-indigo-50">Hoy</button>
+                    <button onclick="rangoRapidoInforme('7dias')" class="px-3 py-1.5 bg-white text-indigo-700 rounded-full text-xs font-semibold border border-indigo-200 hover:bg-indigo-50">Últimos 7 días</button>
+                    <button onclick="rangoRapidoInforme('mes')" class="px-3 py-1.5 bg-white text-indigo-700 rounded-full text-xs font-semibold border border-indigo-200 hover:bg-indigo-50">Este mes</button>
+                    <button id="inf-btn-pdf" onclick="descargarInformeHospPDF()" class="hidden px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 flex items-center gap-2 ml-auto"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+                </div>
+            </div>
+            <div id="inf-resumen" class="hidden text-sm font-semibold text-indigo-700 mb-2"></div>
+            <div id="inf-container" class="space-y-3"></div>
         </div>
 
         <div id="cta-form">
@@ -1452,7 +1502,7 @@
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> Egreso</h2>
             <div class="mb-3 flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-3 py-2 text-sm">
                 <i class="fa-solid fa-circle-info mt-0.5"></i>
-                <span>Cuando el paciente se va, dale egreso: la cuenta se cierra y pasa a Cuentas guardadas.</span>
+                <span>Al dar de alta al paciente, registra su fecha de egreso: la cuenta se cerrará y pasará automáticamente a «Cuentas guardadas».</span>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
                 <button type="button" onclick="window.egresarHoyHosp()" class="js-editar px-5 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md flex items-center justify-center gap-2">
@@ -1483,7 +1533,7 @@
 
         <div id="cta-estado-guardado" class="text-xs text-right min-h-[1rem] font-semibold"></div>
         <div class="flex flex-col sm:flex-row gap-3">
-            <button onclick="guardarCuentaHosp()" id="btn-guardar-cuenta" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube</button>
+            <button onclick="guardarCuentaHosp()" id="btn-guardar-cuenta" title="La cuenta se guarda sola; este botón solo fuerza el guardado inmediato" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar ahora</button>
             <button onclick="exportarCuentaHospPDF()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex justify-center items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
         </div>
         </div><!-- /cta-form -->
@@ -1705,6 +1755,7 @@
             </div>
         </div>
     </div>
+
 
     <div id="toast" class="fixed bottom-4 right-4 bg-[#154390] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gray-300 text-sm sm:text-base">
         <i class="fa-solid fa-check-circle text-gray-200" id="toast-icon"></i>
@@ -2047,6 +2098,7 @@
             document.getElementById('evidencias-screen').classList.add('hidden');
             document.getElementById('farmacia-screen').classList.add('hidden');
             document.getElementById('agenda-screen').classList.add('hidden');
+            document.getElementById('cuentas-screen').classList.add('hidden');
             }
         });
 
@@ -6370,6 +6422,7 @@
         let cuentaHospId = null;
         let cuentaHospExtra = []; // insumos agregados manualmente: {n, v, cant}
         let cuentaHospHistorial = []; // registro completo de cambios: {por, correo, fecha, accion, total}
+        let cuentaHospMovimientos = []; // salidas de insumos con fecha/hora: {n, g, cant, v, fecha, por}
         let cuentaHospDirty = false;       // hay cambios sin guardar
         let cuentaHospEsNueva = true;      // si es cuenta nueva (para el historial)
         let cuentaHospAutosaveTimer = null;
@@ -6465,6 +6518,19 @@
             const nombreU = usuarioSesion ? usuarioSesion.nombre : '';
             const correoU = usuarioSesion ? usuarioSesion.correo : '';
             const actSnap = snapDeCuentaHosp(data);
+            // Registrar SALIDAS de insumos (aumentos) con su fecha/hora, para el informe
+            try {
+                const prevMap = {}; (cuentaHospPrevio.items || []).forEach(it => prevMap[it.n + '||' + it.g] = it.cant || 0);
+                const valMap = {}; (data.items || []).forEach(it => valMap[it.n + '||' + it.g] = it.v || 0);
+                (actSnap.items || []).forEach(it => {
+                    const k = it.n + '||' + it.g;
+                    const delta = (it.cant || 0) - (prevMap[k] || 0);
+                    if (delta > 0) {
+                        cuentaHospMovimientos.push({ n: it.n, g: it.g, cant: delta, v: valMap[k] || 0, fecha: ahora, por: nombreU });
+                    }
+                });
+                if (cuentaHospMovimientos.length > 1000) cuentaHospMovimientos = cuentaHospMovimientos.slice(-1000);
+            } catch (e) { console.error('movimientos', e); }
             const ultima = cuentaHospHistorial[cuentaHospHistorial.length - 1];
             const nuevaEntrada = forzarNueva || !ultima || ultima.por !== nombreU || !ultima.fecha ||
                 (Date.now() - new Date(ultima.fecha).getTime() > 120000);
@@ -6491,7 +6557,14 @@
             const est = document.getElementById('cta-estado-guardado');
             if (est) est.innerHTML = '<span class="text-amber-600"><i class="fa-solid fa-circle" style="font-size:7px"></i> Cambios sin guardar…</span>';
             clearTimeout(cuentaHospAutosaveTimer);
-            cuentaHospAutosaveTimer = setTimeout(autoguardarCuentaHosp, 2000);
+            cuentaHospAutosaveTimer = setTimeout(autoguardarCuentaHosp, 900);
+        }
+
+        // Guarda de inmediato lo pendiente (se llama al salir o cambiar de vista,
+        // para no tener que pulsar "Guardar en la nube").
+        async function flushGuardadoHosp() {
+            clearTimeout(cuentaHospAutosaveTimer);
+            if (cuentaHospDirty) { try { await autoguardarCuentaHosp(); } catch (e) { console.error(e); } }
         }
 
         async function autoguardarCuentaHosp() {
@@ -6517,6 +6590,7 @@
                 if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
                 registrarHistorialHosp(data, ahora, false);
                 data.historial = cuentaHospHistorial;
+                data.movimientos = cuentaHospMovimientos;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
                 cuentaHospId = id;
                 cuentaHospBaseActualizado = ahora;
@@ -6527,9 +6601,9 @@
             } catch (e) { console.error('autoguardado', e); }
         }
 
-        window.salirCuentasHosp = function() {
-            if (cuentaHospDirty && !confirm("Tienes cambios sin guardar. ¿Salir de todas formas?")) return;
-            clearTimeout(cuentaHospAutosaveTimer);
+        window.salirCuentasHosp = async function() {
+            // Se guarda solo antes de salir; no hace falta pulsar "Guardar en la nube"
+            await flushGuardadoHosp();
             cuentaHospDirty = false;
             goToDashboard();
         };
@@ -6865,6 +6939,7 @@
                 ? `<i class="fa-solid fa-user-pen"></i> Última edición: <b>${data.modificadoPor}</b>${data.actualizado ? ' · ' + new Date(data.actualizado).toLocaleString('es-CO') : ''}`
                 : '';
             cuentaHospHistorial = (data.historial || []).slice();
+            cuentaHospMovimientos = (data.movimientos || []).slice();
             cuentaHospPrevio = snapDeCuentaHosp(data);
             cuentaHospEntryBase = snapDeCuentaHosp(data);
             renderHistorialHosp();
@@ -6908,6 +6983,7 @@
             const e = document.getElementById('cta-encurso'); if (e) e.classList.remove('hidden');
             const p = document.getElementById('cta-lista'); if (p) p.classList.add('hidden');
             const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
+            const inf = document.getElementById('cta-informe'); if (inf) inf.classList.add('hidden');
             hospEnFormulario = false;
         }
 
@@ -6917,12 +6993,223 @@
             const e = document.getElementById('cta-encurso'); if (e) e.classList.remove('hidden');
             const p = document.getElementById('cta-lista'); if (p) p.classList.add('hidden');
             const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
+            const inf = document.getElementById('cta-informe'); if (inf) inf.classList.add('hidden');
             hospEnFormulario = true;
         }
+
+        // ===== Informe de insumos por rango de fecha y hora =====
+        let informeHospData = [];
+        let informeHospRango = { desde: '', hasta: '' };
+
+        // Fecha local "YYYY-MM-DD" y hora local "HH:MM"
+        function fISOHosp(d) { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
+        function hHMHosp(d) { const p = n => String(n).padStart(2, '0'); return `${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+        // Llena los menús desplegables de hora (00–23) y minutos (00–59), una sola vez
+        function poblarHorasInforme() {
+            const p = n => String(n).padStart(2, '0');
+            const llenar = (id, max) => {
+                const sel = document.getElementById(id);
+                if (!sel || sel.options.length) return;
+                let html = '';
+                for (let i = 0; i <= max; i++) html += `<option value="${p(i)}">${p(i)}</option>`;
+                sel.innerHTML = html;
+            };
+            llenar('inf-hdesde-h', 23); llenar('inf-hdesde-m', 59);
+            llenar('inf-hhasta-h', 23); llenar('inf-hhasta-m', 59);
+        }
+        // Lee/escribe la hora "HH:MM" desde los dos menús (hora y minutos)
+        function getHoraInforme(pref) {
+            const h = document.getElementById(pref + '-h').value || '00';
+            const m = document.getElementById(pref + '-m').value || '00';
+            return h + ':' + m;
+        }
+        function setHoraInforme(pref, hm) {
+            const partes = (hm || '00:00').split(':');
+            document.getElementById(pref + '-h').value = partes[0] || '00';
+            document.getElementById(pref + '-m').value = partes[1] || '00';
+        }
+        // Fecha + hora legible a partir de un ISO/datetime
+        function fechaHoraLegibleHosp(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            if (isNaN(d)) return iso;
+            return d.toLocaleString('es-CO', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        window.abrirInformeHosp = async function() {
+            await flushGuardadoHosp();
+            const f = document.getElementById('cta-form'); if (f) f.classList.add('hidden');
+            const e = document.getElementById('cta-encurso'); if (e) e.classList.add('hidden');
+            const p = document.getElementById('cta-lista'); if (p) p.classList.add('hidden');
+            const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
+            document.getElementById('cta-informe').classList.remove('hidden');
+            poblarHorasInforme();
+            // Por defecto: hoy, de 00:00 a la hora actual
+            const ahora = new Date();
+            if (!document.getElementById('inf-fdesde').value) document.getElementById('inf-fdesde').value = fISOHosp(ahora);
+            if (!document.getElementById('inf-fhasta').value) document.getElementById('inf-fhasta').value = fISOHosp(ahora);
+            setHoraInforme('inf-hdesde', '00:00');
+            setHoraInforme('inf-hhasta', hHMHosp(ahora));
+        };
+
+        window.cerrarInformeHosp = function() {
+            if (hospEnFormulario) mostrarFormularioHosp();
+            else vistaInicioHosp();
+        };
+
+        window.rangoRapidoInforme = function(tipo) {
+            const ahora = new Date();
+            let desde;
+            if (tipo === 'hoy') desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0);
+            else if (tipo === '7dias') { desde = new Date(ahora); desde.setDate(desde.getDate() - 7); }
+            else desde = new Date(ahora.getFullYear(), ahora.getMonth(), 1, 0, 0); // mes
+            document.getElementById('inf-fdesde').value = fISOHosp(desde);
+            document.getElementById('inf-fhasta').value = fISOHosp(ahora);
+            setHoraInforme('inf-hdesde', '00:00');
+            setHoraInforme('inf-hhasta', '23:59');
+            generarInformeHosp();
+        };
+
+        window.generarInformeHosp = async function() {
+            const cont = document.getElementById('inf-container');
+            const resumen = document.getElementById('inf-resumen');
+            const btnPdf = document.getElementById('inf-btn-pdf');
+            // Fila 1 = fecha, Fila 2 = hora (escrita). Se combinan; si no hay hora, todo el día.
+            const fdesde = document.getElementById('inf-fdesde').value;
+            const fhasta = document.getElementById('inf-fhasta').value;
+            const hdesde = getHoraInforme('inf-hdesde');
+            const hhasta = getHoraInforme('inf-hhasta');
+            const desdeStr = fdesde ? (fdesde + 'T' + hdesde) : '';
+            const hastaStr = fhasta ? (fhasta + 'T' + hhasta) : '';
+            const desde = desdeStr ? new Date(desdeStr) : null;
+            // 'Hasta' incluye el minuto completo (los inputs no traen segundos)
+            const hasta = hastaStr ? new Date(new Date(hastaStr).getTime() + 59999) : null;
+            if (desde && hasta && desde > hasta) { showToast("La fecha/hora 'Desde' es posterior a 'Hasta'.", true); return; }
+            informeHospRango = { desde: desdeStr, hasta: hastaStr };
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            resumen.classList.add('hidden');
+            btnPdf.classList.add('hidden');
+            try {
+                const snap = await getDocs(collection(db, "cuentas_hospital"));
+                const cuentas = [];
+                snap.forEach(d => {
+                    const c = { id: d.id, ...d.data() };
+                    if (c.eliminado) return; // no incluir eliminadas
+                    let movs = [];
+                    if (Array.isArray(c.movimientos) && c.movimientos.length) {
+                        // Salidas de insumos con su propia fecha/hora
+                        movs = c.movimientos.filter(m => {
+                            const md = new Date(m.fecha);
+                            if (isNaN(md)) return false;
+                            if (desde && md < desde) return false;
+                            if (hasta && md > hasta) return false;
+                            return true;
+                        }).map(m => ({ n: m.n, g: m.g, cant: m.cant || 0, v: m.v || 0, fecha: m.fecha, por: m.por || '' }));
+                    } else {
+                        // Cuenta antigua sin detalle por hora: se ubica por su fecha de creación
+                        const ref = c.creado || c.actualizado || (c.fecha ? c.fecha + 'T00:00' : null);
+                        const rd = ref ? new Date(ref) : null;
+                        const enRango = rd && (!desde || rd >= desde) && (!hasta || rd <= hasta);
+                        if (enRango) movs = (c.items || []).map(it => ({ n: it.n, g: it.g, cant: it.cant || 0, v: it.v || 0, fecha: ref, por: '', _legacy: true }));
+                    }
+                    if (movs.length) {
+                        movs.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+                        cuentas.push({ id: c.id, paciente: c.paciente, historia: c.historia, fecha: c.fecha, fechaEgreso: c.fechaEgreso, movs });
+                    }
+                });
+                cuentas.sort((a, b) => ((a.movs[0] && a.movs[0].fecha) || '').localeCompare((b.movs[0] && b.movs[0].fecha) || ''));
+                informeHospData = cuentas;
+            } catch (e) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(e); return;
+            }
+            if (!informeHospData.length) {
+                cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No se sacaron insumos en ese rango de fecha y hora.</div>';
+                return;
+            }
+            // Resumen general (por salidas dentro del rango)
+            let totalValor = 0, totalUnidades = 0;
+            informeHospData.forEach(c => c.movs.forEach(m => { totalUnidades += m.cant; totalValor += m.cant * m.v; }));
+            resumen.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${informeHospData.length} paciente(s) · ${totalUnidades} unidad(es) de insumos · Total $${fmtCOPHosp(totalValor).replace('$ ', '')}`;
+            resumen.classList.remove('hidden');
+            btnPdf.classList.remove('hidden');
+            // Render por paciente, con la fecha/hora de cada salida
+            const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            cont.innerHTML = informeHospData.map(c => {
+                const subtotal = c.movs.reduce((s, m) => s + m.cant * m.v, 0);
+                const filas = c.movs.map(m => `
+                    <div class="flex items-start justify-between gap-2 py-1 border-b border-gray-50 last:border-0 text-sm">
+                        <span class="text-gray-700 min-w-0">
+                            <span class="font-semibold text-[#154390]">${m.cant}×</span> ${esc(m.n)}
+                            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${m.g === 'Laboratorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${m.g === 'Laboratorio' ? 'Lab' : 'Insumo'}</span>
+                            <span class="block text-[11px] text-gray-400"><i class="fa-regular fa-clock"></i> ${m._legacy ? 'Registro (sin hora exacta): ' : ''}${fechaHoraLegibleHosp(m.fecha)}${m.por ? ' · ' + esc(m.por) : ''}</span>
+                        </span>
+                        <span class="text-gray-500 whitespace-nowrap">${fmtCOPHosp(m.cant * m.v)}</span>
+                    </div>`).join('');
+                return `
+                <div class="border border-gray-200 rounded-xl p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2 mb-2">
+                        <div class="min-w-0">
+                            <p class="font-bold text-gray-800 truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${esc(c.paciente) || '(sin paciente)'} <span class="text-gray-400 font-normal text-sm">· HC ${esc(c.historia) || '—'}</span></p>
+                            <p class="text-[11px] text-gray-500">${c.fecha ? 'Ingreso: ' + fechaLegibleHosp(c.fecha) : ''}${c.fechaEgreso ? ' · Egreso: ' + fechaLegibleHosp(c.fechaEgreso) : ' · <span class=\"text-emerald-600\">En curso</span>'}</p>
+                        </div>
+                        <span class="text-sm font-bold text-[#154390] whitespace-nowrap">${c.movs.length} salida(s) · ${fmtCOPHosp(subtotal)}</span>
+                    </div>
+                    ${filas}
+                </div>`;
+            }).join('');
+        };
+
+        window.descargarInformeHospPDF = function() {
+            if (!informeHospData.length) { showToast("Primero genera el informe.", true); return; }
+            if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return; }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const W = pdf.internal.pageSize.getWidth();
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(21, 67, 144);
+            pdf.text("Informe de insumos — Hospitalización", 40, 46);
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5); pdf.setTextColor(90, 90, 90);
+            const rango = `Desde: ${informeHospRango.desde ? fechaHoraLegibleHosp(informeHospRango.desde) : 'inicio'}   ·   Hasta: ${informeHospRango.hasta ? fechaHoraLegibleHosp(informeHospRango.hasta) : 'ahora'}`;
+            pdf.text(rango, 40, 62);
+            pdf.text("Generado: " + new Date().toLocaleString('es-CO'), 40, 76);
+            // Tabla plana: Fecha/hora de la salida, Paciente, HC, Insumo, Cant, Grupo, Valor
+            const body = [];
+            informeHospData.forEach(c => {
+                c.movs.forEach((m, idx) => {
+                    body.push([
+                        fechaHoraLegibleHosp(m.fecha),
+                        idx === 0 ? (c.paciente || '(sin paciente)') : '',
+                        idx === 0 ? (c.historia || '—') : '',
+                        m.n, String(m.cant || 0),
+                        m.g === 'Laboratorio' ? 'Lab' : 'Insumo',
+                        fmtCOPHosp((m.cant || 0) * (m.v || 0))
+                    ]);
+                });
+            });
+            pdf.autoTable({
+                startY: 92,
+                head: [['Fecha y hora salida', 'Paciente', 'HC', 'Insumo', 'Cant.', 'Grupo', 'Valor']],
+                body: body,
+                styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+                headStyles: { fillColor: [21, 67, 144], textColor: 255 },
+                columnStyles: { 0: { cellWidth: 95 }, 1: { cellWidth: 90 }, 2: { cellWidth: 40 }, 4: { cellWidth: 32, halign: 'center' }, 5: { cellWidth: 40 }, 6: { cellWidth: 60, halign: 'right' } },
+                margin: { left: 40, right: 40 }
+            });
+            let totalValor = 0, totalUnid = 0;
+            informeHospData.forEach(c => c.movs.forEach(m => { totalValor += m.cant * m.v; totalUnid += m.cant; }));
+            const y = pdf.lastAutoTable.finalY + 16;
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(21, 67, 144);
+            pdf.text(`${informeHospData.length} paciente(s) · ${totalUnid} unidad(es) · Total $${fmtCOPHosp(totalValor).replace('$ ', '')}`, 40, y);
+            const nombre = `informe_insumos_${(informeHospRango.desde || '').slice(0, 10)}_a_${(informeHospRango.hasta || '').slice(0, 10)}.pdf`;
+            pdf.save(nombre);
+            showToast("Informe PDF generado.");
+        };
 
         // Botón "En curso": cierra el formulario y los paneles y vuelve a la
         // lista de hospitalizaciones en curso, refrescándola.
         window.verHospEnCurso = async function() {
+            await flushGuardadoHosp();
             vistaInicioHosp();
             await renderHospEnCurso();
             const secc = document.getElementById('cta-encurso');
@@ -7072,7 +7359,9 @@
             await aplicarEgresoHosp();
         };
 
-        window.nuevaCuentaHosp = function() {
+        window.nuevaCuentaHosp = async function() {
+            // Guarda la cuenta actual antes de empezar una nueva
+            await flushGuardadoHosp();
             cuentaHospId = null;
             cuentaHospEsNueva = true;
             cuentaHospDirty = false;
@@ -7089,6 +7378,7 @@
             const avDup = document.getElementById('cta-aviso-duplicado'); if (avDup) avDup.classList.add('hidden');
             cuentaHospExtra = [];
             cuentaHospHistorial = [];
+            cuentaHospMovimientos = [];
             cuentaHospPrevio = { items: [], cx: 0, deposito: 0 };
             cuentaHospEntryBase = { items: [], cx: 0, deposito: 0 };
             renderHistorialHosp();
@@ -7142,6 +7432,7 @@
                 if (cuentaHospEsNueva && !cuentaHospId) { data.creado = ahora; data.creadoPor = data.modificadoPor; }
                 registrarHistorialHosp(data, ahora, true);
                 data.historial = cuentaHospHistorial;
+                data.movimientos = cuentaHospMovimientos;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
                 cuentaHospId = id;
                 cuentaHospBaseActualizado = ahora;
@@ -7155,7 +7446,7 @@
                 showToast("No se pudo guardar. Revisa la conexión o las reglas de Firestore.", true);
                 console.error(error);
             } finally {
-                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar en la nube';
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar ahora';
             }
         };
 
@@ -7166,6 +7457,7 @@
         };
 
         window.abrirCuentasGuardadasHosp = async function() {
+            await flushGuardadoHosp();
             const panel = document.getElementById('cta-lista');
             const cont = document.getElementById('cta-lista-container');
             // Al abrir "Guardadas" se oculta el formulario de llenado y la sección "en curso"
@@ -7213,6 +7505,8 @@
         };
 
         window.cargarCuentaHosp = async function(id) {
+            // Guarda lo que estabas editando antes de abrir otra cuenta
+            await flushGuardadoHosp();
             try {
                 const snap = await getDoc(doc(db, "cuentas_hospital", id));
                 if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
@@ -7282,6 +7576,7 @@
 
         window.abrirCuentasEliminadasHosp = async function() {
             if (!esAdmin) { showToast("Solo el administrador puede ver las cuentas eliminadas.", true); return; }
+            await flushGuardadoHosp();
             const panel = document.getElementById('cta-eliminadas');
             const cont = document.getElementById('cta-eliminadas-container');
             const f = document.getElementById('cta-form'); if (f) f.classList.add('hidden');
@@ -9484,6 +9779,7 @@
                 showToast("No se pudo eliminar.", true);
             }
         };
+
 
         // --- SISTEMA DE NOTIFICACIONES ---
         window.showToast = function(message, isError = false) {
