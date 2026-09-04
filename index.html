@@ -1336,6 +1336,10 @@
                 <h2 class="text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</h2>
                 <button onclick="cerrarCuentasGuardadasHosp()" class="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-semibold border border-gray-200 flex items-center gap-2"><i class="fa-solid fa-xmark"></i> Cerrar</button>
             </div>
+            <div class="relative mb-3">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                <input type="text" id="cta-buscar-guardadas" oninput="filtrarGuardadasHosp()" autocomplete="off" placeholder="Buscar por paciente o historia clínica..." class="js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+            </div>
             <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
                 <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-[#154390]"></i> Consultar por rango de fechas</p>
                 <div class="flex flex-wrap items-end gap-2">
@@ -1418,6 +1422,14 @@
                 <div><label class="fmt-lbl">Fecha de ingreso <span class="text-red-500">*</span></label><input type="date" id="cta-fecha" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
                 <div><label class="fmt-lbl">Nombre del paciente <span class="text-red-500">*</span></label><input type="text" id="cta-paciente" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
                 <div><label class="fmt-lbl">Propietario <span class="text-red-500">*</span></label><input type="text" id="cta-propietario" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
+                <div><label class="fmt-lbl">Cédula de ciudadanía <span class="text-red-500">*</span></label><input type="text" inputmode="numeric" id="cta-cedula" oninput="this.value=this.value.replace(/[^0-9]/g,''); validarDatosCuentaHosp()" class="fmt-in" placeholder="Solo números"></div>
+                <div><label class="fmt-lbl">Especie <span class="text-red-500">*</span></label>
+                    <select id="cta-especie" onchange="validarDatosCuentaHosp()" class="fmt-in">
+                        <option value="">Selecciona…</option>
+                        <option value="Canino">Canino</option>
+                        <option value="Felino">Felino</option>
+                    </select>
+                </div>
                 <div><label class="fmt-lbl">Historia clínica <span class="text-red-500">*</span></label><input type="number" inputmode="numeric" min="0" step="1" id="cta-historia" oninput="validarDatosCuentaHosp()" onchange="verificarDuplicadoHosp()" class="fmt-in" placeholder="Solo números"></div>
             </div>
             <div id="cta-aviso-duplicado" class="hidden mt-3 bg-orange-50 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 text-sm"></div>
@@ -1441,6 +1453,15 @@
         <!-- Catálogo + cantidades -->
         <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Insumos y servicios</h2>
+            <!-- Hoja por día: el AM/PM que escribas es del día elegido; la cuenta suma todos los días -->
+            <div class="bg-blue-50 border border-blue-100 rounded-lg p-2 mb-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-[#154390] shrink-0"><i class="fa-regular fa-calendar"></i> Día:</span>
+                    <input type="date" id="cta-dia" onchange="cambiarDiaHosp(this.value)" class="fmt-in text-sm py-1 w-auto">
+                    <div id="cta-dias-chips" class="flex flex-wrap gap-1"></div>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1">Escribes el AM/PM del <b>día elegido</b>. Cambia la fecha para registrar otro día; la columna <b>Total</b> y la cuenta suman todos los días.</p>
+            </div>
             <div class="relative mb-2">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
                 <input type="text" id="cta-buscar" oninput="filtrarCatalogoHosp()" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50" placeholder="Buscar insumo o examen...">
@@ -2250,6 +2271,7 @@
         // ─────────────────────────────────────────────────────────────────────
         const defaultData = [
             // Stand 1 — Catéteres
+            { name: "Catéter 26", ideal: 3 },
             { name: "Catéter 24", ideal: 20 },
             { name: "Catéter 22", ideal: 20 },
             { name: "Catéter 20", ideal: 20 },
@@ -2277,7 +2299,6 @@
             { name: "Sonda 10", ideal: 3 },
             { name: "Sonda 12", ideal: 3 },
             { name: "Sonda 14", ideal: 3 },
-            { name: "Sonda 16", ideal: 3 },
             { name: "Sonda 18", ideal: 3 },
 
             // Vestidos
@@ -2352,6 +2373,7 @@
             { name: "Agua estéril", ideal: 1 },
             { name: "Libra I/D Canino", ideal: 3 },
             { name: "Libra I/D Gato", ideal: 3 },
+            { name: "Lata Royal Recovery", ideal: 1 },
             { name: "Arena gato", ideal: 4 },
             { name: "Tapetes", ideal: 3 }
         ];
@@ -2468,11 +2490,12 @@
                 inventory.forEach(item => {
                     let idealFinal = defaultData.find(d => d.name === item.name).ideal;
                     if (wasHoliday) {
-                        if (item.name === "Jeringa de 1ml")        idealFinal = 30;
-                        if (item.name === "Jeringa de 3ml")        idealFinal = 30;
-                        if (item.name === "Jeringa de 5ml")        idealFinal = 30;
+                        if (item.name === "Jeringa de 1ml")        idealFinal = 40;
+                        if (item.name === "Jeringa de 3ml")        idealFinal = 40;
+                        if (item.name === "Jeringa de 5ml")        idealFinal = 40;
                         if (item.name === "Hartmann 500 ml")       idealFinal = 15;
                         if (item.name === "Solución Hartmann 1 L") idealFinal = 10;
+                        if (item.name === "Lata Royal Recovery")   idealFinal = 3;
                     }
                     item.ideal = idealFinal; 
                 });
@@ -2502,7 +2525,7 @@
             tbody.innerHTML = '';
 
             inventory.forEach((item, index) => {
-                if (item.name.toLowerCase().includes(filter)) {
+                if (sinTildes(item.name).includes(sinTildes(filter))) {
                     const actualValue = item.actual !== '' ? parseInt(item.actual) : '';
                     let reponerValue = '';
                     let rowClass = 'hover:bg-gray-100 transition-colors';
@@ -6418,11 +6441,15 @@
         // ==========================================================
         // MÓDULO: CUENTAS DE COBRO HOSPITALIZACIÓN (colección: cuentas_hospital)
         // ==========================================================
-        const CATALOGO_CUENTAS = [{"n": "CONSULTA NO PROGRAMADA", "v": 115000, "g": "Insumos"}, {"n": "RX", "v": 97000, "g": "Insumos"}, {"n": "2DX", "v": 67000, "g": "Laboratorio"}, {"n": "MATERIALES", "v": 17000, "g": "Insumos"}, {"n": "RX CONTROL  (1/2)", "v": 49000, "g": "Insumos"}, {"n": "4DX", "v": 100000, "g": "Laboratorio"}, {"n": "CATÉTER", "v": 20000, "g": "Insumos"}, {"n": "OXIGENOTERAPIA XHORA", "v": 5000, "g": "Insumos"}, {"n": "ACIDO FOLICO", "v": 90000, "g": "Laboratorio"}, {"n": "TAPON", "v": 5000, "g": "Insumos"}, {"n": "XILACINA 1ML", "v": 15000, "g": "Insumos"}, {"n": "ALBUMINA", "v": 36000, "g": "Laboratorio"}, {"n": "VENOCLISIS", "v": 20000, "g": "Insumos"}, {"n": "PROPOFOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "AMILOIDE FELINO", "v": 95000, "g": "Laboratorio"}, {"n": "VENOBOMBA", "v": 63000, "g": "Insumos"}, {"n": "LIDOCAINA 1ML", "v": 6000, "g": "Insumos"}, {"n": "AMONÍACO", "v": 63000, "g": "Laboratorio"}, {"n": "COBAN(VENDAJEVET)", "v": 5000, "g": "Insumos"}, {"n": "TRAMADOL 1ML", "v": 8000, "g": "Insumos"}, {"n": "ANÁLISIS DE LÍQUIDO", "v": 50000, "g": "Laboratorio"}, {"n": "COBAN ROLLO", "v": 20000, "g": "Insumos"}, {"n": "MORFINA-AMPOLLA X 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 1", "v": 100000, "g": "Laboratorio"}, {"n": "EXTENSION", "v": 15000, "g": "Insumos"}, {"n": "HIDROMORFONA 1ML", "v": 25000, "g": "Insumos"}, {"n": "ASA 2", "v": 145000, "g": "Laboratorio"}, {"n": "HARTMAN 1L", "v": 25000, "g": "Insumos"}, {"n": "BUTORFANOL 1ML", "v": 90000, "g": "Insumos"}, {"n": "ASA 3", "v": 200000, "g": "Laboratorio"}, {"n": "HARTMAN 500ML (SUERO)", "v": 20000, "g": "Insumos"}, {"n": "MIDAZOLAM 1ML", "v": 22000, "g": "Insumos"}, {"n": "ASA 4", "v": 280000, "g": "Laboratorio"}, {"n": "JERINGA 1ML", "v": 1000, "g": "Insumos"}, {"n": "JERINGA 3ML", "v": 1000, "g": "Insumos"}, {"n": "JERINGA 5ML", "v": 1000, "g": "Insumos"}, {"n": "KETAMINA 1ML", "v": 18000, "g": "Insumos"}, {"n": "BACAF", "v": 45000, "g": "Laboratorio"}, {"n": "JERINGA 10ML", "v": 6000, "g": "Insumos"}, {"n": "JERINGA 20ML", "v": 6000, "g": "Insumos"}, {"n": "JERINGA 60ML", "v": 6000, "g": "Insumos"}, {"n": "MELOXICAM 1ML INY", "v": 8000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 1", "v": 105000, "g": "Laboratorio"}, {"n": "PERFUSORA 20", "v": 73000, "g": "Insumos"}, {"n": "PERFUSORA 50", "v": 73000, "g": "Insumos"}, {"n": "DIPIRONA 1ML", "v": 4000, "g": "Insumos"}, {"n": "BÁSICO 1 GRADO 2", "v": 140000, "g": "Laboratorio"}, {"n": "KIT NEBU", "v": 15000, "g": "Insumos"}, {"n": "OMEPRAZOL 1ML INY", "v": 3000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 1", "v": 180000, "g": "Laboratorio"}, {"n": "NEBULIZACION", "v": 15000, "g": "Insumos"}, {"n": "CERENIA 1ML INY", "v": 20000, "g": "Insumos"}, {"n": "BÁSICO 2 GRADO 2", "v": 220000, "g": "Laboratorio"}, {"n": "SONDA", "v": 12000, "g": "Insumos"}, {"n": "ONDANSETRON AMPOLLA X 4ML", "v": 20000, "g": "Insumos"}, {"n": "BILIRRUBINA", "v": 36000, "g": "Laboratorio"}, {"n": "GUANTES PAR(EXAMEN)", "v": 500, "g": "Insumos"}, {"n": "NEXGARD", "v": 74000, "g": "Insumos"}, {"n": "CARTUCHO EDAN", "v": 40000, "g": "Laboratorio"}, {"n": "GUANTE ESTERIL(CIRUGIA)", "v": 4000, "g": "Insumos"}, {"n": "CEFALOTINA 1ML", "v": 3000, "g": "Insumos"}, {"n": "HOSP. GENERAL(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "AMPICILINA AMPOLLA X 10ML", "v": 15000, "g": "Insumos"}, {"n": "CIANOCOBALAMINA", "v": 90000, "g": "Laboratorio"}, {"n": "HOSP. UCI(CUIDADO PACIENTE)", "v": 35000, "g": "Insumos"}, {"n": "ENOXAPARINA", "v": 45000, "g": "Insumos"}, {"n": "CITOLOGÍAS", "v": 28000, "g": "Laboratorio"}, {"n": "HOSP. INFECCIOSO(CUIDADO PACIENTE)", "v": 25000, "g": "Insumos"}, {"n": "METILPREDNISOLONA AMPOLLA  X 10ML", "v": 35000, "g": "Insumos"}, {"n": "COLESTEROL", "v": 36000, "g": "Laboratorio"}, {"n": "AGUJA", "v": 300, "g": "Insumos"}, {"n": "ACIFLUX", "v": 38000, "g": "Insumos"}, {"n": "CONVULSIVO", "v": 220000, "g": "Laboratorio"}, {"n": "SUTURA ABSORBIBLE", "v": 55000, "g": "Insumos"}, {"n": "COMPRESAS", "v": 20000, "g": "Insumos"}, {"n": "COPROLÓGICO", "v": 20000, "g": "Laboratorio"}, {"n": "VENDAJE (PEQUEÑO)", "v": 30000, "g": "Insumos"}, {"n": "PREVICOX 227", "v": 13000, "g": "Insumos"}, {"n": "CORTISOL", "v": 96000, "g": "Laboratorio"}, {"n": "VENDAJE (MEDIANO)", "v": 40000, "g": "Insumos"}, {"n": "PREVICOX 57", "v": 7000, "g": "Insumos"}, {"n": "CREATININA SECA", "v": 36000, "g": "Laboratorio"}, {"n": "VENDAJE (GRANDE)", "v": 50000, "g": "Insumos"}, {"n": "PREGABALINA ML", "v": 5000, "g": "Insumos"}, {"n": "CUADRO HEMÁTICO", "v": 38000, "g": "Laboratorio"}, {"n": "ECOGRAFIA", "v": 97000, "g": "Insumos"}, {"n": "PREGABALINA 25", "v": 5000, "g": "Insumos"}, {"n": "CULTIVO + ANTIBIOGRAMA", "v": 92000, "g": "Laboratorio"}, {"n": "ECOGRAFIA CONTROL", "v": 65000, "g": "Insumos"}, {"n": "PREGABALINA 75", "v": 9000, "g": "Insumos"}, {"n": "CULTIVO DE GÉRMENES COMUNES", "v": 92000, "g": "Laboratorio"}, {"n": "ECO FAST (CONTROL)", "v": 49000, "g": "Insumos"}, {"n": "ENROFLOXACINA", "v": 6000, "g": "Insumos"}, {"n": "CULTIVO DE HONGOS", "v": 92000, "g": "Laboratorio"}, {"n": "ECOCARDIO", "v": 126000, "g": "Insumos"}, {"n": "ÁCIDO TRANEXÁMICO AMPOLLA X 5ML", "v": 20000, "g": "Insumos"}, {"n": "DIFERENCIAL DE PROTEINAS", "v": 71000, "g": "Laboratorio"}, {"n": "ROYAL RECOVERY", "v": 35000, "g": "Insumos"}, {"n": "BAYTRIL", "v": 8300, "g": "Insumos"}, {"n": "DIMERO D", "v": 95000, "g": "Laboratorio"}, {"n": "TOTAL F", "v": 10000, "g": "Insumos"}, {"n": "POTASIO", "v": 7000, "g": "Insumos"}, {"n": "EDAN GASES ARTERIALES/VENOSOS", "v": 85000, "g": "Laboratorio"}, {"n": "MIDAZOLAM", "v": 20000, "g": "Insumos"}, {"n": "BURETROL", "v": 9000, "g": "Insumos"}, {"n": "FOSFORO", "v": 36000, "g": "Laboratorio"}, {"n": "COLLAR FEROMONAS", "v": 95000, "g": "Insumos"}, {"n": "ARENA 1KG", "v": 6000, "g": "Insumos"}, {"n": "FRUCTOSAMINA", "v": 100000, "g": "Laboratorio"}, {"n": "BUPIVACAINA", "v": 15000, "g": "Insumos"}, {"n": "CICLORAC SPRAY", "v": 42000, "g": "Insumos"}, {"n": "GERIÁTRICO CANINO", "v": 315000, "g": "Laboratorio"}, {"n": "VESTIDO XS", "v": 30000, "g": "Insumos"}, {"n": "LIPIDOS", "v": 2000, "g": "Insumos"}, {"n": "GGT", "v": 36000, "g": "Laboratorio"}, {"n": "VESTIDO S", "v": 45000, "g": "Insumos"}, {"n": "EUTHANEX 1ML", "v": 13000, "g": "Insumos"}, {"n": "GLUCOSA", "v": 15000, "g": "Laboratorio"}, {"n": "VESTIDO M", "v": 50000, "g": "Insumos"}, {"n": "TRAZODONA TABLETA", "v": 3000, "g": "Insumos"}, {"n": "GRAM", "v": 34000, "g": "Laboratorio"}, {"n": "VESTIDO L", "v": 55000, "g": "Insumos"}, {"n": "PAÑAL O TAPETE", "v": 4000, "g": "Insumos"}, {"n": "HEMATOCRITO Y P TOTALES", "v": 10000, "g": "Laboratorio"}, {"n": "VESTIDO XL", "v": 60000, "g": "Insumos"}, {"n": "FORTIFLORA", "v": 7000, "g": "Insumos"}, {"n": "HEMOCULTIVO", "v": 92000, "g": "Laboratorio"}, {"n": "VESTIDO XXL", "v": 68000, "g": "Insumos"}, {"n": "CLORURO DE SODIO", "v": 8000, "g": "Insumos"}, {"n": "JERINGA EDAN", "v": 16000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XS", "v": 15000, "g": "Insumos"}, {"n": "FLUIMUCIL AMPOLLA X 3ML", "v": 15000, "g": "Insumos"}, {"n": "LIPASA", "v": 100000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO S", "v": 20000, "g": "Insumos"}, {"n": "TOTAL F SUSPENSION", "v": 10000, "g": "Insumos"}, {"n": "NIVELES DE FENOBARBITAL", "v": 130000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO M", "v": 25000, "g": "Insumos"}, {"n": "REVOLUTION PLUS", "v": 70000, "g": "Insumos"}, {"n": "PARCIAL DE ORINA", "v": 28000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO L", "v": 28000, "g": "Insumos"}, {"n": "NEUROPROTECCION (VITAMINA A-E-C-OMEGA-GINKGO)", "v": 10000, "g": "Insumos"}, {"n": "PCR HEMOTRÓPICOS", "v": 0, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XL", "v": 30000, "g": "Insumos"}, {"n": "TRIHEPAT", "v": 5000, "g": "Insumos"}, {"n": "PCR", "v": 290000, "g": "Laboratorio"}, {"n": "COLLAR ISABELINO XXL", "v": 35000, "g": "Insumos"}, {"n": "SUCRALFATO", "v": 5000, "g": "Insumos"}, {"n": "PERFIL HEPÁTICO", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION GASTROINTESTINAL 100GR", "v": 10000, "g": "Insumos"}, {"n": "MIRTAZAPINA", "v": 15000, "g": "Insumos"}, {"n": "PERFIL RENAL", "v": 172000, "g": "Laboratorio"}, {"n": "MONGE CAT VET SOLUTION RECOVERY 100 GR", "v": 10000, "g": "Insumos"}, {"n": "SILDENAFILO", "v": 5000, "g": "Insumos"}, {"n": "PROTEINA C", "v": 95000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH ANATRA 100 GR", "v": 10000, "g": "Insumos"}, {"n": "CEFTRIAXONA  AMPOLLA X 10ML", "v": 20000, "g": "Insumos"}, {"n": "PT Y PPT (COAGULACIÓN)", "v": 75000, "g": "Laboratorio"}, {"n": "MONGE DOG FRESH SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "LYRICA", "v": 5000, "g": "Insumos"}, {"n": "QUÍMICAS (ALT-AST-FA-CREA-UREA)", "v": 25000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT PORK PINEAPPLE MAIALE", "v": 10000, "g": "Insumos"}, {"n": "FLUNARIZINA", "v": 9000, "g": "Insumos"}, {"n": "ROTOR HEPÁTICO", "v": 120000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT SALMON 100 GR", "v": 10000, "g": "Insumos"}, {"n": "DOXICICLINA (NEODOXIL)", "v": 5000, "g": "Insumos"}, {"n": "ROTOR RENAL", "v": 100000, "g": "Laboratorio"}, {"n": "MONGE DOG FRUIT TACCHINO  100 GR", "v": 10000, "g": "Insumos"}, {"n": "ADRENALINA AMPOLLA", "v": 4000, "g": "Insumos"}, {"n": "ROTOR URGENCIAS", "v": 90000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION DIABETIC 400GR", "v": 28000, "g": "Insumos"}, {"n": "SDMA (DIMETILARGININA SIMÉTRICA)", "v": 180000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION GASTROINTESTIN 400GR", "v": 28000, "g": "Insumos"}, {"n": "ÁCIDO TRANEXÁMICO", "v": 20000, "g": "Insumos"}, {"n": "SUERO ANTÓLOGO", "v": 16000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RECOVERY 150 GR", "v": 12000, "g": "Insumos"}, {"n": "REVOLUTION PLUS 2.5 A 5", "v": 65000, "g": "Insumos"}, {"n": "T4 TOTAL + COLESTEROL T", "v": 126000, "g": "Laboratorio"}, {"n": "MONGE DOG VET SOLUTION RENAL 150 GR", "v": 12000, "g": "Insumos"}, {"n": "BLADURIL", "v": 14000, "g": "Insumos"}, {"n": "TEST DISTEMPER-MOQUILLO", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME ADULT TONNO E ALGHE QU", "v": 12000, "g": "Insumos"}, {"n": "VITAMINA K (KAVITEX)", "v": 4000, "g": "Insumos"}, {"n": "TEST PARVOVIRUS", "v": 57000, "g": "Laboratorio"}, {"n": "MONGE SUPREME CAT RISO TE VERDE 80 GR", "v": 12000, "g": "Insumos"}, {"n": "GLUCONATO DE CALCIO", "v": 4000, "g": "Insumos"}, {"n": "TEST SIDA/LEUCEMIA", "v": 52000, "g": "Laboratorio"}, {"n": "MONGE SUPREME KITTEN TUN CARROT QUINO", "v": 12000, "g": "Insumos"}, {"n": "INSULINA", "v": 5000, "g": "Insumos"}, {"n": "TIEMPO DE COAGULACIÓN EN TUBO", "v": 3000, "g": "Laboratorio"}, {"n": "MONGE VET SOLUTION  HYPO MONOPROTEIN 400 GR", "v": 28000, "g": "Insumos"}, {"n": "DEXTROSA", "v": 300, "g": "Insumos"}, {"n": "TRIGLICÉRIDOS", "v": 36000, "g": "Laboratorio"}, {"n": "LATA E/N CANINO", "v": 30000, "g": "Insumos"}, {"n": "FUROSEMIDA", "v": 2000, "g": "Insumos"}, {"n": "TSH CANINA", "v": 96000, "g": "Laboratorio"}, {"n": "LATA I/D CANINO", "v": 34500, "g": "Insumos"}, {"n": "FITOVETE CREMA", "v": 43000, "g": "Insumos"}, {"n": "UPC", "v": 100000, "g": "Laboratorio"}, {"n": "LATA I/D FELINO", "v": 21000, "g": "Insumos"}, {"n": "METRONIDAZOL X100", "v": 20000, "g": "Insumos"}, {"n": "URGENCIAS 2", "v": 250000, "g": "Laboratorio"}, {"n": "LATA E/N FELINO", "v": 19000, "g": "Insumos"}, {"n": "YOHIMBINA", "v": 10000, "g": "Insumos"}, {"n": "URGENCIAS 1", "v": 155000, "g": "Laboratorio"}, {"n": "I/D SECO CANINO", "v": 29000, "g": "Insumos"}, {"n": "ATROPINA", "v": 9000, "g": "Insumos"}, {"n": "LATA A/D FELINO Y CANINO", "v": 25000, "g": "Insumos"}, {"n": "BISMOPET", "v": 43000, "g": "Insumos"}, {"n": "I/D SECO FELINO", "v": 47000, "g": "Insumos"}, {"n": "MEDICAMENTOS OTROS", "v": 36500, "g": "Insumos"}, {"n": "CHURU", "v": 5000, "g": "Insumos"}, {"n": "BFEX", "v": 28000, "g": "Insumos"}, {"n": "NUTRA LIFE (1CUCHARA 11GR)", "v": 500, "g": "Insumos"}, {"n": "ENEMA", "v": 25000, "g": "Insumos"}, {"n": "ROYAL CANIN RECOVERY", "v": 34000, "g": "Insumos"}, {"n": "TRIMETOPRIM", "v": 5000, "g": "Insumos"}, {"n": "ACEVICAL DISPOSICION CUERPO X 1KG", "v": 8000, "g": "Insumos"}, {"n": "SULFASALAZINA", "v": 4000, "g": "Insumos"}, {"n": "PATOLOGIA", "v": 250000, "g": "Insumos"}, {"n": "DEXAMETASONA", "v": 4000, "g": "Insumos"}, {"n": "LLAVE 3VIAS", "v": 10000, "g": "Insumos"}, {"n": "SMECTA", "v": 5000, "g": "Insumos"}, {"n": "PAQUETE SONDA GATO", "v": 138000, "g": "Insumos"}, {"n": "TIAMINA", "v": 20000, "g": "Insumos"}, {"n": "VACUNAS", "v": 85000, "g": "Insumos"}, {"n": "ONE", "v": 10000, "g": "Insumos"}, {"n": "ANEST. INHALADA (ISORANY)", "v": 120000, "g": "Insumos"}, {"n": "PREDNISOLONA 20", "v": 3500, "g": "Insumos"}, {"n": "TUBO ENDOTRAQUEAL", "v": 18000, "g": "Insumos"}, {"n": "SUPOSITORIOS", "v": 7000, "g": "Insumos"}, {"n": "CARBON ACTIVADO", "v": 20000, "g": "Insumos"}, {"n": "SERETIDE (INALADOR)", "v": 115000, "g": "Insumos"}, {"n": "CEFALEXINA 500MG", "v": 1000, "g": "Insumos"}, {"n": "HIDROSIN", "v": 5000, "g": "Insumos"}, {"n": "DESCENSOR", "v": 3000, "g": "Insumos"}, {"n": "ENALAPRIL", "v": 1000, "g": "Insumos"}, {"n": "COMPLEJO B", "v": 25000, "g": "Insumos"}, {"n": "PERIACTIN", "v": 5000, "g": "Insumos"}, {"n": "DITOPAX", "v": 5000, "g": "Insumos"}, {"n": "FENOBARBITAL ML", "v": 23000, "g": "Insumos"}, {"n": "METAMUCIL", "v": 5000, "g": "Insumos"}, {"n": "PREDNISOLONA 5MG", "v": 3500, "g": "Insumos"}, {"n": "MELOXICAM GOTAS", "v": 24000, "g": "Insumos"}];
+        const CATALOGO_CUENTAS = [{"n": "Consulta No Programada", "v": 115000, "g": "Insumos"}, {"n": "RX", "v": 97000, "g": "Insumos"}, {"n": "2DX", "v": 67000, "g": "Laboratorio"}, {"n": "Materiales", "v": 17000, "g": "Insumos"}, {"n": "RX Control (1/2)", "v": 49000, "g": "Insumos"}, {"n": "4DX", "v": 100000, "g": "Laboratorio"}, {"n": "Catéter", "v": 20000, "g": "Insumos"}, {"n": "Oxigenoterapia X Hora", "v": 5000, "g": "Insumos"}, {"n": "Ácido Fólico", "v": 90000, "g": "Laboratorio"}, {"n": "Tapón", "v": 5000, "g": "Insumos"}, {"n": "Xilacina 1ml", "v": 15000, "g": "Insumos"}, {"n": "Albúmina", "v": 36000, "g": "Laboratorio"}, {"n": "Venoclisis", "v": 20000, "g": "Insumos"}, {"n": "Propofol 1ml", "v": 8000, "g": "Insumos"}, {"n": "Amiloide Felino", "v": 95000, "g": "Laboratorio"}, {"n": "Venobomba", "v": 63000, "g": "Insumos"}, {"n": "Lidocaína 1ml", "v": 6000, "g": "Insumos"}, {"n": "Amoníaco", "v": 63000, "g": "Laboratorio"}, {"n": "Coban (Vendaje Vet)", "v": 5000, "g": "Insumos"}, {"n": "Tramadol 1ml", "v": 8000, "g": "Insumos"}, {"n": "Análisis De Líquido", "v": 50000, "g": "Laboratorio"}, {"n": "Coban Rollo", "v": 20000, "g": "Insumos"}, {"n": "Morfina Ampolla X 1ml", "v": 25000, "g": "Insumos"}, {"n": "ASA 1", "v": 100000, "g": "Laboratorio"}, {"n": "Extensión", "v": 15000, "g": "Insumos"}, {"n": "Hidromorfona 1ml", "v": 25000, "g": "Insumos"}, {"n": "ASA 2", "v": 145000, "g": "Laboratorio"}, {"n": "Hartmann 1l", "v": 25000, "g": "Insumos"}, {"n": "Butorfanol 1ml", "v": 90000, "g": "Insumos"}, {"n": "ASA 3", "v": 200000, "g": "Laboratorio"}, {"n": "Hartmann 500ml (Suero)", "v": 20000, "g": "Insumos"}, {"n": "Midazolam 1ml", "v": 22000, "g": "Insumos"}, {"n": "ASA 4", "v": 280000, "g": "Laboratorio"}, {"n": "Jeringa 1ml", "v": 1000, "g": "Insumos"}, {"n": "Jeringa 3ml", "v": 1000, "g": "Insumos"}, {"n": "Jeringa 5ml", "v": 1000, "g": "Insumos"}, {"n": "Ketamina 1ml", "v": 18000, "g": "Insumos"}, {"n": "BACAF", "v": 45000, "g": "Laboratorio"}, {"n": "Jeringa 10ml", "v": 6000, "g": "Insumos"}, {"n": "Jeringa 20ml", "v": 6000, "g": "Insumos"}, {"n": "Jeringa 60ml", "v": 6000, "g": "Insumos"}, {"n": "Meloxicam 1ml Iny", "v": 8000, "g": "Insumos"}, {"n": "Básico 1 Grado 1", "v": 105000, "g": "Laboratorio"}, {"n": "Perfusora 20", "v": 73000, "g": "Insumos"}, {"n": "Perfusora 50", "v": 73000, "g": "Insumos"}, {"n": "Dipirona 1ml", "v": 4000, "g": "Insumos"}, {"n": "Básico 1 Grado 2", "v": 140000, "g": "Laboratorio"}, {"n": "Kit Nebu", "v": 15000, "g": "Insumos"}, {"n": "Omeprazol 1ml Iny", "v": 3000, "g": "Insumos"}, {"n": "Básico 2 Grado 1", "v": 180000, "g": "Laboratorio"}, {"n": "Nebulización", "v": 15000, "g": "Insumos"}, {"n": "Cerenia 1ml Iny", "v": 20000, "g": "Insumos"}, {"n": "Básico 2 Grado 2", "v": 220000, "g": "Laboratorio"}, {"n": "Sonda", "v": 12000, "g": "Insumos"}, {"n": "Ondansetrón Ampolla X 4ml", "v": 20000, "g": "Insumos"}, {"n": "Bilirrubina", "v": 36000, "g": "Laboratorio"}, {"n": "Guantes Par (Examen)", "v": 500, "g": "Insumos"}, {"n": "Nexgard", "v": 74000, "g": "Insumos"}, {"n": "Cartucho Edan", "v": 40000, "g": "Laboratorio"}, {"n": "Guante Estéril (Cirugía)", "v": 4000, "g": "Insumos"}, {"n": "Cefalotina 1ml", "v": 3000, "g": "Insumos"}, {"n": "Hosp. General (Cuidado Paciente)", "v": 25000, "g": "Insumos"}, {"n": "Ampicilina Ampolla X 10ml", "v": 15000, "g": "Insumos"}, {"n": "Cianocobalamina", "v": 90000, "g": "Laboratorio"}, {"n": "Hosp. UCI (Cuidado Paciente)", "v": 35000, "g": "Insumos"}, {"n": "Enoxaparina", "v": 45000, "g": "Insumos"}, {"n": "Citologías", "v": 28000, "g": "Laboratorio"}, {"n": "Hosp. Infeccioso (Cuidado Paciente)", "v": 25000, "g": "Insumos"}, {"n": "Metilprednisolona Ampolla X 10ml", "v": 35000, "g": "Insumos"}, {"n": "Colesterol", "v": 36000, "g": "Laboratorio"}, {"n": "Aguja", "v": 300, "g": "Insumos"}, {"n": "Aciflux", "v": 38000, "g": "Insumos"}, {"n": "Convulsivo", "v": 220000, "g": "Laboratorio"}, {"n": "Sutura Absorbible", "v": 55000, "g": "Insumos"}, {"n": "Compresas", "v": 20000, "g": "Insumos"}, {"n": "Coprológico", "v": 20000, "g": "Laboratorio"}, {"n": "Vendaje (Pequeño)", "v": 30000, "g": "Insumos"}, {"n": "Previcox 227", "v": 13000, "g": "Insumos"}, {"n": "Cortisol", "v": 96000, "g": "Laboratorio"}, {"n": "Vendaje (Mediano)", "v": 40000, "g": "Insumos"}, {"n": "Previcox 57", "v": 7000, "g": "Insumos"}, {"n": "Creatinina Seca", "v": 36000, "g": "Laboratorio"}, {"n": "Vendaje (Grande)", "v": 50000, "g": "Insumos"}, {"n": "Pregabalina ml", "v": 5000, "g": "Insumos"}, {"n": "Cuadro Hemático", "v": 38000, "g": "Laboratorio"}, {"n": "Ecografía", "v": 97000, "g": "Insumos"}, {"n": "Pregabalina 25", "v": 5000, "g": "Insumos"}, {"n": "Cultivo + Antibiograma", "v": 92000, "g": "Laboratorio"}, {"n": "Ecografía Control", "v": 65000, "g": "Insumos"}, {"n": "Pregabalina 75", "v": 9000, "g": "Insumos"}, {"n": "Cultivo De Gérmenes Comunes", "v": 92000, "g": "Laboratorio"}, {"n": "Eco Fast (Control)", "v": 49000, "g": "Insumos"}, {"n": "Enrofloxacina", "v": 6000, "g": "Insumos"}, {"n": "Cultivo De Hongos", "v": 92000, "g": "Laboratorio"}, {"n": "Ecocardio", "v": 126000, "g": "Insumos"}, {"n": "Ácido Tranexámico Ampolla X 5ml", "v": 20000, "g": "Insumos"}, {"n": "Diferencial De Proteínas", "v": 71000, "g": "Laboratorio"}, {"n": "Royal Recovery", "v": 35000, "g": "Insumos"}, {"n": "Baytril", "v": 8300, "g": "Insumos"}, {"n": "Dímero D", "v": 95000, "g": "Laboratorio"}, {"n": "Total F", "v": 10000, "g": "Insumos"}, {"n": "Potasio", "v": 7000, "g": "Insumos"}, {"n": "Edan Gases Arteriales/Venosos", "v": 85000, "g": "Laboratorio"}, {"n": "Midazolam", "v": 20000, "g": "Insumos"}, {"n": "Buretrol", "v": 9000, "g": "Insumos"}, {"n": "Fósforo", "v": 36000, "g": "Laboratorio"}, {"n": "Collar Feromonas", "v": 95000, "g": "Insumos"}, {"n": "Arena 1kg", "v": 6000, "g": "Insumos"}, {"n": "Fructosamina", "v": 100000, "g": "Laboratorio"}, {"n": "Bupivacaína", "v": 15000, "g": "Insumos"}, {"n": "Ciclorac Spray", "v": 42000, "g": "Insumos"}, {"n": "Geriátrico Canino", "v": 315000, "g": "Laboratorio"}, {"n": "Vestido XS", "v": 30000, "g": "Insumos"}, {"n": "Lípidos", "v": 2000, "g": "Insumos"}, {"n": "GGT", "v": 36000, "g": "Laboratorio"}, {"n": "Vestido S", "v": 45000, "g": "Insumos"}, {"n": "Euthanex 1ml", "v": 13000, "g": "Insumos"}, {"n": "Glucosa", "v": 15000, "g": "Laboratorio"}, {"n": "Vestido M", "v": 50000, "g": "Insumos"}, {"n": "Trazodona Tableta", "v": 3000, "g": "Insumos"}, {"n": "Gram", "v": 34000, "g": "Laboratorio"}, {"n": "Vestido L", "v": 55000, "g": "Insumos"}, {"n": "Pañal O Tapete", "v": 4000, "g": "Insumos"}, {"n": "Hematocrito Y P Totales", "v": 10000, "g": "Laboratorio"}, {"n": "Vestido XL", "v": 60000, "g": "Insumos"}, {"n": "Fortiflora", "v": 7000, "g": "Insumos"}, {"n": "Hemocultivo", "v": 92000, "g": "Laboratorio"}, {"n": "Vestido XXL", "v": 68000, "g": "Insumos"}, {"n": "Cloruro De Sodio", "v": 8000, "g": "Insumos"}, {"n": "Jeringa Edan", "v": 16000, "g": "Laboratorio"}, {"n": "Collar Isabelino XS", "v": 15000, "g": "Insumos"}, {"n": "Fluimucil Ampolla X 3ml", "v": 15000, "g": "Insumos"}, {"n": "Lipasa", "v": 100000, "g": "Laboratorio"}, {"n": "Collar Isabelino S", "v": 20000, "g": "Insumos"}, {"n": "Total F Suspensión", "v": 10000, "g": "Insumos"}, {"n": "Niveles De Fenobarbital", "v": 130000, "g": "Laboratorio"}, {"n": "Collar Isabelino M", "v": 25000, "g": "Insumos"}, {"n": "Revolution Plus", "v": 70000, "g": "Insumos"}, {"n": "Parcial De Orina", "v": 28000, "g": "Laboratorio"}, {"n": "Collar Isabelino L", "v": 28000, "g": "Insumos"}, {"n": "Neuroprotección (Vitamina A-E-C-Omega-Ginkgo)", "v": 10000, "g": "Insumos"}, {"n": "PCR Hemotrópicos", "v": 0, "g": "Laboratorio"}, {"n": "Collar Isabelino XL", "v": 30000, "g": "Insumos"}, {"n": "Trihepat", "v": 5000, "g": "Insumos"}, {"n": "PCR", "v": 290000, "g": "Laboratorio"}, {"n": "Collar Isabelino XXL", "v": 35000, "g": "Insumos"}, {"n": "Sucralfato", "v": 5000, "g": "Insumos"}, {"n": "Perfil Hepático", "v": 172000, "g": "Laboratorio"}, {"n": "Monge Cat Vet Solution Gastrointestinal 100gr", "v": 10000, "g": "Insumos"}, {"n": "Mirtazapina", "v": 15000, "g": "Insumos"}, {"n": "Perfil Renal", "v": 172000, "g": "Laboratorio"}, {"n": "Monge Cat Vet Solution Recovery 100 gr", "v": 10000, "g": "Insumos"}, {"n": "Sildenafilo", "v": 5000, "g": "Insumos"}, {"n": "Proteína C", "v": 95000, "g": "Laboratorio"}, {"n": "Monge Dog Fresh Anatra 100 gr", "v": 10000, "g": "Insumos"}, {"n": "Ceftriaxona Ampolla X 10ml", "v": 20000, "g": "Insumos"}, {"n": "PT Y PPT (Coagulación)", "v": 75000, "g": "Laboratorio"}, {"n": "Monge Dog Fresh Salmon 100 gr", "v": 10000, "g": "Insumos"}, {"n": "Lyrica", "v": 5000, "g": "Insumos"}, {"n": "Químicas (ALT-AST-FA-CREA-UREA)", "v": 25000, "g": "Laboratorio"}, {"n": "Monge Dog Fruit Pork Pineapple Maiale", "v": 10000, "g": "Insumos"}, {"n": "Flunarizina", "v": 9000, "g": "Insumos"}, {"n": "Rotor Hepático", "v": 120000, "g": "Laboratorio"}, {"n": "Monge Dog Fruit Salmon 100 gr", "v": 10000, "g": "Insumos"}, {"n": "Doxiciclina (Neodoxil)", "v": 5000, "g": "Insumos"}, {"n": "Rotor Renal", "v": 100000, "g": "Laboratorio"}, {"n": "Monge Dog Fruit Tacchino 100 gr", "v": 10000, "g": "Insumos"}, {"n": "Adrenalina Ampolla", "v": 4000, "g": "Insumos"}, {"n": "Rotor Urgencias", "v": 90000, "g": "Laboratorio"}, {"n": "Monge Dog Vet Solution Diabetic 400gr", "v": 28000, "g": "Insumos"}, {"n": "SDMA (Dimetilarginina Simétrica)", "v": 180000, "g": "Laboratorio"}, {"n": "Monge Dog Vet Solution Gastrointestin 400gr", "v": 28000, "g": "Insumos"}, {"n": "Ácido Tranexámico", "v": 20000, "g": "Insumos"}, {"n": "Suero Autólogo", "v": 16000, "g": "Laboratorio"}, {"n": "Monge Dog Vet Solution Recovery 150 gr", "v": 12000, "g": "Insumos"}, {"n": "Revolution Plus 2.5 A 5", "v": 65000, "g": "Insumos"}, {"n": "T4 Total + Colesterol T", "v": 126000, "g": "Laboratorio"}, {"n": "Monge Dog Vet Solution Renal 150 gr", "v": 12000, "g": "Insumos"}, {"n": "Bladuril", "v": 14000, "g": "Insumos"}, {"n": "Test Distemper-Moquillo", "v": 52000, "g": "Laboratorio"}, {"n": "Monge Supreme Adult Tonno E Alghe Qu", "v": 12000, "g": "Insumos"}, {"n": "Vitamina K (Kavitex)", "v": 4000, "g": "Insumos"}, {"n": "Test Parvovirus", "v": 57000, "g": "Laboratorio"}, {"n": "Monge Supreme Cat Riso Te Verde 80 gr", "v": 12000, "g": "Insumos"}, {"n": "Gluconato De Calcio", "v": 4000, "g": "Insumos"}, {"n": "Test SIDA/Leucemia", "v": 52000, "g": "Laboratorio"}, {"n": "Monge Supreme Kitten Tun Carrot Quino", "v": 12000, "g": "Insumos"}, {"n": "Insulina", "v": 5000, "g": "Insumos"}, {"n": "Tiempo De Coagulación En Tubo", "v": 3000, "g": "Laboratorio"}, {"n": "Monge Vet Solution Hypo Monoprotein 400 gr", "v": 28000, "g": "Insumos"}, {"n": "Dextrosa", "v": 300, "g": "Insumos"}, {"n": "Triglicéridos", "v": 36000, "g": "Laboratorio"}, {"n": "Lata E/N Canino", "v": 30000, "g": "Insumos"}, {"n": "Furosemida", "v": 2000, "g": "Insumos"}, {"n": "TSH Canina", "v": 96000, "g": "Laboratorio"}, {"n": "Lata I/D Canino", "v": 34500, "g": "Insumos"}, {"n": "Fitovete Crema", "v": 43000, "g": "Insumos"}, {"n": "UPC", "v": 100000, "g": "Laboratorio"}, {"n": "Lata I/D Felino", "v": 21000, "g": "Insumos"}, {"n": "Metronidazol X100", "v": 20000, "g": "Insumos"}, {"n": "Urgencias 2", "v": 250000, "g": "Laboratorio"}, {"n": "Lata E/N Felino", "v": 19000, "g": "Insumos"}, {"n": "Yohimbina", "v": 10000, "g": "Insumos"}, {"n": "Urgencias 1", "v": 155000, "g": "Laboratorio"}, {"n": "I/D Seco Canino", "v": 29000, "g": "Insumos"}, {"n": "Atropina", "v": 9000, "g": "Insumos"}, {"n": "Lata A/D Felino Y Canino", "v": 25000, "g": "Insumos"}, {"n": "Bismopet", "v": 43000, "g": "Insumos"}, {"n": "I/D Seco Felino", "v": 47000, "g": "Insumos"}, {"n": "Medicamentos Otros", "v": 36500, "g": "Insumos"}, {"n": "Churu", "v": 5000, "g": "Insumos"}, {"n": "Bfex", "v": 28000, "g": "Insumos"}, {"n": "Nutra Life (1 Cuchara 11 gr)", "v": 500, "g": "Insumos"}, {"n": "Enema", "v": 25000, "g": "Insumos"}, {"n": "Royal Canin Recovery", "v": 34000, "g": "Insumos"}, {"n": "Trimetoprim", "v": 5000, "g": "Insumos"}, {"n": "Acevical Disposición Cuerpo X 1kg", "v": 8000, "g": "Insumos"}, {"n": "Sulfasalazina", "v": 4000, "g": "Insumos"}, {"n": "Patología", "v": 250000, "g": "Insumos"}, {"n": "Dexametasona", "v": 4000, "g": "Insumos"}, {"n": "Llave 3 Vías", "v": 10000, "g": "Insumos"}, {"n": "Smecta", "v": 5000, "g": "Insumos"}, {"n": "Paquete Sonda Gato", "v": 138000, "g": "Insumos"}, {"n": "Tiamina", "v": 20000, "g": "Insumos"}, {"n": "Vacunas", "v": 85000, "g": "Insumos"}, {"n": "One", "v": 10000, "g": "Insumos"}, {"n": "Anest. Inhalada (Isorany)", "v": 120000, "g": "Insumos"}, {"n": "Prednisolona 20", "v": 3500, "g": "Insumos"}, {"n": "Tubo Endotraqueal", "v": 18000, "g": "Insumos"}, {"n": "Supositorios", "v": 7000, "g": "Insumos"}, {"n": "Carbón Activado", "v": 20000, "g": "Insumos"}, {"n": "Seretide (Inhalador)", "v": 115000, "g": "Insumos"}, {"n": "Cefalexina 500mg", "v": 1000, "g": "Insumos"}, {"n": "Hidrosin", "v": 5000, "g": "Insumos"}, {"n": "Descensor", "v": 3000, "g": "Insumos"}, {"n": "Enalapril", "v": 1000, "g": "Insumos"}, {"n": "Complejo B", "v": 25000, "g": "Insumos"}, {"n": "Periactin", "v": 5000, "g": "Insumos"}, {"n": "Ditopax", "v": 5000, "g": "Insumos"}, {"n": "Fenobarbital ml", "v": 23000, "g": "Insumos"}, {"n": "Metamucil", "v": 5000, "g": "Insumos"}, {"n": "Prednisolona 5mg", "v": 3500, "g": "Insumos"}, {"n": "Meloxicam Gotas", "v": 24000, "g": "Insumos"}];
         let cuentaHospId = null;
         let cuentaHospExtra = []; // insumos agregados manualmente: {n, v, cant}
         let cuentaHospHistorial = []; // registro completo de cambios: {por, correo, fecha, accion, total}
         let cuentaHospMovimientos = []; // salidas de insumos con fecha/hora: {n, g, cant, v, fecha, por}
+        let cuentaHospPorDia = {};      // hoja por día: { fecha: { idx: {am, pm} } }
+        let cuentaHospDia = '';         // día que se está registrando (YYYY-MM-DD)
+        let guardadasHospLista = [];    // caché de "guardadas" para filtrar por paciente/HC sin re-consultar
+        let cuentaHospGuardadoFallo = false; // para no repetir el aviso de error de guardado
         let cuentaHospDirty = false;       // hay cambios sin guardar
         let cuentaHospEsNueva = true;      // si es cuenta nueva (para el historial)
         let cuentaHospAutosaveTimer = null;
@@ -6494,21 +6521,39 @@
         };
 
         function snapDeCuentaHosp(data) {
-            return { items: (data.items || []).map(it => ({ n: it.n, g: it.g, cant: it.cant })), cx: data.cx || 0, deposito: data.deposito || 0 };
+            // items: total por insumo (para movimientos). det: detalle por día y turno (para el historial)
+            const det = {};
+            (data.items || []).forEach(it => {
+                if (it.dias && typeof it.dias === 'object' && Object.keys(it.dias).length) {
+                    for (const f in it.dias) {
+                        const am = it.dias[f].am || 0, pm = it.dias[f].pm || 0;
+                        if (am) det[`${it.n}||${it.g}||${f}||AM`] = am;
+                        if (pm) det[`${it.n}||${it.g}||${f}||PM`] = pm;
+                    }
+                } else if (it.cant) {
+                    det[`${it.n}||${it.g}||—||`] = it.cant; // extras o cuentas antiguas (sin día/turno)
+                }
+            });
+            return { items: (data.items || []).map(it => ({ n: it.n, g: it.g, cant: it.cant })), det, cx: data.cx || 0, deposito: data.deposito || 0 };
         }
 
         function diffCuentaHosp(prev, act) {
             const cambios = [];
-            const clave = it => it.n + '||' + it.g;
-            const mp = {}, ma = {};
-            (prev.items || []).forEach(it => mp[clave(it)] = it);
-            (act.items || []).forEach(it => ma[clave(it)] = it);
-            Object.keys(ma).forEach(k => {
-                const a = ma[k], p = mp[k];
-                if (!p) cambios.push(`Agregó ${a.cant}× ${a.n}`);
-                else if (p.cant !== a.cant) cambios.push(`${a.n}: ${p.cant} → ${a.cant}`);
+            const pd = prev.det || {}, ad = act.det || {};
+            const keys = new Set([...Object.keys(pd), ...Object.keys(ad)]);
+            keys.forEach(k => {
+                const a = ad[k] || 0, p = pd[k] || 0;
+                if (a === p) return;
+                const partes = k.split('||');
+                const n = partes[0], f = partes[2], turno = partes[3];
+                const ubicArr = [];
+                if (f && f !== '—') ubicArr.push(fechaCortaHosp(f));
+                if (turno) ubicArr.push(turno);
+                const ubic = ubicArr.length ? ` (${ubicArr.join(' ')})` : '';
+                const delta = a - p;
+                if (delta > 0) cambios.push(`Agregó ${delta} de ${n}${ubic}`);
+                else cambios.push(`Quitó ${-delta} de ${n}${ubic}`);
             });
-            Object.keys(mp).forEach(k => { if (!ma[k]) cambios.push(`Quitó ${mp[k].n}`); });
             if ((prev.cx || 0) !== (act.cx || 0)) cambios.push(`CX: ${fmtCOPHosp(prev.cx || 0)} → ${fmtCOPHosp(act.cx || 0)}`);
             if ((prev.deposito || 0) !== (act.deposito || 0)) cambios.push(`Depósito: ${fmtCOPHosp(prev.deposito || 0)} → ${fmtCOPHosp(act.deposito || 0)}`);
             return cambios;
@@ -6596,9 +6641,19 @@
                 cuentaHospBaseActualizado = ahora;
                 cuentaHospDirty = false;
                 renderHistorialHosp();
+                cuentaHospGuardadoFallo = false;
                 const est = document.getElementById('cta-estado-guardado');
                 if (est) est.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-cloud"></i> Guardado automáticamente</span>';
-            } catch (e) { console.error('autoguardado', e); }
+            } catch (e) {
+                console.error('autoguardado', e);
+                // Aviso visible de que NO se guardó, y reintento automático
+                cuentaHospDirty = true;
+                const est = document.getElementById('cta-estado-guardado');
+                if (est) est.innerHTML = '<span class="text-red-600"><i class="fa-solid fa-triangle-exclamation"></i> No se pudo guardar. Revisa tu conexión — reintentando…</span>';
+                if (!cuentaHospGuardadoFallo) { showToast("No se pudo guardar la cuenta. Revisa tu conexión.", true); cuentaHospGuardadoFallo = true; }
+                clearTimeout(cuentaHospAutosaveTimer);
+                cuentaHospAutosaveTimer = setTimeout(autoguardarCuentaHosp, 5000);
+            }
         }
 
         window.salirCuentasHosp = async function() {
@@ -6610,7 +6665,7 @@
 
 
         window.validarDatosCuentaHosp = function() {
-            const ok = ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-historia']
+            const ok = ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-cedula', 'cta-historia', 'cta-especie']
                 .every(id => ((document.getElementById(id) || {}).value || '').trim() !== '');
             const aviso = document.getElementById('cta-aviso-datos');
             if (aviso) aviso.classList.toggle('hidden', ok);
@@ -6694,6 +6749,24 @@
 
         const fmtCOPHosp = n => '$ ' + (Math.round(n || 0)).toLocaleString('es-CO');
 
+        // Quita tildes y pasa a minúscula, para buscar "cateter" y encontrar "CATÉTER"
+        const sinTildes = s => (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        // Formatea un nombre con "Primera Letra De Cada Palabra", igual que el cat\u00e1logo:
+        // conserva siglas (RX, UCI, PCR...), unidades en min\u00fascula (ml, mg, gr) y tallas (S, M, L, XL).
+        const _CAT_UPPER = new Set(['RX', 'DX', 'ASA', 'PCR', 'SDMA', 'GGT', 'TSH', 'UPC', 'BACAF', 'PT', 'PPT', 'UCI', 'HC', 'ALT', 'AST', 'FA', 'CREA', 'UREA', 'SIDA', 'XS', 'XL', 'XXL']);
+        const _CAT_UNITS = new Set(['ML', 'MG', 'KG', 'GR', 'CC']);
+        const tituloCatalogo = str => {
+            str = (str || '').toString().replace(/\s{2,}/g, ' ').trim();
+            return str.replace(/[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00d1\u00dc\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1\u00fc]+/g, (run, idx) => {
+                const up = run.toUpperCase();
+                const digitBefore = idx > 0 && /[0-9]/.test(str[idx - 1]);
+                if (_CAT_UNITS.has(up)) return run.toLowerCase();
+                if (up === 'L' && digitBefore) return 'l';
+                if (_CAT_UPPER.has(up)) return up;
+                return run.charAt(0).toUpperCase() + run.slice(1).toLowerCase();
+            });
+        };
+
         // Muestra separador de miles mientras se escribe (ej. 250.000)
         window.formatearMilesInput = function(el) {
             const num = (el.value || '').replace(/\D/g, '');
@@ -6703,6 +6776,73 @@
         const leerMilesHosp = id => {
             const el = document.getElementById(id);
             return el ? (parseInt((el.value || '').replace(/\D/g, ''), 10) || 0) : 0;
+        };
+
+        // ===== Hoja por día (AM/PM por fecha) =====
+        function diaStoreHosp(fecha) { if (!cuentaHospPorDia[fecha]) cuentaHospPorDia[fecha] = {}; return cuentaHospPorDia[fecha]; }
+        // Total de un ítem sumando TODOS los días
+        function totalItemDias(idx) {
+            let t = 0;
+            for (const f in cuentaHospPorDia) { const s = cuentaHospPorDia[f][idx]; if (s) t += (s.am || 0) + (s.pm || 0); }
+            return t;
+        }
+        // Días (con datos) de un ítem, ordenados
+        function desglosePorDia(idx) {
+            const arr = [];
+            for (const f in cuentaHospPorDia) { const s = cuentaHospPorDia[f][idx]; if (s && ((s.am || 0) + (s.pm || 0)) > 0) arr.push({ fecha: f, am: s.am || 0, pm: s.pm || 0 }); }
+            arr.sort((a, b) => a.fecha.localeCompare(b.fecha));
+            return arr;
+        }
+        function fechaCortaHosp(f) { const p = (f || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] : f; }
+
+        // Pinta en las casillas AM/PM lo del día seleccionado
+        function pintarDiaHosp() {
+            CATALOGO_CUENTAS.forEach((it, idx) => {
+                const s = (cuentaHospPorDia[cuentaHospDia] || {})[idx] || { am: 0, pm: 0 };
+                const a = document.getElementById('cta-am-' + idx); if (a) a.value = s.am || '';
+                const p = document.getElementById('cta-pm-' + idx); if (p) p.value = s.pm || '';
+            });
+        }
+
+        function renderChipsDiasHosp() {
+            const cont = document.getElementById('cta-dias-chips'); if (!cont) return;
+            const dias = Object.keys(cuentaHospPorDia).sort();
+            cont.innerHTML = dias.map(f => {
+                const activo = f === cuentaHospDia;
+                const tiene = Object.values(cuentaHospPorDia[f] || {}).some(s => ((s.am || 0) + (s.pm || 0)) > 0);
+                return `<button type="button" onclick="cambiarDiaHosp('${f}')" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${activo ? 'bg-[#154390] text-white border-[#154390]' : 'bg-white text-[#154390] border-blue-200 hover:bg-blue-50'}">${fechaCortaHosp(f)}${tiene ? '' : ' <span class="opacity-60">(vacío)</span>'}</button>`;
+            }).join('');
+        }
+
+        window.cambiarDiaHosp = function(fecha) {
+            if (!fecha) return;
+            cuentaHospDia = fecha;
+            diaStoreHosp(fecha);
+            const inp = document.getElementById('cta-dia'); if (inp) inp.value = fecha;
+            pintarDiaHosp();
+            renderChipsDiasHosp();
+            recalcularCuentaHosp();
+            marcarCambioCuentaHosp();
+        };
+
+        // Escribir en una casilla AM/PM del día actual
+        window.onAmPmHosp = function(el, idx, campo) {
+            let v = parseInt(el.value) || 0;
+            if (v < 0) { v = 0; el.value = ''; }
+            if (v > MAX_CANT_HOSP) { v = MAX_CANT_HOSP; el.value = v; showToast(`Cantidad máxima por casilla: ${MAX_CANT_HOSP}.`, true); }
+            const s = diaStoreHosp(cuentaHospDia); s[idx] = s[idx] || { am: 0, pm: 0 }; s[idx][campo] = v;
+            recalcularCuentaHosp();
+        };
+
+        // Botones + / − para AM o PM de un ítem del catálogo (del día seleccionado)
+        window.pasoAmPmHosp = function(idx, campo, delta) {
+            const s = diaStoreHosp(cuentaHospDia); s[idx] = s[idx] || { am: 0, pm: 0 };
+            const nuevo = Math.min(MAX_CANT_HOSP, Math.max(0, (s[idx][campo] || 0) + delta));
+            s[idx][campo] = nuevo;
+            const el = document.getElementById('cta-' + campo + '-' + idx);
+            if (el) el.value = nuevo || '';
+            marcarCambioCuentaHosp();
+            recalcularCuentaHosp();
         };
 
         window.pasoCantidadHosp = function(idx, delta) {
@@ -6736,16 +6876,27 @@
                 const items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx })).filter(it => it.g === g);
                 html += `<div class="cta-grupo" data-grupo="${g}">
                     <h3 class="text-sm font-bold text-[#154390] bg-blue-50 px-3 py-2 rounded-lg mt-3 mb-1 sticky top-0">${g === 'Insumos' ? 'Insumos y procedimientos' : 'Laboratorio'} <span class="text-gray-400 font-normal">(${items.length})</span></h3>
+                    <div class="flex items-center gap-1 px-1 pb-1 text-[10px] font-bold text-gray-400 uppercase">
+                        <div class="flex-1 min-w-0">Insumo</div>
+                        <div class="w-[96px] text-center shrink-0">AM</div>
+                        <div class="w-[96px] text-center shrink-0">PM</div>
+                        <div class="w-8 text-center shrink-0">Total</div>
+                        <div class="w-16 text-right shrink-0">Valor</div>
+                    </div>
                     <div class="divide-y divide-gray-100">`;
                 items.forEach(it => {
-                    html += `<div class="cta-fila flex items-center gap-2 py-1.5 px-1" data-nombre="${it.n.toLowerCase()}">
+                    const grupoTurno = (campo, titulo) => `
+                        <div class="flex items-center gap-0.5 shrink-0 w-[96px] justify-center">
+                            <button type="button" onclick="pasoAmPmHosp(${it.idx}, '${campo}', -1)" class="js-editar w-6 h-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center shrink-0">−</button>
+                            <input type="number" min="0" max="${MAX_CANT_HOSP}" step="1" id="cta-${campo}-${it.idx}" oninput="onAmPmHosp(this, ${it.idx}, '${campo}')" class="cta-cant w-9 border border-gray-300 rounded-md px-0.5 py-1 text-sm text-center bg-gray-50" placeholder="0" title="Cantidad ${titulo}">
+                            <button type="button" onclick="pasoAmPmHosp(${it.idx}, '${campo}', 1)" class="js-editar w-6 h-7 rounded-md bg-blue-100 hover:bg-blue-200 text-[#154390] font-bold flex items-center justify-center shrink-0">+</button>
+                        </div>`;
+                    html += `<div class="cta-fila flex items-center gap-1 py-1.5 px-1" data-nombre="${sinTildes(it.n)}">
                         <div class="flex-1 min-w-0"><p class="text-sm text-gray-700 truncate" title="${it.n}">${it.n}</p><p class="text-[11px] text-gray-400">${fmtCOPHosp(it.v)} c/u</p></div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" onclick="pasoCantidadHosp(${it.idx}, -1)" class="js-editar w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center">−</button>
-                            <input type="number" min="0" max="${MAX_CANT_HOSP}" step="1" id="cta-cant-${it.idx}" oninput="topeCantHosp(this); recalcularCuentaHosp()" onchange="avisoAgregadoHosp(${it.idx})" class="cta-cant w-12 border border-gray-300 rounded-lg px-1 py-1 text-sm text-center bg-gray-50" placeholder="0">
-                            <button type="button" onclick="pasoCantidadHosp(${it.idx}, 1)" class="js-editar w-7 h-7 rounded-lg bg-blue-100 hover:bg-blue-200 text-[#154390] font-bold flex items-center justify-center">+</button>
-                        </div>
-                        <div class="w-24 text-right text-sm font-semibold text-gray-700" id="cta-sub-${it.idx}">—</div>
+                        ${grupoTurno('am', 'AM')}
+                        ${grupoTurno('pm', 'PM')}
+                        <div class="w-8 text-center text-sm font-extrabold text-[#154390] shrink-0" id="cta-tot-${it.idx}">0</div>
+                        <div class="w-16 text-right text-sm font-semibold text-gray-700 shrink-0" id="cta-sub-${it.idx}">—</div>
                     </div>`;
                 });
                 html += `</div></div>`;
@@ -6754,7 +6905,7 @@
         }
 
         window.filtrarCatalogoHosp = function() {
-            const q = (document.getElementById('cta-buscar').value || '').trim().toLowerCase();
+            const q = sinTildes((document.getElementById('cta-buscar').value || '').trim());
             document.querySelectorAll('#cta-catalogo .cta-fila').forEach(f => {
                 f.style.display = (!q || f.dataset.nombre.includes(q)) ? '' : 'none';
             });
@@ -6796,7 +6947,7 @@
             if (nuevoValor <= 0) { showToast("Escribe un valor válido.", true); return; }
             const grupoTxt = prompt("¿Va en 'Insumos' o 'Laboratorio'? Escribe L para Laboratorio, o deja vacío para Insumos:", it.g === 'Laboratorio' ? 'L' : '');
             if (grupoTxt === null) return;
-            it.n = nuevoNombre.trim().toUpperCase();
+            it.n = tituloCatalogo(nuevoNombre);
             it.v = nuevoValor;
             it.g = (grupoTxt.trim().toLowerCase().startsWith('l')) ? 'Laboratorio' : 'Insumos';
             marcarCambioCuentaHosp();
@@ -6831,7 +6982,7 @@
 
         window.agregarInsumoExtraHosp = function() {
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
-            const n = (document.getElementById('cta-extra-nombre').value || '').trim().toUpperCase();
+            const n = tituloCatalogo(document.getElementById('cta-extra-nombre').value || '');
             const v = parseInt(document.getElementById('cta-extra-valor').value) || 0;
             const g = document.getElementById('cta-extra-grupo').value === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
             if (!n) { showToast("Escribe el nombre del insumo.", true); return; }
@@ -6848,9 +6999,10 @@
         window.recalcularCuentaHosp = function() {
             let subMascotas = 0, subLab = 0;
             CATALOGO_CUENTAS.forEach((it, idx) => {
-                const el = document.getElementById('cta-cant-' + idx);
-                const cant = el ? (parseInt(el.value) || 0) : 0;
+                const cant = totalItemDias(idx); // suma de todos los días
                 const sub = cant * it.v;
+                const tot = document.getElementById('cta-tot-' + idx);
+                if (tot) tot.innerText = cant || 0;
                 const cell = document.getElementById('cta-sub-' + idx);
                 if (cell) cell.innerText = cant ? fmtCOPHosp(sub) : '—';
                 if (it.g === 'Laboratorio') subLab += sub; else subMascotas += sub;
@@ -6883,13 +7035,12 @@
             if (!cont) return;
             const ins = [], lab = [];
             CATALOGO_CUENTAS.forEach((it, idx) => {
-                const el = document.getElementById('cta-cant-' + idx);
-                const cant = el ? (parseInt(el.value) || 0) : 0;
-                if (cant > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant, sub: cant * it.v });
+                const cant = totalItemDias(idx);
+                if (cant > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant, dias: desglosePorDia(idx).length, sub: cant * it.v });
             });
-            cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant: it.cant, sub: it.cant * it.v }); });
+            cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant: it.cant, dias: 0, sub: it.cant * it.v }); });
             if (!ins.length && !lab.length) { cont.innerHTML = '<p class="text-gray-400 italic text-sm">Todavía no has agregado insumos ni servicios.</p>'; return; }
-            const fila = x => `<div class="flex justify-between gap-2 text-sm py-0.5 border-b border-gray-50"><span class="text-gray-700"><span class="font-semibold text-[#154390]">${x.cant}×</span> ${x.n}</span><span class="text-gray-600 whitespace-nowrap">${fmtCOPHosp(x.sub)}</span></div>`;
+            const fila = x => `<div class="flex justify-between gap-2 text-sm py-0.5 border-b border-gray-50"><span class="text-gray-700"><span class="font-semibold text-[#154390]">${x.cant}×</span> ${x.n}${(x.dias > 1) ? ` <span class="text-[10px] text-gray-400">(${x.dias} días)</span>` : ''}</span><span class="text-gray-600 whitespace-nowrap">${fmtCOPHosp(x.sub)}</span></div>`;
             let html = '';
             if (ins.length) html += `<h4 class="text-xs font-bold text-[#154390] mt-1 mb-1 uppercase">Insumos y servicios (${ins.length})</h4>${ins.map(fila).join('')}`;
             if (lab.length) html += `<h4 class="text-xs font-bold text-teal-700 mt-3 mb-1 uppercase">Laboratorio (${lab.length})</h4>${lab.map(fila).join('')}`;
@@ -6900,9 +7051,13 @@
             const items = [];
             let subMascotas = 0, subLab = 0;
             CATALOGO_CUENTAS.forEach((it, idx) => {
-                const el = document.getElementById('cta-cant-' + idx);
-                const cant = el ? (parseInt(el.value) || 0) : 0;
-                if (cant > 0) { items.push({ n: it.n, v: it.v, cant, g: it.g }); if (it.g === 'Laboratorio') subLab += cant * it.v; else subMascotas += cant * it.v; }
+                const cant = totalItemDias(idx);
+                if (cant > 0) {
+                    const dias = {};
+                    desglosePorDia(idx).forEach(x => { dias[x.fecha] = { am: x.am, pm: x.pm }; });
+                    items.push({ n: it.n, v: it.v, cant, g: it.g, dias });
+                    if (it.g === 'Laboratorio') subLab += cant * it.v; else subMascotas += cant * it.v;
+                }
             });
             cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) { const g = it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos'; items.push({ n: it.n, v: it.v, cant: it.cant, g, x: true }); if (g === 'Laboratorio') subLab += it.cant * it.v; else subMascotas += it.cant * it.v; } });
             const cx = leerMilesHosp('cta-cx');
@@ -6912,6 +7067,8 @@
                 paciente: document.getElementById('cta-paciente').value.trim(),
                 historia: document.getElementById('cta-historia').value.trim(),
                 propietario: document.getElementById('cta-propietario').value.trim(),
+                cedula: (document.getElementById('cta-cedula').value || '').replace(/[^0-9]/g, ''),
+                especie: document.getElementById('cta-especie').value,
                 fecha: document.getElementById('cta-fecha').value,
                 fechaEgreso: document.getElementById('cta-fecha-egreso').value,
                 items, cx, subMascotas, subLab, deposito, total, resta: total - deposito,
@@ -6923,18 +7080,36 @@
             document.getElementById('cta-paciente').value = data.paciente || '';
             document.getElementById('cta-historia').value = data.historia || '';
             document.getElementById('cta-propietario').value = data.propietario || '';
+            document.getElementById('cta-cedula').value = data.cedula || '';
+            document.getElementById('cta-especie').value = data.especie || '';
             document.getElementById('cta-fecha').value = data.fecha || '';
             document.getElementById('cta-fecha-egreso').value = data.fechaEgreso || '';
             document.getElementById('cta-cx').value = data.cx ? Number(data.cx).toLocaleString('es-CO') : '';
             document.getElementById('cta-deposito').value = data.deposito ? Number(data.deposito).toLocaleString('es-CO') : '';
-            CATALOGO_CUENTAS.forEach((it, idx) => { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = ''; });
+            // Reconstruir la hoja por día desde los ítems guardados
+            cuentaHospPorDia = {};
             cuentaHospExtra = [];
+            const diaBase = data.fecha || hoyISOHosp();
             (data.items || []).forEach(it => {
                 if (it.x) { cuentaHospExtra.push({ n: it.n, v: it.v, cant: it.cant, g: it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos' }); return; }
-                const idx = CATALOGO_CUENTAS.findIndex(c => c.n === it.n && c.g === it.g);
-                if (idx >= 0) { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = it.cant; }
-                else { cuentaHospExtra.push({ n: it.n, v: it.v, cant: it.cant, g: it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos' }); }
+                const idx = CATALOGO_CUENTAS.findIndex(c => sinTildes(c.n) === sinTildes(it.n) && c.g === it.g);
+                if (idx >= 0) {
+                    if (it.dias && typeof it.dias === 'object') {
+                        for (const f in it.dias) { diaStoreHosp(f)[idx] = { am: it.dias[f].am || 0, pm: it.dias[f].pm || 0 }; }
+                    } else {
+                        // Cuenta antigua (sin días): todo va al día de ingreso; AM = cant si no había AM/PM
+                        const am = (it.am != null || it.pm != null) ? (it.am || 0) : (it.cant || 0);
+                        diaStoreHosp(diaBase)[idx] = { am, pm: it.pm || 0 };
+                    }
+                } else {
+                    cuentaHospExtra.push({ n: it.n, v: it.v, cant: it.cant, g: it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos' });
+                }
             });
+            cuentaHospDia = diaBase;
+            diaStoreHosp(cuentaHospDia);
+            const inpDia = document.getElementById('cta-dia'); if (inpDia) inpDia.value = cuentaHospDia;
+            pintarDiaHosp();
+            renderChipsDiasHosp();
             document.getElementById('cta-ult-edicion').innerHTML = (data.modificadoPor)
                 ? `<i class="fa-solid fa-user-pen"></i> Última edición: <b>${data.modificadoPor}</b>${data.actualizado ? ' · ' + new Date(data.actualizado).toLocaleString('es-CO') : ''}`
                 : '';
@@ -6963,6 +7138,12 @@
                 const d = new Date();
                 document.getElementById('cta-fecha').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             }
+            // Hoja por día: asegurar un día activo
+            if (!cuentaHospDia) cuentaHospDia = document.getElementById('cta-fecha').value || hoyISOHosp();
+            diaStoreHosp(cuentaHospDia);
+            const inpDia = document.getElementById('cta-dia'); if (inpDia && !inpDia.value) inpDia.value = cuentaHospDia;
+            pintarDiaHosp();
+            renderChipsDiasHosp();
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
             validarDatosCuentaHosp();
@@ -6990,7 +7171,8 @@
         // Muestra el formulario de llenado y la sección "en curso"; oculta los paneles
         function mostrarFormularioHosp() {
             const f = document.getElementById('cta-form'); if (f) f.classList.remove('hidden');
-            const e = document.getElementById('cta-encurso'); if (e) e.classList.remove('hidden');
+            // Al abrir/crear una cuenta se oculta la lista de "en curso" para dejar solo el formulario
+            const e = document.getElementById('cta-encurso'); if (e) e.classList.add('hidden');
             const p = document.getElementById('cta-lista'); if (p) p.classList.add('hidden');
             const el = document.getElementById('cta-eliminadas'); if (el) el.classList.add('hidden');
             const inf = document.getElementById('cta-informe'); if (inf) inf.classList.add('hidden');
@@ -7090,63 +7272,71 @@
             cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
             resumen.classList.add('hidden');
             btnPdf.classList.add('hidden');
+            const desdeD = fdesde || ''; // día (YYYY-MM-DD) para la hoja por día
+            const hastaD = fhasta || '';
             try {
                 const snap = await getDocs(collection(db, "cuentas_hospital"));
                 const cuentas = [];
                 snap.forEach(d => {
                     const c = { id: d.id, ...d.data() };
                     if (c.eliminado) return; // no incluir eliminadas
-                    let movs = [];
-                    if (Array.isArray(c.movimientos) && c.movimientos.length) {
-                        // Salidas de insumos con su propia fecha/hora
-                        movs = c.movimientos.filter(m => {
-                            const md = new Date(m.fecha);
-                            if (isNaN(md)) return false;
-                            if (desde && md < desde) return false;
-                            if (hasta && md > hasta) return false;
-                            return true;
-                        }).map(m => ({ n: m.n, g: m.g, cant: m.cant || 0, v: m.v || 0, fecha: m.fecha, por: m.por || '' }));
-                    } else {
-                        // Cuenta antigua sin detalle por hora: se ubica por su fecha de creación
-                        const ref = c.creado || c.actualizado || (c.fecha ? c.fecha + 'T00:00' : null);
-                        const rd = ref ? new Date(ref) : null;
-                        const enRango = rd && (!desde || rd >= desde) && (!hasta || rd <= hasta);
-                        if (enRango) movs = (c.items || []).map(it => ({ n: it.n, g: it.g, cant: it.cant || 0, v: it.v || 0, fecha: ref, por: '', _legacy: true }));
-                    }
-                    if (movs.length) {
-                        movs.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-                        cuentas.push({ id: c.id, paciente: c.paciente, historia: c.historia, fecha: c.fecha, fechaEgreso: c.fechaEgreso, movs });
+                    const filas = [];
+                    (c.items || []).forEach(it => {
+                        if (it.dias && typeof it.dias === 'object' && Object.keys(it.dias).length) {
+                            // Hoja por día: cada día del insumo dentro del rango de FECHAS
+                            for (const f in it.dias) {
+                                if (desdeD && f < desdeD) continue;
+                                if (hastaD && f > hastaD) continue;
+                                const am = it.dias[f].am || 0, pm = it.dias[f].pm || 0;
+                                const cant = am + pm; if (!cant) continue;
+                                filas.push({ fecha: f, n: it.n, g: it.g, am, pm, cant, v: it.v || 0 });
+                            }
+                        } else if ((it.cant || 0) > 0) {
+                            // Insumo antiguo o agregado a mano (sin día): se ubica por creación/fecha
+                            const ref = c.creado || c.actualizado || (c.fecha ? c.fecha + 'T00:00' : null);
+                            const rd = ref ? new Date(ref) : null;
+                            const en = rd && (!desde || rd >= desde) && (!hasta || rd <= hasta);
+                            if (en) filas.push({ fecha: (ref || '').slice(0, 10), n: it.n, g: it.g, am: 0, pm: 0, cant: it.cant || 0, v: it.v || 0, sinDetalle: true });
+                        }
+                    });
+                    if (filas.length) {
+                        filas.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || (a.n || '').localeCompare(b.n || ''));
+                        cuentas.push({ id: c.id, paciente: c.paciente, historia: c.historia, fecha: c.fecha, fechaEgreso: c.fechaEgreso, filas });
                     }
                 });
-                cuentas.sort((a, b) => ((a.movs[0] && a.movs[0].fecha) || '').localeCompare((b.movs[0] && b.movs[0].fecha) || ''));
+                cuentas.sort((a, b) => ((a.filas[0] && a.filas[0].fecha) || '').localeCompare((b.filas[0] && b.filas[0].fecha) || ''));
                 informeHospData = cuentas;
             } catch (e) {
                 cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
                 console.error(e); return;
             }
             if (!informeHospData.length) {
-                cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No se sacaron insumos en ese rango de fecha y hora.</div>';
+                cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No se registraron insumos en ese rango de fechas.</div>';
                 return;
             }
-            // Resumen general (por salidas dentro del rango)
+            // Resumen general
             let totalValor = 0, totalUnidades = 0;
-            informeHospData.forEach(c => c.movs.forEach(m => { totalUnidades += m.cant; totalValor += m.cant * m.v; }));
+            informeHospData.forEach(c => c.filas.forEach(f => { totalUnidades += f.cant; totalValor += f.cant * f.v; }));
             resumen.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${informeHospData.length} paciente(s) · ${totalUnidades} unidad(es) de insumos · Total $${fmtCOPHosp(totalValor).replace('$ ', '')}`;
             resumen.classList.remove('hidden');
             btnPdf.classList.remove('hidden');
-            // Render por paciente, con la fecha/hora de cada salida
+            // Render por paciente, agrupado por día
             const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             cont.innerHTML = informeHospData.map(c => {
-                const subtotal = c.movs.reduce((s, m) => s + m.cant * m.v, 0);
-                const filas = c.movs.map(m => `
-                    <div class="flex items-start justify-between gap-2 py-1 border-b border-gray-50 last:border-0 text-sm">
-                        <span class="text-gray-700 min-w-0">
-                            <span class="font-semibold text-[#154390]">${m.cant}×</span> ${esc(m.n)}
-                            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${m.g === 'Laboratorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${m.g === 'Laboratorio' ? 'Lab' : 'Insumo'}</span>
-                            <span class="block text-[11px] text-gray-400"><i class="fa-regular fa-clock"></i> ${m._legacy ? 'Registro (sin hora exacta): ' : ''}${fechaHoraLegibleHosp(m.fecha)}${m.por ? ' · ' + esc(m.por) : ''}</span>
-                        </span>
-                        <span class="text-gray-500 whitespace-nowrap">${fmtCOPHosp(m.cant * m.v)}</span>
-                    </div>`).join('');
+                const subtotal = c.filas.reduce((s, f) => s + f.cant * f.v, 0);
+                const porFecha = {};
+                c.filas.forEach(f => { (porFecha[f.fecha] = porFecha[f.fecha] || []).push(f); });
+                const bloques = Object.keys(porFecha).sort().map(f => {
+                    const rows = porFecha[f].map(x => `
+                        <div class="flex items-start justify-between gap-2 py-0.5 text-sm">
+                            <span class="text-gray-700 min-w-0"><span class="font-semibold text-[#154390]">${x.cant}×</span> ${esc(x.n)}
+                                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${x.g === 'Laboratorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${x.g === 'Laboratorio' ? 'Lab' : 'Insumo'}</span>
+                                ${(x.am > 0 || x.pm > 0) ? `<span class="text-[10px] text-gray-400">(AM ${x.am} · PM ${x.pm})</span>` : ''}${x.sinDetalle ? '<span class="text-[10px] text-gray-400">(sin detalle por día)</span>' : ''}
+                            </span>
+                            <span class="text-gray-500 whitespace-nowrap">${fmtCOPHosp(x.cant * x.v)}</span>
+                        </div>`).join('');
+                    return `<div class="mt-1"><p class="text-[11px] font-bold text-[#154390]"><i class="fa-regular fa-calendar"></i> ${f && f !== '' ? fechaLegibleHosp(f) : 'Sin fecha'}</p>${rows}</div>`;
+                }).join('');
                 return `
                 <div class="border border-gray-200 rounded-xl p-3">
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2 mb-2">
@@ -7154,9 +7344,9 @@
                             <p class="font-bold text-gray-800 truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${esc(c.paciente) || '(sin paciente)'} <span class="text-gray-400 font-normal text-sm">· HC ${esc(c.historia) || '—'}</span></p>
                             <p class="text-[11px] text-gray-500">${c.fecha ? 'Ingreso: ' + fechaLegibleHosp(c.fecha) : ''}${c.fechaEgreso ? ' · Egreso: ' + fechaLegibleHosp(c.fechaEgreso) : ' · <span class=\"text-emerald-600\">En curso</span>'}</p>
                         </div>
-                        <span class="text-sm font-bold text-[#154390] whitespace-nowrap">${c.movs.length} salida(s) · ${fmtCOPHosp(subtotal)}</span>
+                        <span class="text-sm font-bold text-[#154390] whitespace-nowrap">${fmtCOPHosp(subtotal)}</span>
                     </div>
-                    ${filas}
+                    ${bloques}
                 </div>`;
             }).join('');
         };
@@ -7173,31 +7363,33 @@
             const rango = `Desde: ${informeHospRango.desde ? fechaHoraLegibleHosp(informeHospRango.desde) : 'inicio'}   ·   Hasta: ${informeHospRango.hasta ? fechaHoraLegibleHosp(informeHospRango.hasta) : 'ahora'}`;
             pdf.text(rango, 40, 62);
             pdf.text("Generado: " + new Date().toLocaleString('es-CO'), 40, 76);
-            // Tabla plana: Fecha/hora de la salida, Paciente, HC, Insumo, Cant, Grupo, Valor
+            // Tabla plana: Día, Paciente, HC, Insumo, AM, PM, Total, Valor
             const body = [];
             informeHospData.forEach(c => {
-                c.movs.forEach((m, idx) => {
+                c.filas.forEach((f, idx) => {
                     body.push([
-                        fechaHoraLegibleHosp(m.fecha),
+                        f.fecha ? fechaLegibleHosp(f.fecha) : '—',
                         idx === 0 ? (c.paciente || '(sin paciente)') : '',
                         idx === 0 ? (c.historia || '—') : '',
-                        m.n, String(m.cant || 0),
-                        m.g === 'Laboratorio' ? 'Lab' : 'Insumo',
-                        fmtCOPHosp((m.cant || 0) * (m.v || 0))
+                        f.n,
+                        f.am ? String(f.am) : '',
+                        f.pm ? String(f.pm) : '',
+                        String(f.cant || 0),
+                        fmtCOPHosp((f.cant || 0) * (f.v || 0))
                     ]);
                 });
             });
             pdf.autoTable({
                 startY: 92,
-                head: [['Fecha y hora salida', 'Paciente', 'HC', 'Insumo', 'Cant.', 'Grupo', 'Valor']],
+                head: [['Día', 'Paciente', 'HC', 'Insumo', 'AM', 'PM', 'Total', 'Valor']],
                 body: body,
                 styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
                 headStyles: { fillColor: [21, 67, 144], textColor: 255 },
-                columnStyles: { 0: { cellWidth: 95 }, 1: { cellWidth: 90 }, 2: { cellWidth: 40 }, 4: { cellWidth: 32, halign: 'center' }, 5: { cellWidth: 40 }, 6: { cellWidth: 60, halign: 'right' } },
+                columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 80 }, 2: { cellWidth: 38 }, 4: { cellWidth: 26, halign: 'center' }, 5: { cellWidth: 26, halign: 'center' }, 6: { cellWidth: 34, halign: 'center' }, 7: { cellWidth: 58, halign: 'right' } },
                 margin: { left: 40, right: 40 }
             });
             let totalValor = 0, totalUnid = 0;
-            informeHospData.forEach(c => c.movs.forEach(m => { totalValor += m.cant * m.v; totalUnid += m.cant; }));
+            informeHospData.forEach(c => c.filas.forEach(f => { totalValor += f.cant * f.v; totalUnid += f.cant; }));
             const y = pdf.lastAutoTable.finalY + 16;
             pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(21, 67, 144);
             pdf.text(`${informeHospData.length} paciente(s) · ${totalUnid} unidad(es) · Total $${fmtCOPHosp(totalValor).replace('$ ', '')}`, 40, y);
@@ -7370,6 +7562,8 @@
             document.getElementById('cta-paciente').value = '';
             document.getElementById('cta-historia').value = '';
             document.getElementById('cta-propietario').value = '';
+            document.getElementById('cta-cedula').value = '';
+            document.getElementById('cta-especie').value = '';
             document.getElementById('cta-cx').value = '';
             document.getElementById('cta-deposito').value = '';
             document.getElementById('cta-fecha-egreso').value = '';
@@ -7379,14 +7573,26 @@
             cuentaHospExtra = [];
             cuentaHospHistorial = [];
             cuentaHospMovimientos = [];
+            cuentaHospPorDia = {};
             cuentaHospPrevio = { items: [], cx: 0, deposito: 0 };
             cuentaHospEntryBase = { items: [], cx: 0, deposito: 0 };
             renderHistorialHosp();
             document.getElementById('cta-ult-edicion').innerHTML = '';
             var estN = document.getElementById('cta-estado-guardado'); if (estN) estN.innerHTML = '';
-            CATALOGO_CUENTAS.forEach((it, idx) => { const el = document.getElementById('cta-cant-' + idx); if (el) el.value = ''; });
+            CATALOGO_CUENTAS.forEach((it, idx) => {
+                const a = document.getElementById('cta-am-' + idx); if (a) a.value = '';
+                const p = document.getElementById('cta-pm-' + idx); if (p) p.value = '';
+                const t = document.getElementById('cta-tot-' + idx); if (t) t.innerText = '0';
+            });
             const d = new Date();
-            document.getElementById('cta-fecha').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const hoyStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            document.getElementById('cta-fecha').value = hoyStr;
+            // Hoja por día: arranca en el día de hoy
+            cuentaHospDia = hoyStr;
+            diaStoreHosp(cuentaHospDia);
+            const inpDia = document.getElementById('cta-dia'); if (inpDia) inpDia.value = cuentaHospDia;
+            pintarDiaHosp();
+            renderChipsDiasHosp();
             filtrarCatalogoHosp();
             renderExtraCuentasHosp();
             recalcularCuentaHosp();
@@ -7400,8 +7606,8 @@
         window.guardarCuentaHosp = async function() {
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
             const data = recogerCuentaHosp();
-            if (!data.fecha || !data.paciente || !data.propietario || !data.historia) {
-                showToast("Completa Fecha de ingreso, Paciente, Propietario e Historia clínica.", true);
+            if (!data.fecha || !data.paciente || !data.propietario || !data.cedula || !data.historia || !data.especie) {
+                showToast("Completa Fecha de ingreso, Paciente, Propietario, Cédula, Especie e Historia clínica.", true);
                 validarDatosCuentaHosp();
                 return;
             }
@@ -7477,32 +7683,50 @@
                 const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
                 if (desde) items = items.filter(it => fechaDe(it) >= desde);
                 if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
-                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>'; return; }
                 items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
-                const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
-                cont.innerHTML = '';
-                items.forEach(it => {
-                    const row = document.createElement('div');
-                    row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
-                    row.innerHTML = `
-                        <div class="min-w-0">
-                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
-                            <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')}${it.fechaEgreso ? ' → ' + it.fechaEgreso : ''} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
-                            ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
-                        </div>
-                        <div class="flex gap-2 shrink-0">
-                            <button onclick="cargarCuentaHosp('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
-                            <button onclick="descargarCuentaHospPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
-                            <button onclick="reabrirCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" title="Quitar egreso y devolver a 'en curso'" class="px-3 py-1.5 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Reabrir</button>
-                            ${puedeBorrar ? `<button onclick="eliminarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
-                        </div>`;
-                    cont.appendChild(row);
-                });
+                guardadasHospLista = items;
+                renderGuardadasHosp();
             } catch (error) {
                 cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
                 console.error(error);
             }
         };
+
+        // Filtra la lista ya cargada por paciente o historia clínica (sin re-consultar)
+        window.filtrarGuardadasHosp = function() { renderGuardadasHosp(); };
+
+        function renderGuardadasHosp() {
+            const cont = document.getElementById('cta-lista-container');
+            if (!cont) return;
+            const q = (document.getElementById('cta-buscar-guardadas') ? document.getElementById('cta-buscar-guardadas').value : '').trim().toLowerCase();
+            let items = (guardadasHospLista || []);
+            if (q) items = items.filter(it => (it.paciente || '').toLowerCase().includes(q) || String(it.historia || '').toLowerCase().includes(q));
+            if (!items.length) {
+                cont.innerHTML = q
+                    ? '<div class="text-center py-6 text-gray-400 italic text-sm">Ningún paciente/HC con “' + q + '”.</div>'
+                    : '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>';
+                return;
+            }
+            const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
+            cont.innerHTML = '';
+            items.forEach(it => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
+                row.innerHTML = `
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                        <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')}${it.fechaEgreso ? ' → ' + it.fechaEgreso : ''} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
+                        ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="cargarCuentaHosp('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                        <button onclick="descargarCuentaHospPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                        <button onclick="reabrirCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" title="Quitar egreso y devolver a 'en curso'" class="px-3 py-1.5 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Reabrir</button>
+                        ${puedeBorrar ? `<button onclick="eliminarCuentaHosp('${it.id}', '${(it.paciente || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                    </div>`;
+                cont.appendChild(row);
+            });
+        }
 
         window.cargarCuentaHosp = async function(id) {
             // Guarda lo que estabas editando antes de abrir otra cuenta
@@ -7648,8 +7872,9 @@
             pdf.autoTable({
                 startY: y,
                 body: [
-                    ["PACIENTE", d.paciente || '—', "HISTORIA CLÍNICA", d.historia || '—'],
-                    ["PROPIETARIO", d.propietario || '—', "FECHA INGRESO", d.fecha || '—'],
+                    ["PACIENTE", d.paciente || '—', "ESPECIE", d.especie || '—'],
+                    ["HISTORIA CLÍNICA", d.historia || '—', "FECHA INGRESO", d.fecha || '—'],
+                    ["PROPIETARIO", d.propietario || '—', "CÉDULA", d.cedula || '—'],
                     ["FECHA EGRESO", d.fechaEgreso || '—', "", ""],
                 ],
                 theme: 'grid', styles: { fontSize: 8, cellPadding: 4, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
@@ -7669,6 +7894,32 @@
                 margin: { left: M, right: M }
             });
             y = pdf.lastAutoTable.finalY + 8;
+
+            // Detalle por día (AM / PM) — solo si algún insumo tiene registro por día
+            const filasDia = [];
+            (d.items || []).forEach(it => {
+                if (it.dias && typeof it.dias === 'object') {
+                    Object.keys(it.dias).sort().forEach(f => {
+                        const am = it.dias[f].am || 0, pm = it.dias[f].pm || 0;
+                        if (am || pm) filasDia.push([fechaLegibleHosp(f), it.n, am ? String(am) : '', pm ? String(pm) : '', String(am + pm)]);
+                    });
+                }
+            });
+            if (filasDia.length) {
+                if (y + 40 > PH - 40) { pdf.addPage(); y = 44; }
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(9); pdf.setTextColor(...AZUL);
+                pdf.text("DETALLE POR DÍA (AM / PM)", M, y); y += 6;
+                pdf.autoTable({
+                    startY: y,
+                    head: [["DÍA", "INSUMO", "AM", "PM", "TOTAL"]],
+                    body: filasDia,
+                    theme: 'grid', styles: { fontSize: 7.5, cellPadding: 3, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
+                    headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold' },
+                    columnStyles: { 0: { cellWidth: 110 }, 2: { halign: 'center', cellWidth: 40 }, 3: { halign: 'center', cellWidth: 40 }, 4: { halign: 'center', cellWidth: 50 } },
+                    margin: { left: M, right: M }
+                });
+                y = pdf.lastAutoTable.finalY + 8;
+            }
 
             const resumen = [
                 ["MASCOTAS (insumos)", fmtCOPHosp(d.subMascotas || 0)],
