@@ -507,12 +507,17 @@
         <!-- LISTA DE FORMATOS GUARDADOS -->
         <div id="fmt-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Monitoreos guardados</h2>
-            <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
-                <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="fmt-desde" class="fmt-in"></div>
-                <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="fmt-hasta" class="fmt-in"></div>
-                <div class="flex gap-2">
-                    <button onclick="abrirFormatosGuardados()" class="px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                    <button onclick="limpiarFiltroFechas()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                <div class="flex flex-wrap items-end gap-2">
+                    <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Desde</label><input type="date" id="fmt-desde" class="fmt-in text-sm py-1.5"></div>
+                    <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Hasta</label><input type="date" id="fmt-hasta" class="fmt-in text-sm py-1.5"></div>
+                    <button onclick="abrirFormatosGuardados()" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button onclick="rangoRapidoFmt('fmt','hoy','abrirFormatosGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                    <button onclick="rangoRapidoFmt('fmt','mes','abrirFormatosGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                    <button onclick="rangoRapidoFmt('fmt','todo','abrirFormatosGuardados')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                 </div>
             </div>
             <div id="fmt-lista-container" class="space-y-2"></div>
@@ -716,12 +721,17 @@
             <!-- LISTA DE EXÁMENES GUARDADOS -->
             <div id="orto-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                 <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Exámenes guardados</h2>
-                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
-                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="orto-desde" class="fmt-in"></div>
-                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="orto-hasta" class="fmt-in"></div>
-                    <div class="flex gap-2">
-                        <button onclick="abrirOrtoGuardados()" class="px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                        <button onclick="limpiarFiltroOrto()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                    <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Desde</label><input type="date" id="orto-desde" class="fmt-in text-sm py-1.5"></div>
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Hasta</label><input type="date" id="orto-hasta" class="fmt-in text-sm py-1.5"></div>
+                        <button onclick="abrirOrtoGuardados()" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button onclick="rangoRapidoFmt('orto','hoy','abrirOrtoGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                        <button onclick="rangoRapidoFmt('orto','mes','abrirOrtoGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                        <button onclick="rangoRapidoFmt('orto','todo','abrirOrtoGuardados')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
                 </div>
                 <div id="orto-lista-container" class="space-y-2"></div>
@@ -833,12 +843,17 @@
             <!-- LISTA DE VALORACIONES GUARDADAS -->
             <div id="neuro-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                 <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Valoraciones guardadas</h2>
-                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
-                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="neuro-desde" class="fmt-in"></div>
-                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="neuro-hasta" class="fmt-in"></div>
-                    <div class="flex gap-2">
-                        <button onclick="abrirNeuroGuardados()" class="px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                        <button onclick="limpiarFiltroNeuro()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                    <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Desde</label><input type="date" id="neuro-desde" class="fmt-in text-sm py-1.5"></div>
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Hasta</label><input type="date" id="neuro-hasta" class="fmt-in text-sm py-1.5"></div>
+                        <button onclick="abrirNeuroGuardados()" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button onclick="rangoRapidoFmt('neuro','hoy','abrirNeuroGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                        <button onclick="rangoRapidoFmt('neuro','mes','abrirNeuroGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                        <button onclick="rangoRapidoFmt('neuro','todo','abrirNeuroGuardados')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
                 </div>
                 <div id="neuro-lista-container" class="space-y-2"></div>
@@ -905,12 +920,17 @@
             <!-- LISTA DE CONSULTAS GUARDADAS -->
             <div id="consulta-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                 <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Consultas guardadas</h2>
-                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
-                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="consulta-desde" class="js-ver fmt-in"></div>
-                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="consulta-hasta" class="js-ver fmt-in"></div>
-                    <div class="flex gap-2">
-                        <button onclick="abrirConsultaGuardados()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                        <button onclick="limpiarFiltroConsulta()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todas</button>
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                    <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Desde</label><input type="date" id="consulta-desde" class="js-ver fmt-in text-sm py-1.5"></div>
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Hasta</label><input type="date" id="consulta-hasta" class="js-ver fmt-in text-sm py-1.5"></div>
+                        <button onclick="abrirConsultaGuardados()" class="js-ver px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button onclick="rangoRapidoFmt('consulta','hoy','abrirConsultaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                        <button onclick="rangoRapidoFmt('consulta','mes','abrirConsultaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                        <button onclick="rangoRapidoFmt('consulta','todo','abrirConsultaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
                 </div>
                 <div id="consulta-lista-container" class="space-y-2"></div>
@@ -950,12 +970,17 @@
 
             <div id="endo-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                 <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Reportes guardados</h2>
-                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
-                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="endo-desde" class="js-ver fmt-in"></div>
-                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="endo-hasta" class="js-ver fmt-in"></div>
-                    <div class="flex gap-2">
-                        <button onclick="abrirEndoscopiaGuardados()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                        <button onclick="limpiarFiltroEndoscopia()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                    <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Desde</label><input type="date" id="endo-desde" class="js-ver fmt-in text-sm py-1.5"></div>
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Hasta</label><input type="date" id="endo-hasta" class="js-ver fmt-in text-sm py-1.5"></div>
+                        <button onclick="abrirEndoscopiaGuardados()" class="js-ver px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button onclick="rangoRapidoFmt('endo','hoy','abrirEndoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                        <button onclick="rangoRapidoFmt('endo','mes','abrirEndoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                        <button onclick="rangoRapidoFmt('endo','todo','abrirEndoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
                 </div>
                 <div id="endo-lista-container" class="space-y-2"></div>
@@ -1005,12 +1030,17 @@
 
             <div id="endoalta-lista" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                 <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Reportes guardados</h2>
-                <div class="flex flex-col sm:flex-row gap-2 sm:items-end mb-4">
-                    <div class="flex-1"><label class="fmt-lbl">Desde</label><input type="date" id="endoalta-desde" class="js-ver fmt-in"></div>
-                    <div class="flex-1"><label class="fmt-lbl">Hasta</label><input type="date" id="endoalta-hasta" class="js-ver fmt-in"></div>
-                    <div class="flex gap-2">
-                        <button onclick="abrirEndoscopiaAltaGuardados()" class="js-ver px-4 py-2 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] flex items-center gap-2"><i class="fa-solid fa-filter"></i> Filtrar</button>
-                        <button onclick="limpiarFiltroEndoscopiaAlta()" class="js-ver px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200 border border-gray-200">Ver todos</button>
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+                    <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Desde</label><input type="date" id="endoalta-desde" class="js-ver fmt-in text-sm py-1.5"></div>
+                        <div class="flex-1 min-w-[120px]"><label class="fmt-lbl">Hasta</label><input type="date" id="endoalta-hasta" class="js-ver fmt-in text-sm py-1.5"></div>
+                        <button onclick="abrirEndoscopiaAltaGuardados()" class="js-ver px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button onclick="rangoRapidoFmt('endoalta','hoy','abrirEndoscopiaAltaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Hoy</button>
+                        <button onclick="rangoRapidoFmt('endoalta','mes','abrirEndoscopiaAltaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
+                        <button onclick="rangoRapidoFmt('endoalta','todo','abrirEndoscopiaAltaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
                 </div>
                 <div id="endoalta-lista-container" class="space-y-2"></div>
@@ -4021,6 +4051,25 @@
             }
         };
 
+        // Rango rápido para las listas de "guardados" de todo el módulo de Formatos clínicos.
+        // prefijo = 'fmt' | 'orto' | 'neuro' | 'consulta' | 'endo' | 'endoalta'
+        window.rangoRapidoFmt = function(prefijo, tipo, abrirFn) {
+            const hoy = new Date();
+            const iso = dd => new Date(dd.getTime() - dd.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+            const desde = document.getElementById(prefijo + '-desde');
+            const hasta = document.getElementById(prefijo + '-hasta');
+            if (!desde || !hasta) return;
+            if (tipo === 'hoy') {
+                desde.value = iso(hoy); hasta.value = iso(hoy);
+            } else if (tipo === 'mes') {
+                desde.value = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+                hasta.value = iso(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
+            } else {
+                desde.value = ''; hasta.value = '';
+            }
+            if (typeof window[abrirFn] === 'function') window[abrirFn]();
+        };
+
         window.abrirFormatosGuardados = async function() {
             const panel = document.getElementById('fmt-lista');
             const cont = document.getElementById('fmt-lista-container');
@@ -5973,7 +6022,15 @@
             ] },
             { id: 'colon_trans', titulo: 'Colon transverso', icono: 'fa-magnifying-glass', campos: [
                 { id: 'colontrans_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
-                { id: 'colontrans_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Friabilidad', 'Textura', 'Hemorragia', 'Erosión/úlcera', 'Cont. (moco/bilis/alimento)', 'Otro'] },
+                { id: 'colontrans_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Friabilidad', 'Textura', 'Hemorragia', 'Erosión/úlcera', 'Cont. (moco/bilis/alimento)', 'Mucosas', 'Otro'] },
+            ] },
+            { id: 'colon_desc', titulo: 'Colon descendente', icono: 'fa-magnifying-glass', campos: [
+                { id: 'colondesc_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
+                { id: 'colondesc_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Friabilidad', 'Textura', 'Hemorragia', 'Erosión/úlcera', 'Cont. (moco/bilis/alimento)', 'Mucosas', 'Otro'] },
+            ] },
+            { id: 'ileon', titulo: 'Íleon', icono: 'fa-magnifying-glass', campos: [
+                { id: 'ileon_hallazgo', label: 'Hallazgo general', tipo: 'checks', op: ['Normal', 'Cuerpo extraño', 'Masa', 'Pólipo', 'Parásitos'] },
+                { id: 'ileon_lesiones', tipo: 'lesiones', lesiones: ['Se puede inflar el lumen', 'Hiperemia/vasculatura', 'Edema', 'Decoloración', 'Friabilidad', 'Textura', 'Hemorragia', 'Erosión/úlcera', 'Cont. (moco/bilis/alimento)', 'Mucosas', 'Otro'] },
             ] },
             { id: 'cierre', titulo: 'Conclusiones', icono: 'fa-file-signature', campos: [
                 { id: 'conclusiones', label: 'Conclusiones', tipo: 'area' },
