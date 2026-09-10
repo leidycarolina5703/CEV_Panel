@@ -1144,7 +1144,7 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-teal-700 flex items-center gap-2">
                         <i class="fa-solid fa-flask-vial"></i> Laboratorio
                     </h1>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Cuentas de cobro de exámenes — se generan solas</p>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">Cuentas de cobro de exámenes</p>
                 </div>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
@@ -1383,6 +1383,16 @@
                 <button onclick="cerrarCuentasEliminadasHosp()" class="px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-semibold border border-gray-200 flex items-center gap-2"><i class="fa-solid fa-xmark"></i> Cerrar</button>
             </div>
             <p class="text-xs text-gray-500 mb-3"><i class="fa-solid fa-circle-info"></i> Aquí quedan las cuentas eliminadas, con quién y cuándo las borró. Puedes restaurarlas.</p>
+            <div id="cta-elim-acciones" class="hidden flex flex-col sm:flex-row sm:items-center gap-2 mb-3 bg-red-50 border border-red-200 rounded-lg p-2">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer select-none">
+                    <input type="checkbox" id="cta-elim-selall" onchange="toggleSelAllEliminadasHosp()" class="w-4 h-4 accent-red-600"> Seleccionar todas
+                </label>
+                <div class="flex flex-wrap gap-2 sm:ml-auto">
+                    <button onclick="purgarSeleccionadasHosp()" class="px-3 py-1.5 text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200 rounded-lg border border-red-300 flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Eliminar seleccionadas</button>
+                    <button onclick="purgarTodasEliminadasHosp()" class="px-3 py-1.5 text-xs font-bold bg-red-600 text-white hover:bg-red-700 rounded-lg flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Eliminar TODAS</button>
+                </div>
+            </div>
+            <p class="text-[11px] text-red-600 italic mb-2 hidden" id="cta-elim-aviso"><i class="fa-solid fa-triangle-exclamation"></i> El borrado definitivo es irreversible: elimina el registro de Firestore por completo.</p>
             <div id="cta-eliminadas-container" class="space-y-2"></div>
         </div>
 
@@ -1778,6 +1788,16 @@
 
         function correoEsAdmin(email) {
             return ADMIN_EMAILS.map(e => e.toLowerCase()).includes((email || "").toLowerCase());
+        }
+
+        // Permiso exclusivo para el borrado DEFINITIVO de cuentas eliminadas.
+        // Solo este correo puede purgar (eliminar de forma irreversible).
+        const SUPER_ADMIN_EMAIL = "servicioalclientecevmascotas@gmail.com";
+        function esSuperAdmin() {
+            const correo = (auth.currentUser && auth.currentUser.email)
+                ? auth.currentUser.email
+                : (usuarioSesion ? usuarioSesion.correo : '');
+            return (correo || '').toLowerCase() === SUPER_ADMIN_EMAIL;
         }
 
         // --- NAVEGACIÓN ---
@@ -7742,14 +7762,27 @@
                 snap.forEach(d => items.push({ id: d.id, ...d.data() }));
                 items = items.filter(it => it.eliminado === true);
                 items.sort((a, b) => (b.eliminadoEn || '').localeCompare(a.eliminadoEn || ''));
-                if (items.length === 0) { cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas eliminadas.</div>'; return; }
+                const puedePurgar = esSuperAdmin();
+                const acc = document.getElementById('cta-elim-acciones');
+                const aviso = document.getElementById('cta-elim-aviso');
+                const selAll = document.getElementById('cta-elim-selall');
+                if (selAll) selAll.checked = false;
+                if (items.length === 0) {
+                    if (acc) acc.classList.add('hidden');
+                    if (aviso) aviso.classList.add('hidden');
+                    cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas eliminadas.</div>';
+                    return;
+                }
+                if (acc) acc.classList.toggle('hidden', !puedePurgar);
+                if (aviso) aviso.classList.toggle('hidden', !puedePurgar);
                 cont.innerHTML = '';
                 items.forEach(it => {
                     const row = document.createElement('div');
                     row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 bg-red-50/40 hover:bg-red-50";
                     const cuando = it.eliminadoEn ? new Date(it.eliminadoEn).toLocaleString('es-CO') : '';
                     row.innerHTML = `
-                        <div class="min-w-0">
+                        ${puedePurgar ? `<input type="checkbox" class="cta-elim-chk w-4 h-4 accent-red-600 shrink-0" value="${it.id}">` : ''}
+                        <div class="min-w-0 flex-1">
                             <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
                             <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')}${it.fechaEgreso ? ' → ' + it.fechaEgreso : ''} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
                             <p class="text-[11px] text-red-600"><i class="fa-solid fa-trash-can"></i> Eliminó: <b>${it.eliminadoPor || '—'}</b>${cuando ? ' · ' + cuando : ''}</p>
@@ -7780,6 +7813,51 @@
                 abrirCuentasEliminadasHosp();
                 renderHospEnCurso();
             } catch (error) { showToast("No se pudo restaurar la cuenta.", true); console.error(error); }
+        };
+
+        // ===== Borrado DEFINITIVO de cuentas eliminadas (solo SUPER_ADMIN_EMAIL) =====
+        window.toggleSelAllEliminadasHosp = function() {
+            const sel = document.getElementById('cta-elim-selall');
+            const marcar = !!(sel && sel.checked);
+            document.querySelectorAll('.cta-elim-chk').forEach(chk => { chk.checked = marcar; });
+        };
+
+        async function purgarCuentasHosp(ids) {
+            // Borrado físico e irreversible en Firestore.
+            let ok = 0, fail = 0;
+            for (const id of ids) {
+                try { await deleteDoc(doc(db, "cuentas_hospital", id)); ok++; }
+                catch (e) { console.error(e); fail++; }
+            }
+            return { ok, fail };
+        }
+
+        window.purgarSeleccionadasHosp = async function() {
+            if (!esSuperAdmin()) { showToast("Solo el administrador principal puede eliminar cuentas de forma definitiva.", true); return; }
+            const ids = Array.from(document.querySelectorAll('.cta-elim-chk:checked')).map(c => c.value);
+            if (ids.length === 0) { showToast("No has seleccionado ninguna cuenta.", true); return; }
+            if (!confirm(`¿Eliminar DEFINITIVAMENTE ${ids.length} cuenta(s)?\n\nEsto borra el registro de Firestore por completo y NO se puede deshacer.`)) return;
+            showToast("Eliminando " + ids.length + " cuenta(s)...");
+            const { ok, fail } = await purgarCuentasHosp(ids);
+            showToast(fail === 0 ? (ok + " cuenta(s) eliminada(s) definitivamente.") : (ok + " eliminada(s), " + fail + " con error."), fail !== 0);
+            abrirCuentasEliminadasHosp();
+        };
+
+        window.purgarTodasEliminadasHosp = async function() {
+            if (!esSuperAdmin()) { showToast("Solo el administrador principal puede eliminar cuentas de forma definitiva.", true); return; }
+            let ids = [];
+            try {
+                const snap = await getDocs(collection(db, "cuentas_hospital"));
+                snap.forEach(d => { if (d.data().eliminado === true) ids.push(d.id); });
+            } catch (e) { showToast("No se pudo consultar las cuentas eliminadas.", true); console.error(e); return; }
+            if (ids.length === 0) { showToast("No hay cuentas eliminadas para borrar.", true); return; }
+            const resp = prompt(`Vas a eliminar DEFINITIVAMENTE las ${ids.length} cuentas de la papelera.\n\nEsta acción borra los registros de Firestore por completo y NO se puede deshacer.\n\nEscribe ELIMINAR (en mayúsculas) para confirmar:`);
+            if (resp === null) return;
+            if (resp.trim() !== "ELIMINAR") { showToast("Confirmación incorrecta. No se eliminó nada.", true); return; }
+            showToast("Eliminando " + ids.length + " cuenta(s)...");
+            const { ok, fail } = await purgarCuentasHosp(ids);
+            showToast(fail === 0 ? ("Papelera vaciada: " + ok + " cuenta(s) eliminada(s) definitivamente.") : (ok + " eliminada(s), " + fail + " con error."), fail !== 0);
+            abrirCuentasEliminadasHosp();
         };
 
         function construirCuentaHospPDF(d) {
