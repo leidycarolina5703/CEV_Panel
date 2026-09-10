@@ -8783,9 +8783,23 @@
             const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             let desgloseHtml = "";
             if (detallarActivo()) {
-                desgloseHtml = '<div class="mt-1 space-y-1">' + examenesSel.map(ex => {
-                    const inc = ex.incluye ? `<div class="text-xs italic text-gray-500">Incluye: ${esc(ex.incluye)}</div>` : "";
-                    return `<div><span class="font-semibold">${esc(ex.n)}</span> — $${fmtMiles(ex.p)}${inc}</div>`;
+                // Agrupar exámenes repetidos (mismo nombre e "incluye") con cantidad y subtotal, igual que el PDF
+                const grupos = [];
+                const idxGrupo = {};
+                examenesSel.forEach(ex => {
+                    const key = (ex.n || "") + "||" + (ex.incluye || "");
+                    if (idxGrupo[key] == null) {
+                        idxGrupo[key] = grupos.length;
+                        grupos.push({ n: ex.n || "", incluye: ex.incluye || "", p: ex.p || 0, cant: 0, sub: 0 });
+                    }
+                    const g = grupos[idxGrupo[key]];
+                    g.cant += 1;
+                    g.sub += (ex.p || 0);
+                });
+                desgloseHtml = '<div class="mt-1 space-y-1">' + grupos.map(g => {
+                    const inc = g.incluye ? `<div class="text-xs italic text-gray-500">Incluye: ${esc(g.incluye)}</div>` : "";
+                    const mult = g.cant > 1 ? ` <span class="text-teal-700 font-semibold">(x${g.cant} · $${fmtMiles(g.p)} c/u)</span>` : "";
+                    return `<div><span class="font-semibold">${esc(g.n)}</span>${mult} — $${fmtMiles(g.sub)}${inc}</div>`;
                 }).join("") + '</div>';
             }
             const prev = document.getElementById('lab-preview');
