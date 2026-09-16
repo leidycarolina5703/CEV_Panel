@@ -801,6 +801,22 @@
                 </div>
             </section>
 
+            <!-- Plan, diagnósticos y conclusiones -->
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 space-y-4">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-notes-medical"></i> Plan terapéutico</h2>
+                    <textarea id="o-plan" rows="4" class="fmt-in" placeholder="Escribe el plan terapéutico..."></textarea>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Diagnósticos diferenciales</h2>
+                    <textarea id="o-ddx" rows="4" class="fmt-in" placeholder="Escribe los diagnósticos diferenciales..."></textarea>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-file-signature"></i> Conclusiones</h2>
+                    <textarea id="o-conclusiones" rows="4" class="fmt-in" placeholder="Escribe las conclusiones..."></textarea>
+                </div>
+            </section>
+
             <!-- Acciones -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <button onclick="guardarOrto()" id="btn-guardar-orto" class="flex-1 py-3 bg-[#154390] text-white rounded-xl font-bold hover:bg-[#0f3268] transition-colors shadow-md flex justify-center items-center gap-2">
@@ -4328,7 +4344,7 @@
             "price-dolor","price-rango","price-efusion","price-crepito","price-inestabilidad",
             "eoe-mtd","eoe-mti","eoe-mpd","eoe-mpi",
             "eoe-simetria","eoe-apoyo","eoe-sentado","eoe-inflamacion","eoe-masas","eoe-dolor","eoe-observacion",
-            "especiales"
+            "especiales","plan","ddx","conclusiones"
         ];
         let ortoIdActual = null;
 
@@ -4613,6 +4629,15 @@
             });
             filas.push(["PROCEDIMIENTOS ESPECIALES", ""]);
             par("Descripción", d.especiales);
+            filas.push(["", ""]);
+            filas.push(["PLAN TERAPÉUTICO", ""]);
+            par("Plan terapéutico", d.plan);
+            filas.push(["", ""]);
+            filas.push(["DIAGNÓSTICOS DIFERENCIALES", ""]);
+            par("Diagnósticos diferenciales", d.ddx);
+            filas.push(["", ""]);
+            filas.push(["CONCLUSIONES", ""]);
+            par("Conclusiones", d.conclusiones);
             return filas;
         }
 
@@ -4665,7 +4690,15 @@
                 ["Paciente", d.paciente], ["Raza", d.raza], ["Edad", d.edad],
                 ["Sexo", d.sexo], ["Peso", d.peso]
             ]);
-            seccionKV("ANAMNESIS", [["Anamnesis", d.anamnesis]]);
+            pdf.autoTable({
+                startY: y,
+                head: [[{ content: "ANAMNESIS", styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
+                body: [[d.anamnesis || '']],
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 4, textColor: [40, 40, 40] },
+                margin: { left: M, right: M }
+            });
+            y = pdf.lastAutoTable.finalY + 10;
             seccionKV("PRICE", [
                 ["Dolor", d["price-dolor"]], ["Rango de movimiento", d["price-rango"]],
                 ["Efusión", d["price-efusion"]], ["Crépito", d["price-crepito"]],
@@ -4738,6 +4771,22 @@
                 styles: { fontSize: 8, cellPadding: 4 },
                 margin: { left: M, right: M }
             });
+            // Plan terapéutico, diagnósticos diferenciales y conclusiones
+            let yFin = pdf.lastAutoTable.finalY + 12;
+            const bloqueTextoOrto = (titulo, texto) => {
+                pdf.autoTable({
+                    startY: yFin,
+                    head: [[{ content: titulo, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
+                    body: [[texto || '']],
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 4 },
+                    margin: { left: M, right: M }
+                });
+                yFin = pdf.lastAutoTable.finalY + 12;
+            };
+            bloqueTextoOrto("PLAN TERAPÉUTICO", d.plan);
+            bloqueTextoOrto("DIAGNÓSTICOS DIFERENCIALES", d.ddx);
+            bloqueTextoOrto("CONCLUSIONES", d.conclusiones);
             sellarLogoPaginas(pdf, M);
             return pdf;
         }
@@ -4780,6 +4829,9 @@
             postura: ["Patas", "Decúbito lateral", "Decúbito esternal"]
         };
         const NEURO_SECCIONES = [
+            { id: "anamnesis", titulo: "Anamnesis", icono: "fa-clipboard-question", libre: true, campos: [
+                { id: "detalle", label: "Anamnesis", tipo: "abierto", ancho: true, rows: 5, ph: "Escribe la anamnesis del paciente..." }
+            ]},
             { id: "general", titulo: "Observaciones generales", icono: "fa-clipboard-list", campos: [
                 { id: "musculatura",    label: "Musculatura",             tipo: "texto" },
                 { id: "estado_mental",  label: "Estado mental",           tipo: "estado" },
@@ -4912,6 +4964,15 @@
             { id: "dolor", titulo: "Dolor profundo y superficial", icono: "fa-hand-dots", campos: [
                 { id: "dolor", label: "Dolor profundo y superficial", tipo: "si_no" },
                 { id: "dolor_comentario", label: "Dolor profundo y superficial — Observaciones", tipo: "nota" }
+            ]},
+            { id: "plan", titulo: "Plan terapéutico", icono: "fa-notes-medical", libre: true, campos: [
+                { id: "detalle", label: "Plan terapéutico", tipo: "abierto", ancho: true, rows: 5, ph: "Escribe el plan terapéutico..." }
+            ]},
+            { id: "ddx", titulo: "Diagnósticos diferenciales", icono: "fa-list-check", libre: true, campos: [
+                { id: "detalle", label: "Diagnósticos diferenciales", tipo: "abierto", ancho: true, rows: 5, ph: "Escribe los diagnósticos diferenciales..." }
+            ]},
+            { id: "conclusiones", titulo: "Conclusiones", icono: "fa-file-signature", libre: true, campos: [
+                { id: "detalle", label: "Conclusiones", tipo: "abierto", ancho: true, rows: 5, ph: "Escribe las conclusiones..." }
             ]}
         ];
         const NEURO_DATOS = ["nombre","hc","fecha","edad","sexo"];
@@ -4969,8 +5030,8 @@
                 // Comentario sin campo al que engancharse: casilla propia
                 return `<div id="celda-${dom}">${notaNeuroHTML(secId, campo)}</div>`;
             } else if (campo.tipo === "abierto") {
-                // Cuadro de comentario siempre visible, sin lista SI/NO
-                control = `<textarea id="${dom}" rows="2" class="fmt-in resize-y" placeholder="Comentario..."></textarea>`;
+                // Cuadro de texto siempre visible, sin lista SI/NO
+                control = `<textarea id="${dom}" rows="${campo.rows || 2}" class="fmt-in resize-y" placeholder="${campo.ph || 'Comentario...'}"></textarea>`;
             } else if (campo.tipo === "texto") {
                 control = `<input id="${dom}" class="fmt-in">`;
             } else {
@@ -4980,7 +5041,8 @@
             }
             // La casilla lleva id cuando trae comentario: al abrirlo se ensancha
             const idCelda = nota ? ` id="celda-n-${secId}-${nota.id}"` : '';
-            return `<div${idCelda}><label class="fmt-lbl">${campo.label}</label>${control}${extra}</div>`;
+            const clsAncho = campo.ancho ? ' class="sm:col-span-2 lg:col-span-3"' : '';
+            return `<div${idCelda}${clsAncho}><label class="fmt-lbl">${campo.label}</label>${control}${extra}</div>`;
         }
 
         // Pinta una lista de campos: si a un campo le sigue uno de tipo "nota",
@@ -5340,7 +5402,24 @@
                 ["Edad", d.edad], ["Sexo", d.sexo]
             ]);
             const campos = d.campos || {};
+            // Bloque de texto libre: título arriba y el texto en la fila de abajo, a todo el ancho
+            const bloqueLibre = (titulo, texto) => {
+                pdf.autoTable({
+                    startY: y,
+                    head: [[{ content: titulo, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
+                    body: [[texto || '']],
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 4, textColor: [40, 40, 40] },
+                    margin: { left: M, right: M }
+                });
+                y = pdf.lastAutoTable.finalY + 10;
+            };
             NEURO_SECCIONES.forEach(sec => {
+                if (sec.libre) {
+                    const c = (sec.campos || [])[0];
+                    bloqueLibre(sec.titulo.toUpperCase(), c ? campos[sec.id + '_' + c.id] : '');
+                    return;
+                }
                 if (sec.campos) {
                     tabla(sec.titulo.toUpperCase(), sec.campos.map(c => [c.label, campos[sec.id + '_' + c.id]]));
                 }
