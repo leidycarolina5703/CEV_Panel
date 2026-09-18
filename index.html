@@ -1773,7 +1773,7 @@
                     <i class="fa-solid fa-user-doctor"></i> Médicos
                 </button>
                 <button onclick="rmNuevoPaciente()" class="px-4 py-2 bg-[#154390] text-white hover:bg-[#154390] rounded-lg font-semibold flex items-center gap-2 transition-colors justify-center">
-                    <i class="fa-solid fa-user-plus"></i> Nuevo
+                    <i class="fa-solid fa-plus"></i> Nuevo <i class="fa-solid fa-paw"></i>
                 </button>
             </div>
         </header>
@@ -2350,7 +2350,7 @@
             { name: "Vestido XL", ideal: 1 },
 
             // Caja organizadora — Tabletas / cápsulas
-            { name: "Metronidazol x 10 ml", ideal: 5 },
+            { name: "Metronidazol x 100 ml", ideal: 5 },
             { name: "Pregabalina 75 mg", ideal: 15 },
             { name: "Trimetoprim Tableta", ideal: 5 },
             { name: "Esomeprazol", ideal: 5 },
@@ -2366,7 +2366,7 @@
             { name: "Domperidona (Domevoro)", ideal: 5 },
 
             // Ampollas e inyectables
-            { name: "Ampicilina x 10 ml", ideal: 4 },
+            { name: "Ampicilina x 5 ml", ideal: 4 },
             { name: "Ceftriaxona x 10 ml", ideal: 4 },
             { name: "Omeprazol ml", ideal: 5 },
             { name: "Ampicilina + sulbactam x 10 ml", ideal: 5 },
@@ -10293,6 +10293,18 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             const nota = (ronda.length ? ronda[ronda.length - 1] : p.evolucion[p.evolucion.length - 1]);
             return (nota.texto || "").split("\n")[0];
         }
+        function rmDiasHosp(p) {
+            const f = p.fechaIngreso;
+            if (!f || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return "";
+            const ini = new Date(f + "T00:00:00");
+            const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+            const diff = Math.round((hoy - ini) / 86400000);
+            return diff >= 0 ? (diff + 1) : ""; // el día de ingreso cuenta como día 1
+        }
+        function rmFechaCorta(f) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(f || ""));
+            return m ? (m[3] + "/" + m[2]) : String(f || "");
+        }
 
         window.renderRondaTablero = function() {
             const cont = document.getElementById('rm-tablero-container');
@@ -10522,7 +10534,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
 
         function rmSecMonitoreo(p) {
             const fechas = p.fechas || [];
-            const headFechas = fechas.map(f => `<th class="px-1 py-1 border border-gray-200 bg-blue-50 text-[11px] whitespace-nowrap">${rmEsc(f)}<br><button data-act="delfecha|${f}" class="text-red-400 hover:text-red-600 text-[10px]"><i class="fa-solid fa-xmark"></i></button></th>`).join("");
+            const headFechas = fechas.map(f => `<th class="px-1 py-1 border border-gray-200 bg-blue-50 text-[11px] whitespace-nowrap" title="${rmEsc(f)}">${rmEsc(rmFechaCorta(f))}<br><button data-act="delfecha|${f}" class="text-red-400 hover:text-red-600 text-[10px]"><i class="fa-solid fa-xmark"></i></button></th>`).join("");
             let filas = "";
             RM_MONITOREO.forEach(g => {
                 filas += `<tr><td colspan="${fechas.length+1}" class="px-2 py-1 bg-gray-100 text-[11px] font-bold text-gray-600 uppercase border border-gray-200">${g.grupo}</td></tr>`;
@@ -10586,7 +10598,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
 
         function rmSecLab(p) {
             const fechas = p.fechas || [];
-            const headFechas = fechas.map(f => `<th class="px-1 py-1 border border-gray-200 bg-blue-50 text-[11px] whitespace-nowrap">${rmEsc(f)}</th>`).join("") || '<th class="px-3 py-1 border border-gray-200 text-[11px] text-gray-400 italic">Sin fechas</th>';
+            const headFechas = fechas.map(f => `<th class="px-1 py-1 border border-gray-200 bg-blue-50 text-[11px] whitespace-nowrap" title="${rmEsc(f)}">${rmEsc(rmFechaCorta(f))}</th>`).join("") || '<th class="px-3 py-1 border border-gray-200 text-[11px] text-gray-400 italic">Sin fechas</th>';
             let filas = "";
             RM_LAB.forEach(g => {
                 filas += `<tr><td colspan="${fechas.length+2}" class="px-2 py-1 bg-gray-100 text-[11px] font-bold text-gray-600 uppercase border border-gray-200">${g.grupo}</td></tr>`;
@@ -10760,8 +10772,16 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             const act = parts[0];
             if (act === "addfecha") {
                 const hoy = (typeof fechaLocalISO === "function" ? fechaLocalISO() : new Date().toISOString().slice(0,10));
-                const f = prompt("Fecha de la columna (YYYY-MM-DD):", hoy);
-                if (!f) return;
+                let sugerida = hoy;
+                if (rmActual.fechas && rmActual.fechas.length) {
+                    const ult = rmActual.fechas.slice().sort().pop();
+                    const d = new Date(ult + "T00:00:00");
+                    if (!isNaN(d)) { d.setDate(d.getDate() + 1); sugerida = d.toISOString().slice(0, 10); }
+                } else if (rmActual.fechaIngreso) { sugerida = rmActual.fechaIngreso; }
+                let f = prompt("Fecha de la columna (AAAA-MM-DD):", sugerida);
+                if (f === null) return;
+                f = (f || "").trim();
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) { showToast("Fecha inválida. Usa el formato AAAA-MM-DD.", true); return; }
                 if (rmActual.fechas.includes(f)) { showToast("Esa fecha ya existe.", true); return; }
                 rmActual.fechas.push(f); rmActual.fechas.sort();
             } else if (act === "delfecha") {
