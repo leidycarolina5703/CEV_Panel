@@ -7576,7 +7576,7 @@
                     row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                     row.innerHTML = `
                         <div class="min-w-0">
-                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}${etiquetaEspecie(it.especie)}</p>
                             <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
                             ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
                         </div>
@@ -7821,6 +7821,14 @@
         // Filtra la lista ya cargada por paciente o historia clínica (sin re-consultar)
         window.filtrarGuardadasHosp = function() { renderGuardadasHosp(); };
 
+        // Etiqueta Canino / Felino (badge con color e ícono)
+        function etiquetaEspecie(esp) {
+            const e = String(esp || '').trim().toUpperCase();
+            if (e.includes('CANINO') || e.includes('PERRO')) return ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 align-middle"><i class="fa-solid fa-dog"></i> Canino</span>';
+            if (e.includes('FELINO') || e.includes('GATO')) return ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 align-middle"><i class="fa-solid fa-cat"></i> Felino</span>';
+            return '';
+        }
+
         function renderGuardadasHosp() {
             const cont = document.getElementById('cta-lista-container');
             if (!cont) return;
@@ -7840,7 +7848,7 @@
                 row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                 row.innerHTML = `
                     <div class="min-w-0">
-                        <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                        <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}${etiquetaEspecie(it.especie)}</p>
                         <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')}${it.fechaEgreso ? ' → ' + it.fechaEgreso : ''} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
                         ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
                     </div>
@@ -10340,7 +10348,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 const egresado = p.activo === false ? '<span class="ml-2 text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">EGRESADO</span>' : '';
                 return `<tr onclick="abrirRondaFicha('${p.id}')" class="${rowBg} ${bar} cursor-pointer border-b border-gray-100 transition-colors">
                     <td class="px-2 py-2 text-center text-gray-400 text-xs">${i+1}</td>
-                    <td class="px-2 py-2"><div class="font-bold text-gray-800 text-sm">${nombre}${egresado}</div><div class="text-xs text-gray-500">${sub}</div></td>
+                    <td class="px-2 py-2"><div class="font-bold text-gray-800 text-sm">${nombre}${etiquetaEspecie(p.especie)}${egresado}</div><div class="text-xs text-gray-500">${sub}</div></td>
                     <td class="px-2 py-2 text-xs text-gray-600">${rmEsc(p.hc||"")}</td>
                     <td class="px-2 py-2 text-xs text-gray-600 uppercase">${rmEsc(p.mv||"")}</td>
                     <td class="px-2 py-2 text-xs text-gray-600">${rmEsc(p.fechaIngreso||"")}</td>
