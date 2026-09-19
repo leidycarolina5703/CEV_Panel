@@ -1202,7 +1202,11 @@
             <div class="border-t border-gray-100 pt-4">
                 <p class="fmt-lbl text-gray-700"><i class="fa-solid fa-vials text-teal-600"></i> Exámenes tomados</p>
                 <div class="flex flex-col sm:flex-row gap-2 mt-1">
-                    <select id="lab-examen-select" onchange="actualizarBotonBorrarExamen()" class="fmt-in flex-1 cursor-pointer"></select>
+                    <div class="relative flex-1" id="lab-examen-combo">
+                        <input type="text" id="lab-examen-input" oninput="labComboFiltrar()" onfocus="labComboAbrir()" placeholder="Escribe o elige un examen…" autocomplete="off" class="fmt-in w-full pr-8 cursor-pointer">
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                        <div id="lab-examen-lista" class="hidden absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+                    </div>
                     <button onclick="agregarExamen()" class="px-4 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 text-sm flex items-center justify-center gap-2 shrink-0">
                         <i class="fa-solid fa-plus"></i> Agregar
                     </button>
@@ -1216,7 +1220,7 @@
                     </button>
                 </div>
                 <div id="lab-nuevo-examen" class="hidden mt-2 bg-teal-50 border border-teal-200 rounded-lg p-3 flex flex-col sm:flex-row gap-2 items-stretch">
-                    <input type="text" id="lab-nuevo-nombre" placeholder="Nombre del examen" class="fmt-in flex-1 uppercase">
+                    <input type="text" id="lab-nuevo-nombre" placeholder="Nombre del examen" class="fmt-in flex-1">
                     <div class="relative sm:w-36">
                         <span class="absolute left-3 top-2.5 text-gray-400 font-bold">$</span>
                         <input type="text" inputmode="numeric" id="lab-nuevo-precio" placeholder="Precio" class="fmt-in pl-7">
@@ -8426,6 +8430,8 @@
         let cuentaIdActual = null;
         let examenesSel = [];   // exámenes elegidos para la cuenta actual
         let examenesPersonalizados = [];       // exámenes agregados por el usuario
+        let labExamenSel = null;               // examen elegido en el desplegable (para desambiguar nombres repetidos)
+        let labTodosRender = [];               // lista renderizada en el desplegable (para resolver el clic)
         let examenesPersonalizadosCargados = false;
 
         const EXAMENES_LAB = [
@@ -8483,7 +8489,8 @@
             {n:"PAQUETE RENAL 2", p:325000, incluye:"Perfil Renal – T4 Total – Colesterol Total – Lipasa"},
             {n:"RENAL", p:172000, incluye:"Hemograma – Parcial de Orina – Cloro – Calcio – Potasio – Albúmina – Urea – Sodio – Creatinina – CO2 – Glucosa – Fósforo"},
             {n:"HEPÁTICO", p:172000, incluye:"Hemograma – Colesterol T – Parcial de Orina – GGT – ALT – Bilirrubina T – Ácidos Biliares – Albúmina – Urea – Fosfatasa"},
-            {n:"GERIÁTRICO CANINO", p:315000, incluye:"CH – Uroanálisis – Perfil Renal – Perfil Hepático"},
+            {n:"Geriátrico Canino", p:315000, incluye:"CH – Uroanálisis – Perfil Renal – Perfil Hepático"},
+            {n:"Geriátrico Felino", p:315000, incluye:""},
             {n:"CONVULSIVO", p:220000, incluye:"CH – EDAN – PO – CREA – UREA – ALT – AST – FA"},
             {n:"URGENCIAS 2", p:250000, incluye:"CH – Creatinina – EDAN – Urea – Fosfatasa – Parcial de Orina – ALT – Glucosa – Proteínas T"},
             {n:"URGENCIAS 1", p:155000, incluye:"CH – Creatinina – Fosfatasa – Urea – ALT – Parcial de Orina – Glucosa – Proteínas T"},
@@ -8495,6 +8502,142 @@
             {n:"ASA II", p:145000, incluye:"CH – PO – CREA – UREA – ALT – FA – TCT"},
             {n:"ASA III", p:200000, incluye:"CH – PO – CREA – ALT – FA – EDAN – TCT"},
             {n:"ASA IV", p:280000, incluye:"CH – PO – CREA – ALT – FA – EDAN – TP – TTP"}
+        ];
+
+        const EXAMENES_PCR = [
+            {n:"PCR Cardiaco Canino 1", p:233000, incluye:"Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Trypanosoma sp. y Bartonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Cardiaco Canino 2", p:300000, incluye:"Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Trypanosoma sp., Angiostrongylus vasorum y Bartonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Cachorros 1", p:265000, incluye:"Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Distemper (CDV) y Parvovirus (CPV)", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Cachorros 2", p:490000, incluye:"Hepatozoon sp., Babesia sp., Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp. y Candidatus Mycoplasma, Bartonella sp., Distemper (CDV), Coronavirus canino (CVC) y Parvovirus (CPV)", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Dermatofitosis Básico", p:265000, incluye:"Microsporum sp., Trichophyton sp., Leishmania sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Dermatofitosis 2", p:346000, incluye:"Microsporum sp., Trichophyton sp., Mycobacterium sp., Nocardia sp., Leishmania sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Diarreico Canino 1", p:265000, incluye:"Coronavirus canino (CVC), Parvovirus (CPV) y Giardia sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Diarreico Canino 2", p:300000, incluye:"Coronavirus canino (CVC), Distemper (CDV), Parvovirus (CPV) y Rotavirus tipo A", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Diarreico Canino 3", p:300000, incluye:"Trichomona sp., Giardia sp., Cryptococcus sp. y Salmonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Diarreico Bacteriano", p:265000, incluye:"Clostridium sp., Campylobacter sp., Salmonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Diarreico Parasitario", p:265000, incluye:"Cryptosporidium sp., Giardia sp., Cystoisospora sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Diarreico Completo", p:560000, incluye:"Coronavirus canino (CVC), Distemper (CDV), Rotavirus tipo A, Parvovirus (CPV), Trichomona sp., Giardia sp., Cryptococcus sp., Clostridium sp., Campylobacter sp., Salmonella sp., Cystoisospora sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Hemotrópicos Canino 4 Agentes", p:200000, incluye:"Babesia sp., Anaplasma sp., Ehrlichia sp., Mycoplasma sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Hemotrópicos 5 Agentes", p:250000, incluye:"Babesia sp., Anaplasma sp., Ehrlichia sp., Mycoplasma sp., Toxoplasma sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Hemotrópicos Canino Básicos-Filarias", p:277000, incluye:"Hepatozoon sp., Babesia sp., Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp. y Candidatus Mycoplasma, Bartonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Hemotrópicos Canino Básicos-Toxoplasma Sp.", p:276000, incluye:"Hepatozoon sp., Babesia sp., Toxoplasma sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp. y Candidatus Mycoplasma, Bartonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Hemotrópicos Canino Básicos-Leptospira Sp.", p:276000, incluye:"Hepatozoon sp., Babesia sp., Leptospira sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp. y Candidatus Mycoplasma, Bartonella sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Hemotrópicos Complementario", p:410000, incluye:"Hepatozoon sp., Babesia sp., Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Mycoplasma sp. y Candidatus Mycoplasma, Bartonella sp., Trypanosoma sp., Coxiella sp., Toxoplasma sp., Borrelia sp., Francisella tularensis.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Ictérico 1", p:265000, incluye:"Adenovirus canino (CAV), Leptospira sp., Hepatozoon sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Ictérico 2", p:265000, incluye:"Adenovirus canino (CAV), Leptospira sp., Rickettsiales", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Infectocan+ Hemotrópicos", p:383000, incluye:"Parvovirus y Distemper + Panel de hemotrópico básico Toxoplasma", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Neurológico Canino", p:265000, incluye:"Distemper, Toxoplasma sp., Neospora sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Neurológico Canino 1", p:515000, incluye:"Virus de Distemper (CDV), Parvovirus (CPV), Borrelia sp., Neospora sp., Hemotrópicos básico - Toxoplasma sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Neurológico Canino 2", p:407000, incluye:"Hemotrópico básico - Toxoplasma, Distemper (CDV) y Parvovirus (CPV)", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Neurológico Canino 3", p:336000, incluye:"Neospora sp., Toxoplasma sp., Babesia sp., Distemper (CDV) y Parvovirus (CPV)", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Neurológico Canino 4", p:300000, incluye:"Toxoplasma sp., Leishmania sp., Cryptococcus sp. y Distemper", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Reproductivo Canino 1", p:265000, incluye:"Brucella sp., Leptospira sp. y Herpesvirus canino", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Reproductivo Canino 2", p:265000, incluye:"Brucella sp., Leptospira sp. y Neospora sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Reproductivo Canino 3", p:337000, incluye:"Brucella sp., Leptospira sp., Herpesvirus canino, Mycoplasma sp./Ureaplasma sp. y Chlamydia sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Respiratorio Canino 1", p:265000, incluye:"Bordetella sp., Adenovirus canino (CAV) y Virus Parainfluenza.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Respiratorio Canino 2", p:265000, incluye:"Bordetella sp., Distemper (CDV) y Virus Parainfluenza", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Respiratorio Canino 3", p:410000, incluye:"Distemper (CDV), Herpesvirus canino, Bordetella sp., Adenovirus canino (CAV), Virus Parainfluenza, Influenza, Mycoplasma sp.", grupo:"PCR · Perfiles caninos"},
+            {n:"PCR Dermatofitosis Básico", p:265000, incluye:"Microsporum sp., Trichophyton sp., Leishmania sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Dermatofitosis 2", p:336000, incluye:"Microsporum sp., Trichophyton sp., Mycobacterium sp., Nocardia sp., Leishmania sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarrea Crónica Felina 1", p:265000, incluye:"Tritrichomona sp./Trichomonas spp., Pentatrichomona sp. y Giardia sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarrea Crónica Felina 2", p:265000, incluye:"Tritrichomona sp./Trichomonas spp., Virus de la Panleucopenia felina (FPV) y Giardia sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarreico 2", p:300000, incluye:"Tritrichomona sp./Trichomona spp., Giardia sp., Cryptococcus sp. y Salmonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarreico Bacteriano", p:265000, incluye:"Clostridium sp., Campylobacter sp., Salmonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarreico Parasitario", p:265000, incluye:"Cryptosporidium sp., Giardia sp., Cystoisospora sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarreico Completo", p:515000, incluye:"Clostridium sp., Campylobacter sp., Salmonella sp., Panleucopenia felina, Coronavirus entérico felino, Pentatrichomona sp., Tritrichomona sp., Cryptosporidium sp., Cystoisospora sp., Giardia sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarreico Parasitario Completo", p:372000, incluye:"Tritrichomona sp., Pentatrichomona sp., Giardia sp., Cryptosporidium sp., Cystoisospora sp., Toxoplasma sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Diarreico Viral", p:230000, incluye:"Virus de la Panleucopenia felina (FPV) y Coronavirus entérico felino (PIF).", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Gatitos", p:443000, incluye:"Hepatozoon sp., Babesia sp., Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp., Candidatus, Bartonella sp., Genoma del virus de inmunodeficiencia SIDA y Leucemia felina (Viral y Proviral)", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Gatitos 1", p:300000, incluye:"Genoma del virus de inmunodeficiencia SIDA, Leucemia felina (Viral y Proviral), Calicivirus y Herpesvirus felino", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópicos 3 Agentes", p:200000, incluye:"Bartonella sp., Mycoplasma sp., Rickettsial.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópicos 4 Agentes", p:240000, incluye:"Babesia sp., Anaplasma sp., Ehrlichia sp., Mycoplasma sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópico Felino Básicos-Toxoplasma Sp.", p:276000, incluye:"Hepatozoon sp., Babesia sp., Toxoplasma sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp., Candidatus, Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópico Felino Básicos-Filarias", p:276000, incluye:"Hepatozoon sp., Babesia sp., Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp., Candidatus y Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópico Felino Básicos-Leptospira Sp.", p:276000, incluye:"Hepatozoon sp., Babesia sp., Leptospira sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp., Candidatus y Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópico Felino Básicos-Cytauxzoon Sp.", p:276000, incluye:"Hepatozoon sp., Babesia sp., Cytauxzoon sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp., Mycoplasma sp., Candidatus y Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Hemotrópicos Complementario Felino", p:410000, incluye:"Hepatozoon sp., Babesia sp., Dirofilaria sp., Brugia sp., Acanthocheilonema sp., Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Mycoplasma sp. y Candidatus Mycoplasma, Bartonella sp., Trypanosoma sp., Coxiella sp., Toxoplasma sp., Borrelia sp. y Francisella tularensis.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Infectofel+ Hemotrópicos", p:383000, incluye:"FIV, FeLV + panel hemotrópicos básico Toxoplasma", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Infectocontagiosas 1", p:158000, incluye:"Genoma del virus de inmunodeficiencia felina (Viral y Proviral) y Leucemia felina (Viral y Proviral)", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Infectocontagiosas 2", p:265000, incluye:"Genoma del virus de inmunodeficiencia felina (Viral y Proviral) y Leucemia felina (Viral y Proviral), Mycoplasma sp. y Candidatus Mycoplasma.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Infectocontagiosas 3", p:300000, incluye:"Genoma del virus de inmunodeficiencia felina (Viral y Proviral) y Leucemia felina (Viral y Proviral), Mycoplasma sp., Candidatus y Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Infectocontagiosas 4", p:375000, incluye:"Genoma del virus de inmunodeficiencia felina (Viral y Proviral) y Leucemia felina (Viral y Proviral) y Mycoplasma sp., Candidatus y Bartonella sp., Calicivirus y Herpesvirus felino", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Infectocontagiosas 5", p:265000, incluye:"Genoma del virus de inmunodeficiencia felina (Viral y Proviral) y Leucemia felina (Viral y Proviral), Coronavirus entérico felino (PIF)", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Neurológico Felino 1", p:300000, incluye:"Toxoplasma sp., Neospora sp., Mycoplasma sp., Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Neurológico Felino 2", p:336000, incluye:"Genoma del virus de inmunodeficiencia felina (Viral y Proviral) y Leucemia felina (Viral y Proviral), Coronavirus entérico felino (PIF), Toxoplasma sp., Cryptococcus sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Medular", p:265000, incluye:"Gurltia sp., Toxoplasma sp., Bartonella sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Oculares Felino 1", p:265000, incluye:"Herpesvirus felino (FHV-1), Virus Panleucopenia (FPV), Calicivirus felino (FCV).", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Oculares Felino 2", p:265000, incluye:"Herpesvirus felino (FHV-1), Calicivirus felino (FCV), Chlamydia sp.", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Reproductivo Felino", p:265000, incluye:"Chlamydia sp., Brucella sp., Herpesvirus felino", grupo:"PCR · Perfiles felinos"},
+            {n:"PCR Respiratorio Felino", p:300000, incluye:"Herpesvirus felino (FHV-1) o Rinotraqueitis, Virus Panleucopenia (FPV), Calicivirus felino (FCV), Mycoplasma sp. y Candidatus Mycoplasma.", grupo:"PCR · Perfiles felinos"},
+            {n:"Acanthocheilonema reconditum", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Adenovirus canino", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Anaplasma sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Angiostrongylus vasorum", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Babesia canis", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Babesia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Babesia vogeli", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Bartonella sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Bordetella sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Borrelia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Brucella sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Calicivirus felino", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Campylobacter sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Chlamydia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Clostridium sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Coronavirus canino", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Coronavirus entérico felino (causante de PIF)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Coxiella sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Cryptococcus sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Cryptosporidium sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Cystoisospora sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Cytauxzoon sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Dirofilaria immitis", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Dirofilaria repens", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Dirofilaria sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Distemper canino", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"E. coli O157", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Ehrlichia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Escherichia coli", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Filarias", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Francisella tularensis", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Giardia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Gurltia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Helicobacter sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Hepatozoon sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Herpesvirus canino", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Herpesvirus felino (rinotraqueitis infecciosa felina)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Leishmania sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Leptospira sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Leucemia felina (FeLV)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Listeria sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Microsporum sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Mycobacterium", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Mycobacterium sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Mycoplasma sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Neospora sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Nocardia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Occidentia", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Orientia", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Panleucopenia felina", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Parainfluenza virus (CIPV)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Parvovirus canino (CPV)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Pentatrichomonas sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Rickettsia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Rickettsiales (Anaplasma sp., Ehrlichia sp., Wolbachia sp., Rickettsia sp., Orientia sp., Occidentia sp.)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Rotavirus A", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Salmonella sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Sarcocystis neurona", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Sarcocystis sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"SIDA felino (FIV)", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"SIDA proviral", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Theileria sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Toxoplasma sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Trichophyton sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Tritrichomona sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Trypanosoma sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Ureaplasma sp.", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Virus de inmunodeficiencia felina", p:195000, incluye:"", grupo:"PCR · Individuales"},
+            {n:"Wolbachia sp.", p:195000, incluye:"", grupo:"PCR · Individuales"}
         ];
 
         const MESES_LAB = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -8616,31 +8759,94 @@
         }
 
         function listaExamenes() {
-            return EXAMENES_LAB.concat(examenesPersonalizados);
+            return EXAMENES_LAB.concat(EXAMENES_PCR).concat(examenesPersonalizados);
         }
 
-        function poblarSelectExamenes(filtro) {
-            const sel = document.getElementById('lab-examen-select');
+        const PCR_ORDEN_GRUPOS = ["PCR · Perfiles caninos", "PCR · Perfiles felinos", "PCR · Individuales"];
+        function labComboRender(filtro) {
+            const cont = document.getElementById('lab-examen-lista');
+            if (!cont) return;
             const f = (filtro || "").trim().toLowerCase();
-            sel.innerHTML = '<option value="">Seleccione un examen…</option>';
-            listaExamenes().forEach((ex, idx) => {
-                if (f && !ex.n.toLowerCase().includes(f)) return;
-                const esCustom = idx >= EXAMENES_LAB.length;
-                const etiquetaPrecio = ex.p > 0 ? "$" + fmtMiles(ex.p) : "definir precio";
-                const opt = document.createElement('option');
-                opt.value = String(idx);
-                opt.textContent = (esCustom ? "★ " : "") + ex.n + "  —  " + etiquetaPrecio;
-                sel.appendChild(opt);
+            const todos = listaExamenes();
+            labTodosRender = todos;
+            const coincide = ex => !f || ex.n.toLowerCase().includes(f);
+            const esCustom = ex => examenesPersonalizados.some(c => c.n.toLowerCase() === ex.n.toLowerCase());
+            const item = (ex) => {
+                const idx = todos.indexOf(ex);
+                const precio = ex.p > 0 ? "$" + fmtMiles(ex.p) : '<span class="text-red-500">definir precio</span>';
+                const nombre = String(ex.n || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                const nombreAttr = String(ex.n || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+                return `<div class="lab-combo-item px-3 py-2 hover:bg-teal-50 cursor-pointer text-sm flex justify-between items-center gap-3 border-b border-gray-50" data-idx="${idx}" data-nombre="${nombreAttr}">
+                    <span class="min-w-0 text-gray-700">${esCustom(ex) ? '<span class="text-amber-400">★</span> ' : ''}${nombre}</span>
+                    <span class="shrink-0 font-semibold text-teal-700">${precio}</span></div>`;
+            };
+            const header = (t) => `<div class="px-3 py-1.5 bg-gray-100 text-[11px] font-bold text-teal-700 uppercase tracking-wide border-b border-gray-200 sticky top-0">${String(t).replace(/</g,"&lt;")}</div>`;
+            const alfa = (a, b) => (a.n || "").localeCompare((b.n || ""), 'es', { sensitivity: 'base' });
+
+            // Generales (sin grupo), alfabéticos
+            const general = todos.filter(ex => !ex.grupo && coincide(ex)).sort(alfa);
+            // Agrupados
+            const porGrupo = {};
+            todos.filter(ex => ex.grupo && coincide(ex)).forEach(ex => { (porGrupo[ex.grupo] = porGrupo[ex.grupo] || []).push(ex); });
+            const nombresGrupos = Object.keys(porGrupo).sort((a, b) => {
+                const ia = PCR_ORDEN_GRUPOS.indexOf(a), ib = PCR_ORDEN_GRUPOS.indexOf(b);
+                if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+                return a.localeCompare(b, 'es');
             });
+
+            let html = general.map(item).join("");
+            nombresGrupos.forEach(g => { html += header(g) + porGrupo[g].sort(alfa).map(item).join(""); });
+            cont.innerHTML = html || '<div class="px-3 py-3 text-center text-gray-400 italic text-xs">Sin coincidencias.</div>';
+        }
+        window.labComboAbrir = function() {
+            labComboRender(document.getElementById('lab-examen-input').value);
+            document.getElementById('lab-examen-lista').classList.remove('hidden');
+        };
+        window.labComboFiltrar = function() {
+            labExamenSel = null;
+            labComboRender(document.getElementById('lab-examen-input').value);
+            document.getElementById('lab-examen-lista').classList.remove('hidden');
+            actualizarBotonBorrarExamen();
+        };
+        function labComboCerrar() {
+            const l = document.getElementById('lab-examen-lista');
+            if (l) l.classList.add('hidden');
+        }
+        // Elegir con clic (delegación) y cerrar al hacer clic afuera — se registra una vez
+        if (!window.__labComboInit) {
+            window.__labComboInit = true;
+            document.addEventListener('click', (e) => {
+                const item = e.target.closest && e.target.closest('.lab-combo-item');
+                if (item) {
+                    const inp = document.getElementById('lab-examen-input');
+                    const idx = parseInt(item.getAttribute('data-idx'), 10);
+                    labExamenSel = (!isNaN(idx) && labTodosRender[idx]) ? labTodosRender[idx] : null;
+                    if (inp) inp.value = labExamenSel ? labExamenSel.n : (item.getAttribute('data-nombre') || "");
+                    labComboCerrar();
+                    actualizarBotonBorrarExamen();
+                    return;
+                }
+                const combo = document.getElementById('lab-examen-combo');
+                if (combo && !combo.contains(e.target)) labComboCerrar();
+            });
+        }
+
+        // Mantiene el nombre anterior: refresca el desplegable tras cambios en la lista
+        function poblarSelectExamenes(filtro) {
+            const cont = document.getElementById('lab-examen-lista');
+            if (cont && !cont.classList.contains('hidden')) {
+                labComboRender(document.getElementById('lab-examen-input').value);
+            }
             actualizarBotonBorrarExamen();
         }
 
         function actualizarBotonBorrarExamen() {
-            const sel = document.getElementById('lab-examen-select');
+            const inp = document.getElementById('lab-examen-input');
             const btn = document.getElementById('btn-borrar-examen');
-            if (!btn) return;
-            const idx = Number(sel.value);
-            if (sel.value !== "" && idx >= EXAMENES_LAB.length) btn.classList.remove('hidden');
+            if (!inp || !btn) return;
+            const nombre = (inp.value || "").trim().toLowerCase();
+            const esCustom = nombre && examenesPersonalizados.some(e => e.n.toLowerCase() === nombre);
+            if (esCustom) btn.classList.remove('hidden');
             else btn.classList.add('hidden');
         }
         window.actualizarBotonBorrarExamen = actualizarBotonBorrarExamen;
@@ -8678,13 +8884,17 @@
 
         window.agregarExamen = function() {
             if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
-            const sel = document.getElementById('lab-examen-select');
-            const idx = sel.value;
-            if (idx === "") { showToast("Elige un examen de la lista.", true); return; }
-            const ex = listaExamenes()[Number(idx)];
+            const inp = document.getElementById('lab-examen-input');
+            const nombre = (inp.value || "").trim();
+            if (!nombre) { showToast("Escribe o elige un examen de la lista.", true); return; }
+            const ex = (labExamenSel && labExamenSel.n.toLowerCase() === nombre.toLowerCase())
+                ? labExamenSel
+                : listaExamenes().find(e => e.n.toLowerCase() === nombre.toLowerCase());
+            if (!ex) { showToast("Ese examen no está en la lista. Usa \"¿No está el examen? Agregar uno nuevo\".", true); return; }
             examenesSel.push({ n: ex.n, p: ex.p, incluye: ex.incluye || "" });
             renderExamenesSel();
-            sel.value = "";
+            inp.value = "";
+            labExamenSel = null;
             actualizarBotonBorrarExamen();
         };
 
@@ -8725,12 +8935,22 @@
             document.getElementById('lab-nuevo-examen').classList.add('hidden');
         };
 
+        const RM_SIGLAS = new Set(["PCR","CH","EDAN","PO","ALT","AST","FA","GGT","T4","T3","TSH","SDMA","UPC","ASA","BACAF","PT","PPT","TCT","TP","TTP","CO2","CREA","UREA","RX","UCI","DX","2DX","4DX","VIH","FIV","FELV","BUN","ALP","LDH","CK","MAT","IFI","ELISA","PAAF","HDL","LDL","GR","GB","PLT"]);
+        function tituloCaso(s) {
+            return String(s || "").split(/\s+/).filter(Boolean).map(w => {
+                const up = w.toUpperCase();
+                if (RM_SIGLAS.has(up)) return up;         // siglas conocidas: en mayúsculas
+                if (w.includes("/")) return up;            // formatos tipo I/D, A/D, E/N
+                return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+            }).join(" ");
+        }
+
         window.guardarExamenNuevo = async function() {
             if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
-            const nombre = (document.getElementById('lab-nuevo-nombre').value || "").trim().toUpperCase();
+            const nombre = tituloCaso((document.getElementById('lab-nuevo-nombre').value || "").trim());
             const precio = parseInt((document.getElementById('lab-nuevo-precio').value || "").replace(/\D/g, ''), 10) || 0;
             if (!nombre) { showToast("Escribe el nombre del examen.", true); return; }
-            if (listaExamenes().some(e => e.n.toUpperCase() === nombre)) {
+            if (listaExamenes().some(e => e.n.toLowerCase() === nombre.toLowerCase())) {
                 showToast("Ese examen ya está en la lista.", true); return;
             }
             examenesPersonalizados.push({ n: nombre, p: precio, incluye: "" });
@@ -8747,19 +8967,19 @@
 
         window.borrarExamenPersonalizado = async function() {
             if (!puedeEditar('laboratorio')) { showToast("No tienes permiso para editar aquí.", true); return; }
-            const sel = document.getElementById('lab-examen-select');
-            const idx = Number(sel.value);
-            if (sel.value === "" || idx < EXAMENES_LAB.length) return;
-            const pos = idx - EXAMENES_LAB.length;
+            const inp = document.getElementById('lab-examen-input');
+            const nombre = (inp.value || "").trim();
+            const pos = examenesPersonalizados.findIndex(e => e.n.toLowerCase() === nombre.toLowerCase());
+            if (pos < 0) return;
             const ex = examenesPersonalizados[pos];
-            if (!ex) return;
             if (!confirm(`¿Eliminar el examen "${ex.n}" de la lista? (No afecta las cuentas ya guardadas.)`)) return;
             examenesPersonalizados.splice(pos, 1);
             if (editandoExamenIdx === pos) editandoExamenIdx = -1;
             await guardarExamenesPersonalizados();
-            sel.value = "";
+            inp.value = "";
             poblarSelectExamenes('');
             renderExamenesPersonalizados();
+            actualizarBotonBorrarExamen();
             showToast("Examen eliminado de la lista.");
         };
 
@@ -8830,11 +9050,12 @@
             const inpN = document.getElementById('edit-nombre-' + i);
             const inpP = document.getElementById('edit-precio-' + i);
             if (!inpN || !inpP) return;
-            const nombre = (inpN.value || '').trim().toUpperCase();
+            const nombre = tituloCaso((inpN.value || '').trim());
             const precio = parseInt((inpP.value || '').replace(/\D/g, ''), 10) || 0;
             if (!nombre) { showToast("El nombre no puede quedar vacío.", true); return; }
             // Evitar que quede igual a otro examen ya existente (base o personalizado)
-            const dup = listaExamenes().some((e, idx) => e.n.toUpperCase() === nombre && idx !== (EXAMENES_LAB.length + i));
+            const actualEx = examenesPersonalizados[i];
+            const dup = listaExamenes().some(e => e !== actualEx && e.n.toLowerCase() === nombre.toLowerCase());
             if (dup) { showToast("Ya existe un examen con ese nombre.", true); return; }
             const anterior = examenesPersonalizados[i];
             examenesPersonalizados[i] = { n: nombre, p: precio, incluye: anterior.incluye || "" };
@@ -10019,11 +10240,6 @@
         // MÓDULO RONDA MÉDICA (hospitalización)
         // ==========================================================
         const RM_COL = "rondas_pacientes";
-        const RM_FOTOS_COL = "rondas_fotos"; // la foto se guarda aparte para que la ficha sea liviana
-        async function rmGuardarFoto(id, foto) {
-            try { await setDoc(doc(db, RM_FOTOS_COL, id), { foto: foto || "", actualizadoEn: new Date().toISOString() }); }
-            catch (e) { console.error(e); showToast("No se pudo guardar la foto: " + (e && (e.message || e.code) || ""), true); }
-        }
         let rmPacientes = [];      // lista cargada de Firestore
         let rmActual = null;       // paciente abierto en la ficha
         let rmAutosaveTimer = null;
@@ -10393,15 +10609,6 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             p.laboratorio = p.laboratorio || {}; p.medicacion = p.medicacion || []; p.nutricion = p.nutricion || [];
             rmActual = p;
             abrirFichaRender();
-            // Foto: si la ficha vieja la traía adentro, migrarla a su colección;
-            // si no está en memoria, cargarla aparte (carga diferida, no frena la ficha).
-            if (p.foto) {
-                rmGuardarFoto(p.id, p.foto);
-            } else {
-                getDoc(doc(db, RM_FOTOS_COL, p.id)).then(s => {
-                    if (s.exists() && s.data().foto && rmActual && rmActual.id === p.id) { p.foto = s.data().foto; renderFicha(); }
-                }).catch(() => {});
-            }
         };
 
         function abrirFichaRender() {
@@ -10472,27 +10679,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         }
 
         function rmSecIdent(p) {
-            const fotoBlock = `<div class="col-span-2 sm:col-span-3 lg:col-span-4">
-                <span class="text-xs font-semibold text-gray-500">Foto del paciente</span>
-                <div class="mt-1 flex items-start gap-3 flex-wrap">
-                    ${p.foto
-                        ? `<img src="${rmAttr(p.foto)}" alt="Foto del paciente" class="w-28 h-28 object-cover rounded-lg border border-gray-200 bg-gray-50">`
-                        : `<div class="w-28 h-28 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-300"><i class="fa-solid fa-paw text-2xl"></i></div>`}
-                    <div class="flex-1 min-w-[200px]">
-                        <div id="rm-foto-drop" onclick="document.getElementById('rm-foto-file').click()" ondragover="rmFotoDragover(event)" ondragleave="rmFotoDragleave(event)" ondrop="rmFotoDrop(event)" class="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center text-gray-400 text-xs cursor-pointer hover:border-[#154390] hover:bg-blue-50/30 transition-colors">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Arrastra una foto aquí o haz clic para cargar
-                        </div>
-                        <div class="flex gap-2 mt-2 flex-wrap">
-                            <button type="button" onclick="document.getElementById('rm-foto-cam').click()" class="px-3 py-1.5 text-xs font-semibold bg-[#154390] text-white rounded-lg hover:bg-[#0f2f66] flex items-center gap-1.5"><i class="fa-solid fa-camera"></i> Tomar foto</button>
-                            ${p.foto ? `<button type="button" onclick="rmFotoQuitar()" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 border border-gray-200 flex items-center gap-1.5"><i class="fa-solid fa-trash-can"></i> Quitar</button>` : ''}
-                        </div>
-                        <input type="file" id="rm-foto-file" accept="image/*" class="hidden" onchange="rmFotoChange(event)">
-                        <input type="file" id="rm-foto-cam" accept="image/*" capture="environment" class="hidden" onchange="rmFotoChange(event)">
-                    </div>
-                </div>
-            </div>`;
             const inner = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                ${fotoBlock}
                 ${rmInput("paciente","Nombre",p.paciente)}
                 ${rmSelect("especie","Especie",p.especie,RM_OPC.especie)}
                 <label class="block"><span class="text-xs font-semibold text-gray-500">Raza</span>
@@ -10830,40 +11017,6 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             rmAutosave();
         }
 
-        // ---- Foto del paciente (cargar, cámara, arrastrar) ----
-        async function rmSetFoto(file) {
-            if (!rmActual || !file) return;
-            if (!file.type || !file.type.startsWith('image/')) { showToast("El archivo debe ser una imagen.", true); return; }
-            try {
-                showToast("Procesando foto...");
-                rmActual.foto = await comprimirImagen(file, 800, 0.55);
-                renderFicha();
-                await rmGuardarFoto(rmActual.id, rmActual.foto); // se guarda aparte (no en cada autoguardado)
-                const kb = Math.round((rmActual.foto || "").length / 1024);
-                showToast(kb > 400 ? ("Foto agregada (" + kb + " KB). Si falla al guardar, usa una más liviana.") : "Foto agregada.", kb > 400);
-            } catch (e) { console.error(e); showToast("No se pudo procesar la foto.", true); }
-        }
-        window.rmFotoChange = async function(ev) {
-            const f = ev.target.files && ev.target.files[0];
-            if (f) await rmSetFoto(f);
-            ev.target.value = '';
-        };
-        window.rmFotoDragover = function(ev) { ev.preventDefault(); const d = document.getElementById('rm-foto-drop'); if (d) d.classList.add('border-[#154390]','bg-blue-50'); };
-        window.rmFotoDragleave = function(ev) { ev.preventDefault(); const d = document.getElementById('rm-foto-drop'); if (d) d.classList.remove('border-[#154390]','bg-blue-50'); };
-        window.rmFotoDrop = async function(ev) {
-            ev.preventDefault();
-            const d = document.getElementById('rm-foto-drop'); if (d) d.classList.remove('border-[#154390]','bg-blue-50');
-            const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
-            if (f) await rmSetFoto(f);
-        };
-        window.rmFotoQuitar = async function() {
-            if (!rmActual) return;
-            if (!confirm("¿Quitar la foto del paciente?")) return;
-            rmActual.foto = "";
-            renderFicha();
-            await rmGuardarFoto(rmActual.id, "");
-        };
-
         function rmAutosave() {
             const lbl = document.getElementById('rm-ficha-guardado');
             if (lbl) lbl.textContent = "Guardando...";
@@ -10878,12 +11031,12 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             // Limpia valores no admitidos por Firestore (undefined) mediante ida y vuelta por JSON
             let limpio;
             try { limpio = JSON.parse(JSON.stringify(rmActual)); } catch (e) { limpio = { ...rmActual }; }
-            delete limpio.foto; // la foto se guarda en su propia colección (rondas_fotos), no dentro de la ficha
-            // Firestore no admite documentos de más de ~1 MB (usualmente por una foto pesada)
+            delete limpio.foto; // por compatibilidad con fichas antiguas que traían la foto adentro
+            // Firestore no admite documentos de más de ~1 MB
             const tam = JSON.stringify(limpio).length;
             if (tam > 1000000) {
                 if (lbl) lbl.textContent = "No se guardó: ficha muy pesada";
-                showToast("La ficha es demasiado grande (≈" + Math.round(tam/1024) + " KB). Suele ser la foto: quítala o usa una más liviana.", true);
+                showToast("La ficha es demasiado grande (≈" + Math.round(tam/1024) + " KB). Reduce el contenido para poder guardarla.", true);
                 return;
             }
             try {
@@ -10918,8 +11071,6 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             const yLinea = Math.max(70, 22 + altoLogo + 8);
             pdf.setDrawColor(...AZUL); pdf.setLineWidth(1.5); pdf.line(M, yLinea, M + anchoUtil, yLinea);
             let y = yLinea + 16;
-
-            if (p.foto) { try { const pr = pdf.getImageProperties(p.foto); const w = 84, h = Math.min(84, w * pr.height / pr.width); pdf.addImage(p.foto, 'JPEG', M, y, w, h); y += h + 8; } catch (e) { console.error(e); } }
 
             const tabla = (titulo, filas, columnStyles) => {
                 pdf.autoTable({
