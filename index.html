@@ -33,6 +33,23 @@
         .nota-ancha { grid-column: 1 / -1; }
         /* Señala por un momento la tarjeta de un paciente ya registrado */
         .bod-resaltada { box-shadow: 0 0 0 3px rgba(217,119,6,.5); }
+        .rm-med-tabla { table-layout: fixed; width: 100%; min-width: 1250px; border-collapse: collapse; }
+        .rm-med-tabla th, .rm-med-tabla td { border: 1px solid #d1d5db; }
+        .rm-med-tabla thead th { background: #154390; color: #fff; border-color: rgba(255,255,255,.35); font-weight: 700; font-size: 12px; text-align: center; padding: 6px 3px; line-height: 1.2; }
+        .rm-med-tabla td { padding: 0; font-size: 13px; background: #fff; position: relative; }
+        .rm-med-tabla td.rm-mv-col { background: #eef0f3; }
+        .rm-med-tabla td input { width: 100%; border: 0; background: transparent; padding: 9px 4px; font-size: 13px; text-align: center; }
+        .rm-med-tabla td input:focus { outline: none; background: #eff6ff; box-shadow: inset 0 0 0 2px #154390; }
+        .rm-med-tabla td input.rm-med-nombre { font-weight: 700; }
+        .rm-med-tabla input[type="date"] { padding: 9px 2px; font-size: 12px; cursor: pointer; }
+        .rm-med-tabla input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
+        .rm-med-tabla input[type="date"].rm-vacia { color: #c0c4cc; }
+        .rm-med-tabla td input.rm-hc { height: 40px; padding: 0; font-size: 12.5px; }
+        .rm-med-tabla td input.rm-hc:not(:placeholder-shown) { background: #dbeafe; color: #154390; font-weight: 700; }
+        .rm-med-tabla tr.rm-med-sep td { background: #1f2937; height: 8px; border-color: #1f2937; }
+        .rm-med-tabla .rm-borrar { display: none; position: absolute; top: 1px; right: 1px; width: 13px; height: 13px; border: 0; border-radius: 999px; background: #ef4444; color: #fff; font-size: 10px; line-height: 13px; font-weight: 700; cursor: pointer; z-index: 3; padding: 0; }
+        .rm-med-tabla td:hover input:not(:placeholder-shown) + .rm-borrar,
+        .rm-med-tabla td input:focus:not(:placeholder-shown) + .rm-borrar { display: block; }
         .nota-txt { min-height: 7rem; line-height: 1.5; }
         /* Oculta el ojo/limpiar nativo del navegador para dejar solo el de la app */
         input[type="password"]::-ms-reveal,
@@ -114,7 +131,14 @@
                     <p class="text-gray-500 text-sm mt-1">Selecciona un módulo para comenzar</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
+                <div id="dash-usuario" class="hidden flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg" title="">
+                    <i class="fa-solid fa-circle-user text-2xl text-[#154390]"></i>
+                    <div class="leading-tight">
+                        <p class="text-[11px] text-gray-400">Sesión iniciada</p>
+                        <p class="text-sm font-bold text-gray-800 flex items-center gap-1.5"><span id="dash-usuario-nombre"></span><span id="dash-usuario-admin" class="hidden text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#154390] text-white">Admin</span></p>
+                    </div>
+                </div>
                 <button id="btn-admin" onclick="openAdmin()" class="hidden px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200">
                     <i class="fa-solid fa-user-gear"></i> Administración
                 </button>
@@ -1210,11 +1234,14 @@
                     <p class="text-gray-500 text-xs sm:text-sm mt-1">Cuentas de cobro de exámenes</p>
                 </div>
             </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="nuevaCuenta()" class="px-4 py-2 bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-teal-200 w-full sm:w-auto justify-center">
+            <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto">
+                <button onclick="openCuentasHospLab()" title="Cuentas de exámenes que se arman solas desde las cuentas de hospitalización y ambulatorio" class="px-3 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-blue-200 w-full sm:w-auto justify-center whitespace-nowrap">
+                    <i class="fa-solid fa-hospital-user"></i> Hospitalizados
+                </button>
+                <button onclick="nuevaCuenta()" class="whitespace-nowrap px-3 py-2 bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-teal-200 w-full sm:w-auto justify-center">
                     <i class="fa-solid fa-file-circle-plus"></i> Nueva
                 </button>
-                <button onclick="openCuentasGuardadas()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
+                <button onclick="openCuentasGuardadas()" class="whitespace-nowrap px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 transition-colors border border-gray-200 w-full sm:w-auto justify-center">
                     <i class="fa-solid fa-folder-open"></i> Guardadas
                 </button>
             </div>
@@ -1718,13 +1745,13 @@
                 <i class="fa-solid fa-arrow-left"></i>
             </button>
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-teal-700 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</h1>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">Consulta las cuentas de cobro por rango de fechas</p>
+                <h1 id="lab-guard-titulo" class="text-xl sm:text-2xl font-bold text-teal-700 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Cuentas guardadas</h1>
+                <p id="lab-guard-sub" class="text-gray-500 text-xs sm:text-sm mt-1">Consulta las cuentas de cobro por rango de fechas</p>
             </div>
         </header>
 
         <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
+            <div id="lab-guard-filtros" class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
                 <p class="fmt-lbl text-gray-700 mb-1"><i class="fa-regular fa-calendar text-teal-600"></i> Consultar por rango de fechas</p>
                 <div class="flex flex-wrap items-end gap-2">
                     <div class="flex-1 min-w-[120px]">
@@ -1893,7 +1920,8 @@
                 </button>
                 <div>
                     <h1 id="rm-ficha-titulo" class="text-lg sm:text-2xl font-bold text-[#154390] flex items-center gap-2">
-                        <i class="fa-solid fa-paw"></i> <span>Ficha del paciente</span>
+                        <img id="rm-ficha-avatar" alt="" class="hidden w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-blue-200 shadow-sm cursor-zoom-in" onclick="rmVerFoto()">
+                        <i id="rm-ficha-icono" class="fa-solid fa-paw"></i> <span>Ficha del paciente</span>
                     </h1>
                     <p id="rm-ficha-sub" class="text-gray-500 text-xs sm:text-sm mt-1"></p>
                 </div>
@@ -2199,6 +2227,13 @@
                     nombre: (datosUsuario && (datosUsuario.nombre || datosUsuario.usuario)) || (user.email ? user.email.split('@')[0] : 'usuario'),
                     correo: user.email || ''
                 };
+                // Mostrar en el encabezado quién tiene la sesión abierta
+                try {
+                    const du = document.getElementById('dash-usuario');
+                    document.getElementById('dash-usuario-nombre').textContent = usuarioSesion.nombre;
+                    document.getElementById('dash-usuario-admin').classList.toggle('hidden', !esAdmin);
+                    if (du) { du.title = usuarioSesion.correo; du.classList.remove('hidden'); }
+                } catch (e) { console.error(e); }
 
                 // Interruptor activo/inactivo (no aplica a la administradora)
                 if (!esAdmin && datosUsuario && datosUsuario.activo === false) {
@@ -4528,42 +4563,48 @@
             { id: "carpo", titulo: "Carpo y dedos", grupo: "anterior",
               desc: "Ubicar el hueso accesorio del carpo, articulación radiocarpiana, fracturas, hinchazón articular y cambios óseos proliferativos.",
               pruebas: [
-                { id: "flexion",   label: "Rango de movimiento en flexión" },
-                { id: "extension", label: "Extensión" },
+                { id: "flexion",   label: "Rango de movimiento en flexión y extensión", par: "extension" },
+                { id: "extension", label: "Extensión", enPar: true },
                 { id: "propio",    label: "Propiocepción" }
               ] },
             { id: "codo", titulo: "Codo y antebrazo", grupo: "anterior",
               desc: "Ubicar el epicóndilo del húmero y el olécranon; palpar incongruencias, fracturas y luxación.",
               pruebas: [
+                { id: "flexion",   label: "Rango de movimiento en flexión y extensión", par: "extension" },
+                { id: "extension", label: "Extensión", enPar: true },
                 { id: "campbell",  label: "Prueba de Campbell (aducción)" },
                 { id: "abduccion", label: "Abducción" }
               ] },
             { id: "hombro", titulo: "Hombro", grupo: "anterior",
               desc: "Ubicar el acromion, la espina y la cara dorsal de la escápula; palpar incongruencias, tuberosidad mayor del húmero y musculatura.",
               pruebas: [
+                { id: "flexion",   label: "Rango de movimiento en flexión y extensión", par: "extension" },
+                { id: "extension", label: "Extensión", enPar: true },
                 { id: "tricipital", label: "Reflejo tricipital" },
                 { id: "bicipital",  label: "Reflejo bicipital" }
               ] },
             { id: "corvejon", titulo: "Corvejón y dedos", grupo: "posterior",
               desc: "Observar la tibia distal, el hueso tarsoperoneo y el tendón de Aquiles; articulación, ligamentos y huesos.",
               pruebas: [
-                { id: "flexion",     label: "Rango de movimiento en flexión" },
-                { id: "extension",   label: "Extensión" },
+                { id: "flexion",   label: "Rango de movimiento en flexión y extensión", par: "extension" },
+                { id: "extension", label: "Extensión", enPar: true },
                 { id: "gastrocnemio",label: "Reflejo m. gastrocnemio" }
               ] },
             { id: "rodilla", titulo: "Rodilla", grupo: "posterior",
               desc: "Observar el mecanismo extensor, cuádriceps, rótula, ligamento rotuliano, tuberosidad de la tibia, cóndilos femorales, articulación, musculatura, ligamentos y huesos.",
               pruebas: [
+                { id: "flexion",   label: "Rango de movimiento en flexión y extensión", par: "extension" },
+                { id: "extension", label: "Extensión", enPar: true },
                 { id: "compresion", label: "Prueba de compresión tibial" },
                 { id: "cajon",      label: "Prueba de cajón" },
                 { id: "luxacion",   label: "Luxación patelar" },
-                { id: "rotuliano",  label: "Reflejo rotuliano" },
-                { id: "flexion",    label: "Rango de movimiento en flexión" },
-                { id: "extension",  label: "Extensión" }
+                { id: "rotuliano",  label: "Reflejo rotuliano" }
               ] },
             { id: "pelvis", titulo: "Pelvis", grupo: "posterior",
               desc: "Observar las crestas ilíacas, el trocánter mayor, la tuberosidad isquiática, asimetría de la pelvis, dislocación de la cadera y musculatura.",
               pruebas: [
+                { id: "flexion",   label: "Rango de movimiento en flexión y extensión", par: "extension" },
+                { id: "extension", label: "Extensión", enPar: true },
                 { id: "ortolani", label: "Prueba de Ortolani" },
                 { id: "barden",   label: "Prueba de Barden" }
               ] }
@@ -4627,6 +4668,13 @@
             document.getElementById('orto-img-modal').classList.add('hidden');
         };
 
+        // Valor de una prueba para el PDF; las pruebas en pareja se muestran en una sola línea
+        function valorPruebaOrto(o, p) {
+            if (!p.par) return o[p.id] || '';
+            const f = o[p.id] || '', e = o[p.par] || '';
+            if (!f && !e) return '';
+            return [f ? 'Flexión: ' + f : '', e ? 'Extensión: ' + e : ''].filter(Boolean).join(' · ');
+        }
         function renderRegionesOrto() {
             const cont = document.getElementById('o-regiones');
             let html = '';
@@ -4639,6 +4687,15 @@
                         ${imgOrto(reg.id + '_' + lado, reg.titulo + ' — ' + etiqueta)}
                         <div class="mt-3 space-y-2">`;
                     reg.pruebas.forEach(p => {
+                        if (p.enPar) return;   // se dibuja junto a su pareja
+                        if (p.par) {
+                            c += `<div><label class="fmt-lbl">${p.label}</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input id="o-${reg.id}-${lado}-${p.id}" class="fmt-in" placeholder="Flexión" title="Flexión">
+                                    <input id="o-${reg.id}-${lado}-${p.par}" class="fmt-in" placeholder="Extensión" title="Extensión">
+                                </div></div>`;
+                            return;
+                        }
                         c += `<div><label class="fmt-lbl">${p.label}</label><input id="o-${reg.id}-${lado}-${p.id}" class="fmt-in"></div>`;
                     });
                     c += `<div><label class="fmt-lbl">Observaciones</label><textarea id="o-${reg.id}-${lado}-notas" rows="3" class="fmt-in"></textarea></div>`;
@@ -4850,8 +4907,9 @@
                 filas.push([reg.titulo.toUpperCase(), ""]);
                 filas.push(["Prueba", etD, etI]);
                 reg.pruebas.forEach(p => {
+                    if (p.enPar) return;
                     const od = regs[reg.id + '_d'] || {}, oi = regs[reg.id + '_i'] || {};
-                    filas.push([p.label, od[p.id] || '', oi[p.id] || '']);
+                    filas.push([p.label, valorPruebaOrto(od, p), valorPruebaOrto(oi, p)]);
                 });
                 const od = regs[reg.id + '_d'] || {}, oi = regs[reg.id + '_i'] || {};
                 filas.push(["Observaciones", od.notas || '', oi.notas || '']);
@@ -4943,40 +5001,69 @@
                 ["Observación", d["eoe-observacion"]]
             ]);
 
-            // Una página por región, con sus dos imágenes
+            // Regiones seguidas (sin forzar una página por región), con imágenes pequeñas enmarcadas
             const regs = d.regiones || {};
-            ORTO_REGIONES.forEach(reg => {
-                pdf.addPage('a4', 'portrait');
+            const PHo = pdf.internal.pageSize.getHeight();
+            const ALTO_IMG = 110;                       // alto máximo de cada imagen
+            const anchoCol = (anchoUtil - 16) / 2;      // mitad derecha / izquierda
+            const medirImg = (img) => {
+                try {
+                    const p = pdf.getImageProperties(img);
+                    let h = ALTO_IMG, w = h * p.width / p.height;
+                    if (w > anchoCol - 20) { w = anchoCol - 20; h = w * p.height / p.width; }
+                    return { w, h };
+                } catch (e) { return null; }
+            };
+            pdf.addPage('a4', 'portrait'); y = 44;
+            ORTO_REGIONES.forEach((reg, idx) => {
                 const etD = reg.grupo === 'anterior' ? 'MTD — derecho' : 'MPD — derecho';
                 const etI = reg.grupo === 'anterior' ? 'MTI — izquierdo' : 'MPI — izquierdo';
-                pdf.setFontSize(13); pdf.setTextColor(...AZUL); pdf.setFont(undefined, 'bold');
-                pdf.text(reg.titulo, M, 46);
-                pdf.setFontSize(8); pdf.setTextColor(110, 110, 110); pdf.setFont(undefined, 'normal');
-                pdf.text(pdf.splitTextToSize(reg.desc, anchoUtil), M, 60);
-
-                let yy = 92;
-                const anchoImg = (anchoUtil - 16) / 2;
+                pdf.setFontSize(8);
+                const lineasDesc = pdf.splitTextToSize(reg.desc, anchoUtil);
                 const imgD = ORTO_IMGS[reg.id + '_d'], imgI = ORTO_IMGS[reg.id + '_i'];
-                let altoImg = 0;
-                try {
-                    if (imgD) { const p = pdf.getImageProperties(imgD); altoImg = anchoImg * p.height / p.width; pdf.addImage(imgD, 'JPEG', M, yy, anchoImg, altoImg); }
-                    if (imgI) { const p = pdf.getImageProperties(imgI); const h2 = anchoImg * p.height / p.width; altoImg = Math.max(altoImg, h2); pdf.addImage(imgI, 'JPEG', M + anchoImg + 16, yy, anchoImg, h2); }
-                } catch (e) { console.error("Imagen no incluida:", e); }
-                yy += altoImg + 14;
+                const mD = imgD ? medirImg(imgD) : null, mI = imgI ? medirImg(imgI) : null;
+                const altoImgs = (mD || mI) ? Math.max(mD ? mD.h : 0, mI ? mI.h : 0) + 12 : 0;
+                // título + descripción + imágenes + ~4 filas de tabla deben caber juntos
+                const necesario = 18 + lineasDesc.length * 9 + 8 + altoImgs + 14 + 70;
+                if (idx > 0 && y + necesario > PHo - 44) { pdf.addPage('a4', 'portrait'); y = 44; }
+
+                // Título de la región con barra lateral
+                pdf.setFillColor(...AZUL); pdf.rect(M, y, 3, 14, 'F');
+                pdf.setFontSize(12); pdf.setTextColor(...AZUL); pdf.setFont(undefined, 'bold');
+                pdf.text(reg.titulo, M + 9, y + 11);
+                y += 22;
+                pdf.setFontSize(8); pdf.setTextColor(110, 110, 110); pdf.setFont(undefined, 'italic');
+                pdf.text(lineasDesc, M, y);
+                pdf.setFont(undefined, 'normal');
+                y += lineasDesc.length * 9 + 6;
+
+                if (altoImgs) {
+                    const caja = altoImgs - 12 + 12;
+                    pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6);
+                    [[mD, imgD, M], [mI, imgI, M + anchoCol + 16]].forEach(([m, img, x0]) => {
+                        pdf.setFillColor(248, 250, 253);
+                        pdf.roundedRect(x0, y, anchoCol, caja, 4, 4, 'FD');
+                        if (!m) return;
+                        try { pdf.addImage(img, 'JPEG', x0 + (anchoCol - m.w) / 2, y + (caja - m.h) / 2, m.w, m.h); }
+                        catch (e) { console.error("Imagen no incluida:", e); }
+                    });
+                    y += caja + 8;
+                }
 
                 const od = regs[reg.id + '_d'] || {}, oi = regs[reg.id + '_i'] || {};
-                const body = reg.pruebas.map(p => [p.label, od[p.id] || '', oi[p.id] || '']);
+                const body = reg.pruebas.filter(p => !p.enPar).map(p => [p.label, valorPruebaOrto(od, p), valorPruebaOrto(oi, p)]);
                 body.push(["Observaciones", od.notas || '', oi.notas || '']);
                 pdf.autoTable({
-                    startY: yy,
+                    startY: y,
                     head: [["Prueba", etD, etI]],
                     body: body,
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 3 },
                     headStyles: { fillColor: AZUL, textColor: 255 },
                     columnStyles: { 0: { cellWidth: 150, fontStyle: 'bold', textColor: [90, 90, 90] } },
-                    margin: { left: M, right: M }
+                    margin: { left: M, right: M, top: 44 }
                 });
+                y = pdf.lastAutoTable.finalY + 20;
             });
 
             // Procedimientos especiales
@@ -4988,7 +5075,8 @@
                 const imgE = ORTO_IMGS['especiales'];
                 if (imgE) {
                     const p = pdf.getImageProperties(imgE);
-                    const w = anchoUtil * 0.6, h = w * p.height / p.width;
+                    let h = 150, w = h * p.width / p.height;
+                    if (w > anchoUtil * 0.5) { w = anchoUtil * 0.5; h = w * p.height / p.width; }
                     pdf.addImage(imgE, 'JPEG', M, ye, w, h);
                     ye += h + 14;
                 }
@@ -5073,7 +5161,10 @@
                 { id: "tono_comentario", label: "Tono — Observaciones",      tipo: "nota" },
                 { id: "ataxia",         label: "Ataxia",                  tipo: "si_no" },
                 { id: "claudica",       label: "Claudica",                tipo: "si_no" },
-                { id: "paresis",        label: "Paresis",                 tipo: "si_no" }
+                { id: "paresis",        label: "Paresis",                 tipo: "si_no" },
+                { id: "hemiplejia",     label: "Hemiplejia",              tipo: "si_no" },
+                { id: "paraplejia",     label: "Paraplejia",              tipo: "si_no" },
+                { id: "tetraplejia",    label: "Tetraplejia",             tipo: "si_no" }
             ]},
             { id: "pares", titulo: "Pares craneales", icono: "fa-diagram-project", bloques: [
                 { titulo: "I Olfatorio", campos: [
@@ -5665,7 +5756,7 @@
             const imgs = d.imagenes || [];
             if (imgs.length) {
                 const PH = pdf.internal.pageSize.getHeight();
-                const cols = 2, gap = 12, box = (anchoUtil - gap) / cols;
+                const cols = 3, gap = 10, box = (anchoUtil - gap * (cols - 1)) / cols;
                 // El título y la primera fila de fotos viajan juntos
                 if (y + 20 + box > PH - 44) { pdf.addPage(); y = 44; }
                 pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
@@ -5680,6 +5771,9 @@
                         const rt = p.width / p.height;
                         if (rt >= 1) { h = box / rt; } else { w = box * rt; }
                     } catch (e) { }
+                    pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6); pdf.setFillColor(248, 250, 253);
+                    pdf.roundedRect(cx, y, box, box, 4, 4, 'FD');
+                    w *= 0.94; h *= 0.94;
                     const ox = cx + (box - w) / 2, oy = y + (box - h) / 2;
                     try { pdf.addImage(img, 'JPEG', ox, oy, w, h); } catch (e) { }
                     if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
@@ -6623,13 +6717,16 @@
             if (imgs.length) {
                 tit("IMÁGENES DEL PROCEDIMIENTO");
                 y += 6;
-                const cols = 2, gap = 12, box = (W - gap) / cols;
+                const cols = 3, gap = 10, box = (W - gap * (cols - 1)) / cols;
                 imgs.forEach((img, i) => {
                     const col = i % cols;
                     if (col === 0 && y + box > PH - 44) { pdf.addPage(); y = 44; }
                     const cx = M + col * (box + gap);
                     let w = box, h = box;
                     try { const p = pdf.getImageProperties(img); const rt = p.width / p.height; if (rt >= 1) { h = box / rt; } else { w = box * rt; } } catch (e) { }
+                    pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6); pdf.setFillColor(248, 250, 253);
+                    pdf.roundedRect(cx, y, box, box, 4, 4, 'FD');
+                    w *= 0.94; h *= 0.94;
                     const ox = cx + (box - w) / 2, oy = y + (box - h) / 2;
                     try { pdf.addImage(img, 'JPEG', ox, oy, w, h); } catch (e) { }
                     if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
@@ -7554,6 +7651,7 @@
                 data.historial = cuentaHospHistorial;
                 data.movimientos = cuentaHospMovimientos;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
+                sincronizarLabDesdeHosp(id, data);
                 cuentaHospId = id;
                 cuentaHospBaseActualizado = ahora;
                 cuentaHospDirty = false;
@@ -9488,6 +9586,7 @@
                 data.historial = cuentaHospHistorial;
                 data.movimientos = cuentaHospMovimientos;
                 await setDoc(doc(db, "cuentas_hospital", id), data, { merge: true });
+                sincronizarLabDesdeHosp(id, data);
                 cuentaHospId = id;
                 cuentaHospBaseActualizado = ahora;
                 cuentaHospEsNueva = false;
@@ -9604,6 +9703,63 @@
             } catch (error) { showToast("No se pudo abrir la cuenta.", true); console.error(error); }
         };
 
+        // ---- Cuenta de laboratorio automática (una por paciente: cuentas_laboratorio/hosp_<id>) ----
+        const labHospCache = {};   // id → { existe, fecha, firma }
+        async function sincronizarLabDesdeHosp(id, data) {
+            if (!id || !data) return;
+            try {
+                const norm = s => String(s || '').trim().toLowerCase();
+                const catLab = (typeof EXAMENES_LAB !== 'undefined' ? EXAMENES_LAB : []);
+                const examenes = [];
+                (data.items || []).forEach(it => {
+                    if (it.g !== 'Laboratorio' || !(Number(it.cant) > 0)) return;
+                    const ref = catLab.find(e => norm(e.n) === norm(it.n));
+                    const veces = Math.max(1, Math.round(Number(it.cant)));
+                    for (let k = 0; k < veces; k++) examenes.push({ n: it.n, p: Number(it.v) || 0, incluye: (ref && ref.incluye) || '' });
+                });
+                const c = labHospCache[id] = labHospCache[id] || {};
+                const refDoc = doc(db, "cuentas_laboratorio", "hosp_" + id);
+                if (c.existe === undefined) {
+                    try { const s = await getDoc(refDoc); c.existe = s.exists(); c.fecha = s.exists() ? (s.data().fecha || '') : ''; }
+                    catch (e) { console.error(e); c.existe = false; }
+                }
+                if (!examenes.length && !c.existe) return;      // sin exámenes: no se crea nada
+                const egresado = !!(data.fechaEgreso && String(data.fechaEgreso).trim());
+                const firma = JSON.stringify([examenes, data.propietario, data.cedula, data.paciente, data.historia, data.tipoAtencion, egresado]);
+                if (c.firma === firma) return;                  // nada cambió
+                const total = examenes.reduce((s, e) => s + e.p, 0);
+                const fecha = c.fecha || fechaISOLocal(new Date());
+                const cfg = (typeof LAB_CONFIG !== 'undefined') ? LAB_CONFIG : {};
+                const reg = {
+                    origen: 'hospitalizacion', cuentaHospId: id, tipoAtencion: data.tipoAtencion || 'Hospitalización', egresado, anulada: false,
+                    fecha, fechaLarga: fechaLargaCuenta(fecha, cfg.ciudad),
+                    deudorNombre: String(data.propietario || '').trim().toUpperCase(), deudorCC: formatearCC(data.cedula || ''),
+                    paciente: data.paciente || '', hc: data.historia || '',
+                    examenes, totalExamenes: total, valor: total, valorFmt: fmtMiles(total), valorLetras: valorEnLetras(total),
+                    actualizadoDesdeHosp: new Date().toISOString(), sincronizadoPor: usuarioSesion ? usuarioSesion.nombre : ''
+                };
+                if (!c.existe) {
+                    const base = 'Realización de exámenes de laboratorio del paciente';
+                    Object.assign(reg, {
+                        conceptoBase: base, concepto: (base + ' ' + (data.paciente || '') + (data.historia ? ' (HC ' + data.historia + ')' : '')).trim(),
+                        detallar: true, formatoConcepto: 2, creado: new Date().toISOString(),
+                        acreedorNombre: String(cfg.acreedorNombre || '').toUpperCase(), acreedorCC: formatearCC(cfg.acreedorCC || ''),
+                        ciudad: cfg.ciudad || '', banco: cfg.banco || ''
+                    });
+                }
+                await setDoc(refDoc, reg, { merge: true });
+                c.existe = true; c.fecha = fecha; c.firma = firma;
+            } catch (e) { console.error('No se pudo actualizar la cuenta de laboratorio del paciente:', e); }
+        }
+        async function marcarLabHospAnulada(id, anulada) {
+            try {
+                const refDoc = doc(db, "cuentas_laboratorio", "hosp_" + id);
+                const s = await getDoc(refDoc);
+                if (s.exists()) await setDoc(refDoc, { anulada, actualizadoDesdeHosp: new Date().toISOString() }, { merge: true });
+                if (labHospCache[id]) labHospCache[id].firma = null;
+            } catch (e) { console.error(e); }
+        }
+
         window.eliminarCuentaHosp = async function(id, nombre) {
             if (permisosActuales['cuentas_hosp_borrar'] !== true) { showToast("No tienes permiso para borrar cuentas.", true); return; }
             if (!confirm(`¿Eliminar la cuenta de "${nombre || 'este paciente'}"?\n\nLa cuenta se ocultará de las listas, pero quedará registrado quién y cuándo la eliminó.`)) return;
@@ -9615,6 +9771,7 @@
                     eliminadoCorreo: usuarioSesion ? usuarioSesion.correo : '',
                     eliminadoEn: new Date().toISOString()
                 }, { merge: true });
+                marcarLabHospAnulada(id, true);
                 if (cuentaHospId === id) nuevaCuentaHosp();
                 showToast("Cuenta eliminada (queda el registro de quién la borró).");
                 renderHospEnCurso();
@@ -9717,6 +9874,7 @@
                     restauradoEn: ahora,
                     actualizado: ahora
                 }, { merge: true });
+                marcarLabHospAnulada(id, false);
                 showToast("Cuenta restaurada.");
                 abrirCuentasEliminadasHosp();
                 renderHospEnCurso();
@@ -11227,7 +11385,7 @@
             const id = cuentaIdActual || String(Date.now());
             const registro = { ...d, creado: new Date().toISOString() };
             try {
-                await setDoc(doc(db, "cuentas_laboratorio", id), registro);
+                await setDoc(doc(db, "cuentas_laboratorio", id), registro, { merge: true });   // conserva datos de origen (ej. cuentas desde hospitalización)
                 cuentaIdActual = id;
                 if (typeof limpiarBorrador === 'function') await limpiarBorrador('laboratorio');
                 showToast("Cuenta guardada en la nube.");
@@ -11284,10 +11442,74 @@
         };
 
         window.openCuentasGuardadas = function() {
+            document.getElementById('lab-guard-titulo').innerHTML = '<i class="fa-solid fa-folder-open"></i> Cuentas guardadas';
+            document.getElementById('lab-guard-sub').textContent = 'Consulta las cuentas de cobro por rango de fechas';
+            document.getElementById('lab-guard-filtros').classList.remove('hidden');
             document.getElementById('laboratorio-screen').classList.add('hidden');
             document.getElementById('lab-guardadas-screen').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'auto' });
             abrirCuentasGuardadas();
+        };
+
+        // Cuentas de laboratorio que se arman solas desde Cuentas de cobro (hospitalización / ambulatorio)
+        let labHospIncluirEgresados = false;
+        window.openCuentasHospLab = function() {
+            document.getElementById('lab-guard-titulo').innerHTML = '<i class="fa-solid fa-hospital-user"></i> Pacientes hospitalizados';
+            document.getElementById('lab-guard-sub').textContent = 'Cuentas de exámenes que se arman solas desde las cuentas de hospitalización y ambulatorio';
+            document.getElementById('lab-guard-filtros').classList.add('hidden');
+            document.getElementById('laboratorio-screen').classList.add('hidden');
+            document.getElementById('lab-guardadas-screen').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            renderCuentasHospLab();
+        };
+        window.toggleLabHospEgresados = function(v) { labHospIncluirEgresados = !!v; renderCuentasHospLab(); };
+        window.renderCuentasHospLab = async function() {
+            const cont = document.getElementById('lab-lista-container');
+            const resumen = document.getElementById('lab-lista-resumen');
+            resumen.classList.add('hidden');
+            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, "cuentas_laboratorio"));
+                let items = [];
+                snap.forEach(dd => { const it = { id: dd.id, ...dd.data() }; if (it.origen === 'hospitalizacion' && !it.anulada) items.push(it); });
+                const nEgr = items.filter(it => it.egresado).length;
+                if (!labHospIncluirEgresados) items = items.filter(it => !it.egresado);
+                items.sort((a, b) => (b.actualizadoDesdeHosp || '').localeCompare(a.actualizadoDesdeHosp || ''));
+                const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const filtro = `<label class="flex items-center gap-2 text-xs text-gray-600 mb-2 cursor-pointer"><input type="checkbox" ${labHospIncluirEgresados ? 'checked' : ''} onchange="toggleLabHospEgresados(this.checked)" class="w-4 h-4"> Incluir pacientes ya egresados${nEgr ? ' (' + nEgr + ')' : ''}</label>`;
+                if (!items.length) {
+                    cont.innerHTML = filtro + '<div class="text-center py-6 text-gray-400 italic text-sm">No hay pacientes con exámenes de laboratorio cargados en su cuenta de cobro.</div>';
+                    return;
+                }
+                const total = items.reduce((s, it) => s + (Number(it.valor) || 0), 0);
+                resumen.innerHTML = '<i class="fa-solid fa-hospital-user text-[#154390]"></i> ' + items.length + ' paciente(s) con exámenes · Total $' + fmtMiles(total);
+                resumen.classList.remove('hidden');
+                cont.innerHTML = filtro + items.map(it => {
+                    const ex = Array.isArray(it.examenes) ? it.examenes : [];
+                    const cuenta = {}; ex.forEach(e => { cuenta[e.n] = (cuenta[e.n] || 0) + 1; });
+                    const lista = Object.keys(cuenta).map(n => esc(n) + (cuenta[n] > 1 ? ' ×' + cuenta[n] : '')).join(', ');
+                    const tipo = it.tipoAtencion === 'Ambulatorio'
+                        ? '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">Ambulatorio</span>'
+                        : '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-[#154390]">Hospitalización</span>';
+                    const egr = it.egresado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-200 text-gray-600">Egresado</span>' : '';
+                    const env = it.enviado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-teal-100 text-teal-700"><i class="fa-solid fa-paper-plane"></i> Enviada</span>' : '';
+                    return `<div class="flex items-start justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 mb-2">
+                        <div class="min-w-0">
+                            <p class="font-bold text-gray-800 text-sm"><i class="fa-solid fa-paw text-teal-600"></i> ${esc(it.paciente) || '(sin paciente)'}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + esc(it.hc) + '</span>' : ''} ${tipo}${egr}${env}</p>
+                            <p class="text-xs text-gray-500">Propietario: ${esc(it.deudorNombre) || '—'} · <span class="font-semibold text-teal-700">$${fmtMiles(it.valor)}</span></p>
+                            <p class="text-xs text-gray-600 mt-0.5"><i class="fa-solid fa-flask-vial text-teal-600"></i> ${ex.length ? ex.length + ' examen(es): ' + lista : 'Sin exámenes por ahora'}</p>
+                            <p class="text-[11px] text-gray-400 mt-0.5"><i class="fa-solid fa-rotate"></i> Actualizada ${it.actualizadoDesdeHosp ? new Date(it.actualizadoDesdeHosp).toLocaleString('es-CO') : ''}${it.sincronizadoPor ? ' · ' + esc(it.sincronizadoPor) : ''}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="cargarCuenta('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg border border-teal-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
+                            <button onclick="descargarCuentaGuardadaPDF('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">Error al cargar. Revisa las reglas de Firestore.</div>';
+                console.error(e);
+            }
         };
 
         window.volverALaboratorio = function() {
@@ -11343,7 +11565,7 @@
                         const safeNombre = (it.deudorNombre || '').replace(/'/g, "\\'");
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}${it.enviado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700"><i class="fa-solid fa-envelope"></i> Enviada</span>' : ''}</p>
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.origen === 'hospitalizacion' ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-[#154390] align-middle">' + (it.tipoAtencion === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización') + '</span>' : ''}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}${it.enviado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700"><i class="fa-solid fa-envelope"></i> Enviada</span>' : ''}</p>
                                 <p class="text-xs text-gray-500 truncate">Propietario: ${it.deudorNombre || '—'} · <span class="font-semibold text-teal-700">$${fmtMiles(it.valor)}</span></p>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -11383,7 +11605,7 @@
                 if (it.valor) document.getElementById('lab-valor').value = Number(it.valor).toLocaleString('es-CO');
                 actualizarPreviewCuenta();
                 volverALaboratorio();
-                showToast("Cuenta cargada.");
+                showToast(it.origen === 'hospitalizacion' ? "Cuenta cargada. Se actualiza sola con los exámenes de la cuenta de " + (it.tipoAtencion === 'Ambulatorio' ? 'ambulatorio' : 'hospitalización') + "." : "Cuenta cargada.");
             } catch (e) {
                 showToast("No se pudo abrir la cuenta.", true);
                 console.error(e);
@@ -11958,6 +12180,132 @@
         // MÓDULO RONDA MÉDICA (hospitalización)
         // ==========================================================
         const RM_COL = "rondas_pacientes";
+        // ---- Foto del paciente (se guarda aparte en "rondas_fotos" para que la ficha sea liviana) ----
+        const RM_FOTOS_COL = "rondas_fotos";
+        const rmFotos = {};   // id → { foto, w, h } | null
+        function rmFotoDe(p) {
+            if (!p) return null;
+            const f = rmFotos[p.id];
+            if (f && f.foto) return f;
+            return p.foto ? { foto: p.foto } : null;   // fichas antiguas que traían la foto adentro
+        }
+        function rmFotoHtml(p) {
+            const f = rmFotoDe(p);
+            return f ? `<img src="${f.foto}" alt="Foto del paciente" class="w-full h-full object-cover cursor-zoom-in" onclick="rmVerFoto()">`
+                     : '<div class="text-center text-blue-300"><i class="fa-solid fa-paw text-4xl"></i><p class="text-[10px] font-semibold mt-1">Sin foto</p></div>';
+        }
+        function rmPintarFoto() {
+            const p = rmActual; if (!p) return;
+            const f = rmFotoDe(p);
+            const box = document.getElementById('rm-foto-box'); if (box) box.innerHTML = rmFotoHtml(p);
+            const lbl = document.getElementById('rm-foto-lbl'); if (lbl) lbl.textContent = f ? 'Cambiar foto' : 'Agregar foto';
+            const q = document.getElementById('rm-foto-quitar'); if (q) q.classList.toggle('hidden', !(rmFotos[p.id] && rmFotos[p.id].foto));
+            const av = document.getElementById('rm-ficha-avatar'), ic = document.getElementById('rm-ficha-icono');
+            if (av) { if (f) { av.src = f.foto; av.classList.remove('hidden'); } else { av.removeAttribute('src'); av.classList.add('hidden'); } }
+            if (ic) ic.classList.toggle('hidden', !!f);
+        }
+        async function rmCargarFoto(id) {
+            if (!id) return;
+            if (rmFotos[id] === undefined) {
+                try {
+                    const d = await getDoc(doc(db, RM_FOTOS_COL, id));
+                    rmFotos[id] = (d.exists() && d.data().foto) ? d.data() : null;
+                } catch (e) { console.error('No se pudo cargar la foto:', e); rmFotos[id] = null; }
+            }
+            if (rmActual && rmActual.id === id) {
+                rmPintarFoto();
+                const f = rmFotoDe(rmActual);
+                if (f && !rmActual.fotoMini && puedeEditar('ronda')) rmGuardarMini(id, await rmMiniDesde(f.foto));
+            }
+        }
+        function rmComprimirFoto(file) {
+            return new Promise((resolve, reject) => {
+                const fr = new FileReader();
+                fr.onerror = () => reject(new Error('No se pudo leer el archivo'));
+                fr.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Formato de imagen no compatible'));
+                    img.onload = () => {
+                        let max = 900, q = 0.8, out = '', w = 0, h = 0;
+                        for (let i = 0; i < 6; i++) {
+                            const k = Math.min(1, max / Math.max(img.width, img.height));
+                            w = Math.round(img.width * k); h = Math.round(img.height * k);
+                            const c = document.createElement('canvas'); c.width = w; c.height = h;
+                            const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+                            out = c.toDataURL('image/jpeg', q);
+                            if (out.length < 350000) break;          // ≈ 250 KB máx.
+                            max = Math.round(max * 0.8); q = Math.max(0.5, q - 0.1);
+                        }
+                        resolve({ foto: out, w, h });
+                    };
+                    img.src = fr.result;
+                };
+                fr.readAsDataURL(file);
+            });
+        }
+        // Miniatura cuadrada para la lista de pacientes (≈ 4–8 KB), guardada en la ficha
+        function rmMiniDesde(dataUrl, lado = 96) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const s = Math.min(img.width, img.height);
+                    const c = document.createElement('canvas'); c.width = lado; c.height = lado;
+                    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, lado, lado);
+                    ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, lado, lado);
+                    resolve(c.toDataURL('image/jpeg', 0.7));
+                };
+                img.onerror = () => resolve('');
+                img.src = dataUrl;
+            });
+        }
+        async function rmGuardarMini(id, mini) {
+            const p = rmPacientes.find(x => x.id === id);
+            if (p) p.fotoMini = mini;
+            if (rmActual && rmActual.id === id) rmActual.fotoMini = mini;
+            try { await setDoc(doc(db, RM_COL, id), { fotoMini: mini }, { merge: true }); }
+            catch (e) { console.error('No se pudo guardar la miniatura:', e); }
+        }
+        window.rmSubirFoto = async function(input) {
+            const file = input && input.files && input.files[0];
+            if (input) input.value = '';
+            if (!file || !rmActual) return;
+            if (!puedeEditar('ronda')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!/^image\//.test(file.type || '')) { showToast("El archivo no es una imagen.", true); return; }
+            const id = rmActual.id;
+            const box = document.getElementById('rm-foto-box');
+            if (box) box.innerHTML = '<div class="text-center text-blue-400"><i class="fa-solid fa-spinner fa-spin text-2xl"></i><p class="text-[10px] font-semibold mt-1">Guardando…</p></div>';
+            try {
+                const r = await rmComprimirFoto(file);
+                await setDoc(doc(db, RM_FOTOS_COL, id), { foto: r.foto, w: r.w, h: r.h, actualizado: new Date().toISOString(), por: (usuarioSesion ? usuarioSesion.nombre : '') || '' });
+                rmFotos[id] = r;
+                await rmGuardarMini(id, await rmMiniDesde(r.foto));
+                showToast("Foto guardada.");
+            } catch (e) {
+                console.error(e);
+                showToast("No se pudo guardar la foto" + (e && e.message ? ": " + e.message : ". Revisa tu conexión o las reglas de Firestore."), true);
+            }
+            rmPintarFoto();
+        };
+        window.rmQuitarFoto = async function() {
+            if (!rmActual) return;
+            if (!puedeEditar('ronda')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            if (!confirm("¿Quitar la foto de " + (rmActual.paciente || "este paciente") + "?")) return;
+            try {
+                await deleteDoc(doc(db, RM_FOTOS_COL, rmActual.id));
+                rmFotos[rmActual.id] = null;
+                await rmGuardarMini(rmActual.id, '');
+                rmPintarFoto();
+                showToast("Foto quitada.");
+            } catch (e) { console.error(e); showToast("No se pudo quitar la foto.", true); }
+        };
+        window.rmVerFoto = function() {
+            const f = rmFotoDe(rmActual); if (!f) return;
+            const ov = document.createElement('div');
+            ov.className = 'fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4 cursor-zoom-out';
+            ov.innerHTML = `<img src="${f.foto}" alt="Foto del paciente" class="max-w-full max-h-full rounded-xl shadow-2xl">`;
+            ov.onclick = () => ov.remove();
+            document.body.appendChild(ov);
+        };
         let rmPacientes = [];      // lista cargada de Firestore
         let rmActual = null;       // paciente abierto en la ficha
         let rmAutosaveTimer = null;
@@ -12287,7 +12635,12 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 const egresado = p.activo === false ? '<span class="ml-2 text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">EGRESADO</span>' : '';
                 return `<tr onclick="abrirRondaFicha('${p.id}')" class="${rowBg} ${bar} cursor-pointer border-b border-gray-100 transition-colors">
                     <td class="px-2 py-2 text-center text-gray-400 text-xs">${i+1}</td>
-                    <td class="px-2 py-2"><div class="font-bold text-gray-800 text-sm">${nombre}${etiquetaEspecie(p.especie)}${egresado}</div><div class="text-xs text-gray-500">${sub}</div></td>
+                    <td class="px-2 py-2"><div class="flex items-center gap-2.5">
+                        ${/^data:image\//.test(p.fotoMini || '')
+                            ? `<img src="${p.fotoMini}" alt="" class="w-10 h-10 rounded-full object-cover border-2 border-blue-200 shrink-0">`
+                            : '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-300 shrink-0"><i class="fa-solid fa-paw"></i></div>'}
+                        <div class="min-w-0"><div class="font-bold text-gray-800 text-sm">${nombre}${etiquetaEspecie(p.especie)}${egresado}</div><div class="text-xs text-gray-500">${sub}</div></div>
+                    </div></td>
                     <td class="px-2 py-2 text-xs text-gray-600">${rmEsc(p.hc||"")}</td>
                     <td class="px-2 py-2 text-xs text-gray-600 uppercase">${rmEsc(p.mv||"")}</td>
                     <td class="px-2 py-2 text-xs text-gray-600">${rmEsc(p.fechaIngreso||"")}</td>
@@ -12351,6 +12704,8 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             const body = document.getElementById('rm-ficha-body');
             const pdfFinal = `<div class="flex justify-center pt-2 pb-4"><button type="button" onclick="rmGenerarPDF()" class="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Generar PDF de la ficha</button></div>`;
             body.innerHTML = [rmNavBar(), rmSecIdent(p), rmSecIngreso(p), rmSecEvolucion(p), rmSecMonitoreo(p), rmSecMedicacion(p), rmSecLab(p), rmSecNutricion(p), rmSecStoy(), pdfFinal, rmDatalistsGlobal()].join("");
+            rmPintarFoto();
+            rmCargarFoto(p.id);
             if (!rmListeners) {
                 body.addEventListener('input', rmOnInput);
                 body.addEventListener('change', rmOnInput);
@@ -12397,7 +12752,22 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         }
 
         function rmSecIdent(p) {
-            const inner = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            const tieneFotoPropia = !!(rmFotos[p.id] && rmFotos[p.id].foto);
+            const fotoBox = `<div class="flex items-center gap-4 mb-4">
+                <div id="rm-foto-box" class="w-28 h-28 sm:w-32 sm:h-32 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 flex items-center justify-center overflow-hidden shrink-0">${rmFotoHtml(p)}</div>
+                <div class="space-y-2 min-w-0">
+                    <p class="text-xs font-semibold text-gray-500">Foto del paciente</p>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="js-editar cursor-pointer px-3 py-1.5 bg-[#154390] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3268] inline-flex items-center gap-2">
+                            <i class="fa-solid fa-camera"></i> <span id="rm-foto-lbl">${rmFotoDe(p) ? 'Cambiar foto' : 'Agregar foto'}</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="rmSubirFoto(this)">
+                        </label>
+                        <button type="button" id="rm-foto-quitar" onclick="rmQuitarFoto()" class="js-editar ${tieneFotoPropia ? '' : 'hidden'} px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-red-50 hover:text-red-600 border border-gray-200 inline-flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Quitar</button>
+                    </div>
+                    <p class="text-[11px] text-gray-400">Desde el celular puedes tomarla con la cámara. Se reduce automáticamente al guardarla.</p>
+                </div>
+            </div>`;
+            const inner = fotoBox + `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 ${rmInput("paciente","Nombre",p.paciente)}
                 ${rmSelect("especie","Especie",p.especie,RM_OPC.especie)}
                 <label class="block"><span class="text-xs font-semibold text-gray-500">Raza</span>
@@ -12494,32 +12864,45 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
 
         function rmSecMedicacion(p) {
             const horas = Array.from({length:24}, (_,i)=>i+1);
-            const headHoras = horas.map(h => `<th class="px-0 py-1 border border-gray-200 text-[10px] w-[30px]">${h}</th>`).join("");
-            const filas = (p.medicacion||[]).map((m, idx) => {
-                const celdaH = horas.map(h => `<td class="p-0 border border-gray-200"><input type="text" list="rm-siglas-datalist" data-rm="h|${idx}|${h}" value="${rmAttr((m.horas && m.horas[h]) || "")}" title="Hora ${h}: médico que administró la dosis" class="w-full min-w-[30px] px-0 py-1 text-[11px] text-center uppercase focus:outline-none focus:bg-blue-50"></td>`).join("");
-                const inp = (k, w) => `<input type="text" data-rm="d|${idx}|${k}" value="${rmAttr(m[k])}" class="w-full ${w} px-1 py-1 text-xs focus:outline-none focus:bg-blue-50">`;
-                return `<tr>
-                    <td class="p-0 border border-gray-200"><input type="date" data-rm="d|${idx}|inicio" value="${rmAttr(m.inicio)}" class="w-[104px] min-w-[104px] px-0.5 py-1 text-[11px] focus:outline-none focus:bg-blue-50"></td>
-                    <td class="p-0 border border-gray-200"><input type="date" data-rm="d|${idx}|fin" value="${rmAttr(m.fin)}" class="w-[104px] min-w-[104px] px-0.5 py-1 text-[11px] focus:outline-none focus:bg-blue-50"></td>
-                    <td class="p-0 border border-gray-200">${inp("medicamento","min-w-[140px]")}</td>
-                    <td class="p-0 border border-gray-200">${inp("dosisMg","min-w-[70px]")}</td>
-                    <td class="p-0 border border-gray-200">${inp("dosisAdm","min-w-[70px]")}</td>
-                    <td class="p-0 border border-gray-200">${rmCellSelect("d|"+idx+"|via", m.via, RM_OPC.viaMed, "viaMed")}</td>
-                    <td class="p-0 border border-gray-200"><input type="text" data-rm="d|${idx}|medico" value="${rmAttr(m.medico)}" list="rm-mv-datalist" placeholder="Buscar..." class="w-full min-w-[80px] px-1 py-1 text-xs focus:outline-none focus:bg-blue-50"></td>
-                    ${celdaH}
-                    <td class="p-0 border border-gray-200 text-center"><button data-act="delmed|${idx}" class="text-red-500 hover:text-red-700 text-xs px-1"><i class="fa-solid fa-trash-can"></i></button></td>
+            const norm = s => String(s || '').trim().toLowerCase();
+            const meds = p.medicacion || [];
+            const COLS = 7 + 24 + 1;
+            let filas = '';
+            meds.forEach((m, idx) => {
+                if (idx > 0 && norm(m.medicamento) !== norm(meds[idx - 1].medicamento)) filas += `<tr class="rm-med-sep"><td colspan="${COLS}"></td></tr>`;
+                const inp = (k, extra) => `<input type="text" data-rm="d|${idx}|${k}" value="${rmAttr(m[k])}" class="${extra || ''}">`;
+                const fecha = k => `<input type="date" data-rm="d|${idx}|${k}" value="${rmAttr(m[k])}" class="${m[k] ? '' : 'rm-vacia'}" onclick="try{this.showPicker()}catch(e){}" onchange="this.classList.toggle('rm-vacia', !this.value)" title="Clic para elegir la fecha">`;
+                const via = rmCellSelect("d|"+idx+"|via", m.via, RM_OPC.viaMed, "viaMed").replace('class="w-full min-w-[90px] px-1 py-1 text-xs bg-white focus:outline-none focus:bg-blue-50"', 'class=""');
+                const borrar = '<button type="button" class="rm-borrar" tabindex="-1" onmousedown="event.preventDefault()" onclick="rmBorrarCelda(this)" title="Borrar">×</button>';
+                const celdas = horas.map(hh => `<td><input type="text" list="rm-siglas-datalist" data-rm="h|${idx}|${hh}" value="${rmAttr((m.horas && m.horas[hh]) || "")}" placeholder=" " onfocus="this.select()" title="Hora ${hh}: médico que administró la dosis" class="rm-hc">${borrar}</td>`).join("");
+                filas += `<tr>
+                    <td>${fecha('inicio')}</td><td>${fecha('fin')}</td>
+                    <td>${inp('medicamento', 'rm-med-nombre')}</td>
+                    <td>${inp('dosisMg')}</td><td>${inp('dosisAdm')}</td><td>${via}</td>
+                    <td class="rm-mv-col"><input type="text" data-rm="d|${idx}|medico" value="${rmAttr(m.medico)}" list="rm-mv-datalist" placeholder=" " onfocus="this.select()">${borrar}</td>
+                    ${celdas}
+                    <td class="text-center whitespace-nowrap">
+                        <button data-act="diamed|${idx}" class="text-[#154390] hover:bg-blue-50 rounded px-1 py-1" title="Agregar el día siguiente de este medicamento"><i class="fa-solid fa-calendar-plus"></i></button>
+                        <button data-act="delmed|${idx}" class="text-red-500 hover:bg-red-50 rounded px-1 py-1" title="Quitar esta fila"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
                 </tr>`;
-            }).join("") || `<tr><td colspan="${8+24}" class="px-3 py-3 text-center text-gray-400 italic text-xs border border-gray-200">Sin medicación registrada.</td></tr>`;
+            });
+            if (!filas) filas = `<tr><td colspan="${COLS}" class="px-3 py-4 text-center text-gray-400 italic">Sin medicación registrada. Usa "Agregar medicamento".</td></tr>`;
             const inner = `<div class="flex justify-end mb-2"><button data-act="addmed" class="text-xs font-semibold text-[#154390] hover:text-[#0f2f66]"><i class="fa-solid fa-plus"></i> Agregar medicamento</button></div>
-                <div class="overflow-x-auto"><table class="border-collapse text-left text-xs">
-                    <thead><tr class="bg-gray-100 text-[10px] uppercase text-gray-500">
-                        <th class="px-1 py-1 border border-gray-200">Inicio</th><th class="px-1 py-1 border border-gray-200">Fin</th>
-                        <th class="px-1 py-1 border border-gray-200">Medicamento / procedimiento</th><th class="px-1 py-1 border border-gray-200">Dosis mg</th>
-                        <th class="px-1 py-1 border border-gray-200">Dosis adm</th><th class="px-1 py-1 border border-gray-200">Vía</th>
-                        <th class="px-1 py-1 border border-gray-200">MV</th>${headHoras}<th class="px-1 py-1 border border-gray-200"></th>
-                    </tr></thead><tbody>${filas}</tbody>
+                <div class="overflow-x-auto rounded-lg border border-gray-300">
+                <table class="rm-med-tabla">
+                    <colgroup>
+                        <col style="width:86px"><col style="width:86px"><col style="width:140px"><col style="width:80px"><col style="width:64px"><col style="width:50px"><col style="width:76px">
+                        ${horas.map(() => '<col>').join('')}
+                        <col style="width:54px">
+                    </colgroup>
+                    <thead>
+                        <tr><th colspan="7">Medicación</th><th colspan="24">Hora de administración</th><th rowspan="2"></th></tr>
+                        <tr><th>Fecha inicio</th><th>Fecha fin</th><th>Medicamento / Procedimiento</th><th>Dosis mg</th><th>Dosis adm</th><th>Vía</th><th>Médico Veterinario</th>${horas.map(hh => `<th>${hh}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>${filas}</tbody>
                 </table></div>
-                <p class="text-[11px] text-gray-400 mt-1">En cada hora (1–24) escribe o elige el médico que administró la dosis. Una celda con nombre = dosis administrada.</p>`;
+                <p class="text-[11px] text-gray-400 mt-2">Una fila por día. Si pones <b>Fecha inicio</b> y <b>Fecha fin</b>, se crean solas las filas de los días intermedios. Con <i class="fa-solid fa-calendar-plus text-[#154390]"></i> agregas un día más. En cada hora (1–24) escribe las iniciales del médico; para borrar, pasa el mouse sobre la casilla y usa la <b class="text-red-500">×</b>.</p>`;
             return rmCard("Medicación", "fa-syringe", inner, "rm-sec-medic");
         }
 
@@ -12632,6 +13015,39 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         };
 
         // ---- Manejadores (delegación) ----
+        // Si una fila tiene medicamento, fecha inicio y fecha fin, crea las filas de los días intermedios (una por día)
+        function rmExpandirMedicacion(idx) {
+            const meds = rmActual.medicacion, m = meds[idx];
+            if (!m || !m.inicio || !m.fin || !String(m.medicamento || '').trim()) return 0;
+            const toD = s => { const p = String(s).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+            const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            const ini = toD(m.inicio), fin = toD(m.fin);
+            if (isNaN(ini) || isNaN(fin) || fin <= ini) return 0;
+            const norm = s => String(s || '').trim().toLowerCase();
+            let a = idx; while (a - 1 >= 0 && norm(meds[a - 1].medicamento) === norm(m.medicamento)) a--;
+            let b = idx; while (b + 1 < meds.length && norm(meds[b + 1].medicamento) === norm(m.medicamento)) b++;
+            const existentes = new Set(meds.slice(a, b + 1).map(x => x.inicio).filter(Boolean));
+            const nuevas = [];
+            const d = new Date(ini); d.setDate(d.getDate() + 1);
+            let g = 0;
+            while (d <= fin && g++ < 60) {
+                const f = iso(d);
+                if (!existentes.has(f)) nuevas.push({ inicio: f, fin: "", medicamento: m.medicamento, dosisMg: m.dosisMg || "", dosisAdm: m.dosisAdm || "", via: m.via || "", medico: "", horas: {} });
+                d.setDate(d.getDate() + 1);
+            }
+            if (!nuevas.length) return 0;
+            const grupo = meds.slice(a, b + 1).concat(nuevas).sort((x, y) => (x.inicio || '9999').localeCompare(y.inicio || '9999'));
+            meds.splice(a, b - a + 1, ...grupo);
+            return nuevas.length;
+        }
+        // Botón × de una casilla: la deja vacía y guarda
+        window.rmBorrarCelda = function(btn) {
+            const inp = btn && btn.previousElementSibling; if (!inp) return;
+            inp.value = '';
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+            inp.focus();
+        };
         function rmOnInput(e) {
             const el = e.target;
             const key = el.getAttribute && el.getAttribute('data-rm');
@@ -12674,7 +13090,13 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 el.classList.toggle('text-red-700', fuera);
                 el.classList.toggle('font-semibold', fuera);
             }
-            else if (tipo === "d") { rmActual.medicacion[+parts[1]][parts[2]] = val; }
+            else if (tipo === "d") {
+                rmActual.medicacion[+parts[1]][parts[2]] = val;
+                if (e.type === "change" && ["inicio", "fin", "medicamento"].includes(parts[2])) {
+                    const n = rmExpandirMedicacion(+parts[1]);
+                    if (n) { renderFicha(); showToast(`Se agregaron ${n} día(s) para este medicamento.`); }
+                }
+            }
             else if (tipo === "h") { const m = rmActual.medicacion[+parts[1]]; m.horas = m.horas || {}; m.horas[parts[2]] = val; }
             else if (tipo === "n") { rmActual.nutricion[+parts[1]][parts[2]] = val; }
             else if (tipo === "e") { rmActual.evolucion[+parts[1]][parts[2]] = val; }
@@ -12721,6 +13143,14 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 rmActual.medicacion.push({ inicio:"", fin:"", medicamento:"", dosisMg:"", dosisAdm:"", via:"", medico:"", horas:{} });
             } else if (act === "delmed") {
                 rmActual.medicacion.splice(+parts[1], 1);
+            } else if (act === "diamed") {
+                const meds = rmActual.medicacion, i = +parts[1], base = meds[i]; if (!base) return;
+                const norm = s => String(s || '').trim().toLowerCase();
+                let fin = i; while (fin + 1 < meds.length && norm(meds[fin + 1].medicamento) === norm(base.medicamento)) fin++;
+                const ult = meds[fin];
+                let fecha = (typeof fechaLocalISO === "function" ? fechaLocalISO() : new Date().toISOString().slice(0, 10));
+                if (ult.inicio) { const d = new Date(ult.inicio + "T00:00:00"); if (!isNaN(d)) { d.setDate(d.getDate() + 1); fecha = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); } }
+                meds.splice(fin + 1, 0, { inicio: fecha, fin: "", medicamento: base.medicamento || "", dosisMg: base.dosisMg || "", dosisAdm: base.dosisAdm || "", via: base.via || "", medico: "", horas: {} });
             } else if (act === "addnutri") {
                 rmActual.nutricion.push({ horario:"", dieta:"", kcal:"", req:"", ofrecida:"", via:"", consumida:"", cumple:"", peso:"", comentarios:"" });
             } else if (act === "delnutri") {
@@ -12787,6 +13217,15 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             pdf.setFontSize(11); pdf.setTextColor(60, 60, 60); pdf.setFont(undefined, 'normal');
             pdf.text("Ficha de hospitalización / Ronda médica", M + 126, 60);
             const yLinea = Math.max(70, 22 + altoLogo + 8);
+            const fotoP = rmFotoDe(p);
+            if (fotoP) {
+                try {
+                    const lado = 60; let fw = lado, fh = lado;
+                    if (fotoP.w && fotoP.h) { const k = Math.min(lado / fotoP.w, lado / fotoP.h); fw = fotoP.w * k; fh = fotoP.h * k; }
+                    const tipoImg = /^data:image\/png/.test(fotoP.foto) ? 'PNG' : 'JPEG';
+                    pdf.addImage(fotoP.foto, tipoImg, M + anchoUtil - fw, Math.max(8, yLinea - fh - 6), fw, fh);
+                } catch (e) { console.error('No se pudo poner la foto en el PDF:', e); }
+            }
             pdf.setDrawColor(...AZUL); pdf.setLineWidth(1.5); pdf.line(M, yLinea, M + anchoUtil, yLinea);
             let y = yLinea + 16;
 
@@ -12937,6 +13376,8 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             if (!confirm("¿Eliminar DEFINITIVAMENTE la ficha de " + (rmActual.paciente || "este paciente") + "?\n\nEsto borra el registro por completo y no se puede deshacer.")) return;
             try {
                 await deleteDoc(doc(db, RM_COL, rmActual.id));
+                try { await deleteDoc(doc(db, RM_FOTOS_COL, rmActual.id)); } catch (e) { console.error(e); }
+                delete rmFotos[rmActual.id];
                 rmPacientes = rmPacientes.filter(x => x.id !== rmActual.id);
                 showToast("Ficha eliminada.");
                 rmVolverTablero();
