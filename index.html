@@ -6986,6 +6986,8 @@
             {"n": "Revolution Gatos Pipeta", "v": 65000, "g": "Insumos", "cat": "Insumos", "id": "x22463aea9d"},
             {"n": "Revolution Plus 2.5 -5 kg", "v": 70000, "g": "Insumos", "cat": "Insumos", "id": "xf0d81086d3"},
             {"n": "Lata Royal Recovery", "v": 34000, "g": "Insumos", "cat": "Insumos", "id": "xc2d6f9cec5"},
+            {"n": "S-toy Canino gramo", "v": 1000, "g": "Insumos", "cat": "Insumos", "id": "xs7c4n1n00"},
+            {"n": "S-toy Felino gramo", "v": 300, "g": "Insumos", "cat": "Insumos", "id": "xs7f3l1n00"},
             {"n": "Sebocalm Spherulites", "v": 60000, "g": "Insumos", "cat": "Insumos", "id": "xc83ef39ed0"},
             {"n": "Shampoo Labyderm", "v": 105000, "g": "Insumos", "cat": "Insumos", "id": "x3b5190fd20"},
             {"n": "Shampoo Sebolytic x 250 ml", "v": 95000, "g": "Insumos", "cat": "Insumos", "id": "xa245e20b4f"},
@@ -8409,10 +8411,20 @@
             showToast(`Precio de ${it.n}: ${fmtCOPHosp(nuevo)}.`);
         };
 
+        // Busca ignorando tildes, mayúsculas, guiones, espacios y signos:
+        // "stoy", "s toy" o "S-toy" encuentran "S-toy Canino gramo".
+        const compactarBusqueda = t => (t || '').replace(/[^a-z0-9ñ]/g, '');
+        function coincideBusqueda(nombre, q) {
+            if (!q) return true;
+            if ((nombre || '').includes(q)) return true;
+            const qc = compactarBusqueda(q);
+            return !!qc && compactarBusqueda(nombre).includes(qc);
+        }
+
         window.filtrarCatalogoHosp = function() {
             const q = sinTildes((document.getElementById('cta-buscar').value || '').trim());
             document.querySelectorAll('#cta-catalogo .cta-fila').forEach(f => {
-                f.style.display = (!q || f.dataset.nombre.includes(q)) ? '' : 'none';
+                f.style.display = coincideBusqueda(f.dataset.nombre, q) ? '' : 'none';
             });
             document.querySelectorAll('#cta-catalogo .cta-grupo').forEach(gr => {
                 const visibles = gr.querySelectorAll('.cta-fila:not([style*="none"])').length;
@@ -8438,7 +8450,7 @@
         window.filtrarCatalogoLabHosp = function() {
             const q = sinTildes((document.getElementById('cta-buscar-lab').value || '').trim());
             document.querySelectorAll('#cta-catalogo-lab .cta-fila').forEach(f => {
-                f.style.display = (!q || f.dataset.nombre.includes(q)) ? '' : 'none';
+                f.style.display = coincideBusqueda(f.dataset.nombre, q) ? '' : 'none';
             });
             document.querySelectorAll('#cta-catalogo-lab .cta-grupo').forEach(gr => {
                 const visibles = gr.querySelectorAll('.cta-fila:not([style*="none"])').length;
