@@ -736,7 +736,7 @@
                     <div><label class="fmt-lbl">Fecha</label><input type="date" id="f-fecha" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Propietario</label><input id="f-propietario" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Teléfono</label><input id="f-telefono" class="fmt-in"></div>
-                    <div><label class="fmt-lbl">Especie</label><input id="f-especie" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Especie</label><input id="f-especie" list="lista-especies" autocomplete="off" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Sexo</label>
                         <select id="f-sexo" class="fmt-in"><option value=""></option><option>Macho</option><option>Hembra</option><option>Macho castrado</option><option>Hembra esterilizada</option></select>
                     </div>
@@ -961,7 +961,8 @@
                     <div class="sm:col-span-2"><label class="fmt-lbl">Propietario</label><input id="o-propietario" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Fecha</label><input type="date" id="o-fecha" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Paciente</label><input id="o-paciente" class="fmt-in"></div>
-                    <div><label class="fmt-lbl">Raza</label><input id="o-raza" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Especie</label><input id="o-especie" list="lista-especies" autocomplete="off" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Raza</label><input id="o-raza" list="o-raza-razas" data-raza-de="o-especie" autocomplete="off" class="fmt-in"><datalist id="o-raza-razas"></datalist></div>
                     <div><label class="fmt-lbl">Edad</label><input id="o-edad" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Sexo</label>
                         <select id="o-sexo" class="fmt-in"><option value=""></option><option>Macho</option><option>Hembra</option><option>Macho castrado</option><option>Hembra esterilizada</option></select>
@@ -1113,6 +1114,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div><label class="fmt-lbl">Nombre</label><input id="n-nombre" class="fmt-in"></div>
                     <div><label class="fmt-lbl">HC</label><input id="n-hc" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Especie</label><input id="n-especie" list="lista-especies" autocomplete="off" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Fecha</label><input type="date" id="n-fecha" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Edad</label><input id="n-edad" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Sexo</label>
@@ -4658,6 +4660,31 @@
             return partes.join(' - ') + '.pdf';
         }
 
+        // Razas sugeridas en los formatos según la especie (Canino / Felino); se puede escribir otra
+        function razasParaEspecie(esp) {
+            const e = String(esp || '').toLowerCase();
+            if (/felin|gat/.test(e)) return RM_RAZAS_FELINO;
+            if (/canin|perr/.test(e)) return RM_RAZAS_CANINO;
+            return RM_RAZAS_CANINO.concat(RM_RAZAS_FELINO);
+        }
+        function actualizarListaRazas(inputRaza) {
+            const dl = document.getElementById(inputRaza.getAttribute('list'));
+            if (!dl) return;
+            const esp = (document.getElementById(inputRaza.dataset.razaDe) || {}).value || '';
+            if (dl.dataset.esp === esp && dl.options.length) return;
+            dl.dataset.esp = esp;
+            dl.innerHTML = razasParaEspecie(esp).map(r => `<option value="${String(r).replace(/"/g, '&quot;')}"></option>`).join('');
+        }
+        document.addEventListener('focusin', e => {
+            const t = e.target;
+            if (t && t.matches && t.matches('input[data-raza-de]')) actualizarListaRazas(t);
+        });
+        document.addEventListener('input', e => {
+            const t = e.target;
+            if (!t || !t.id) return;
+            document.querySelectorAll(`input[data-raza-de="${t.id}"]`).forEach(actualizarListaRazas);
+        });
+
         // Médico responsable por defecto (todos los formatos menos Monitoreo anestésico y Consulta clínica)
         const MEDICO_INFORMES = 'Juan Carlos Giraldo';
 
@@ -4991,7 +5018,7 @@
         }
 
         function volcarFormato(data) {
-            FMT_CAMPOS.forEach(c => { const el = document.getElementById('f-' + c); if (el) el.value = data[c] || ''; });
+            FMT_CAMPOS.forEach(c => { const el = document.getElementById('f-' + c); if (el) { asegurarOpcion(el, data[c]); el.value = data[c] || ''; } });
             fmtEstadoPre = data.estadoPre || "";
             renderEstadosPre();
             // medicamentos
@@ -5475,7 +5502,7 @@
         ];
         // Campos simples del formato ortopédico
         const ORTO_CAMPOS = [
-            "hc","propietario","fecha","paciente","raza","edad","sexo","peso","medico","anamnesis",
+            "hc","propietario","fecha","paciente","especie","raza","edad","sexo","peso","medico","anamnesis",
             "price-dolor","price-rango","price-efusion","price-crepito","price-inestabilidad",
             "eoe-mtd","eoe-mti","eoe-mpd","eoe-mpi",
             "eoe-simetria","eoe-apoyo","eoe-sentado","eoe-inflamacion","eoe-masas","eoe-dolor","eoe-observacion",
@@ -5604,7 +5631,7 @@
         }
 
         function volcarOrto(data) {
-            ORTO_CAMPOS.forEach(c => { const el = document.getElementById('o-' + c); if (el) el.value = data[c] || ''; });
+            ORTO_CAMPOS.forEach(c => { const el = document.getElementById('o-' + c); if (el) { asegurarOpcion(el, data[c]); el.value = data[c] || ''; } });
             const regiones = data.regiones || {};
             ORTO_REGIONES.forEach(reg => {
                 ['d','i'].forEach(lado => {
@@ -5756,7 +5783,7 @@
             filas.push(["", ""]);
             filas.push(["DATOS DEL PACIENTE", ""]);
             par("Historia clínica", d.hc); par("Propietario", d.propietario); par("Fecha", d.fecha);
-            par("Paciente", d.paciente); par("Raza", d.raza); par("Edad", d.edad);
+            par("Paciente", d.paciente); par("Especie", d.especie); par("Raza", d.raza); par("Edad", d.edad);
             par("Sexo", d.sexo); par("Peso", d.peso);
             filas.push(["", ""]);
             filas.push(["ANAMNESIS", ""]);
@@ -5845,7 +5872,7 @@
 
             seccionKV("DATOS DEL PACIENTE", [
                 ["Historia clínica", d.hc], ["Propietario", d.propietario], ["Fecha", d.fecha],
-                ["Paciente", d.paciente], ["Raza", d.raza], ["Edad", d.edad],
+                ["Paciente", d.paciente], ["Especie", d.especie], ["Raza", d.raza], ["Edad", d.edad],
                 ["Sexo", d.sexo], ["Peso", d.peso]
             ]);
             pdf.autoTable({
@@ -6169,7 +6196,7 @@
                 { id: "detalle", label: "Conclusiones", tipo: "abierto", ancho: true, rows: 5, ph: "Escribe las conclusiones..." }
             ]}
         ];
-        const NEURO_DATOS = ["nombre","hc","fecha","edad","sexo","medico"];
+        const NEURO_DATOS = ["nombre","hc","especie","fecha","edad","sexo","medico"];
         let neuroIdActual = null;
 
         window.openNeuro = function() {
@@ -6401,7 +6428,7 @@
         }
 
         function volcarNeuro(data) {
-            NEURO_DATOS.forEach(c => { const el = document.getElementById('n-' + c); if (el) el.value = data[c] || ''; });
+            NEURO_DATOS.forEach(c => { const el = document.getElementById('n-' + c); if (el) { asegurarOpcion(el, data[c]); el.value = data[c] || ''; } });
             const campos = data.campos || {};
             recorrerCamposNeuro((secId, c) => {
                 const el = document.getElementById(`n-${secId}-${c.id}`);
@@ -6546,7 +6573,7 @@
             filas.push(["", ""]);
             filas.push(["DATOS DEL PACIENTE", ""]);
             par("Nombre", d.nombre); par("HC", d.hc); par("Fecha", d.fecha);
-            par("Edad", d.edad); par("Sexo", d.sexo);
+            par("Especie", d.especie); par("Edad", d.edad); par("Sexo", d.sexo);
             const campos = d.campos || {};
             NEURO_SECCIONES.forEach(sec => {
                 filas.push(["", ""]);
@@ -6595,7 +6622,7 @@
 
             tabla("DATOS DEL PACIENTE", [
                 ["Nombre", d.nombre], ["HC", d.hc], ["Fecha", d.fecha],
-                ["Edad", d.edad], ["Sexo", d.sexo]
+                ["Especie", d.especie], ["Edad", d.edad], ["Sexo", d.sexo]
             ]);
             const campos = d.campos || {};
             // Bloque de texto libre: título arriba y el texto en la fila de abajo, a todo el ancho
@@ -6699,7 +6726,7 @@
                 { id: 'hc', label: 'H.C. #', tipo: 'texto' },
                 { id: 'nombre', label: 'Nombre del paciente', tipo: 'texto' },
                 { id: 'especie', label: 'Especie', tipo: 'select', op: ['Canino', 'Felino', 'Otro'] },
-                { id: 'raza', label: 'Raza', tipo: 'texto' },
+                { id: 'raza', label: 'Raza', tipo: 'raza' },
                 { id: 'sexo', label: 'Sexo', tipo: 'select', op: ['Macho', 'Hembra', 'Macho castrado', 'Hembra castrada'] },
                 { id: 'color', label: 'Color', tipo: 'texto' },
                 { id: 'nacido', label: 'Fecha de nacimiento', tipo: 'fecha' },
@@ -6765,6 +6792,9 @@
             if (c.tipo === 'select') {
                 const opts = ['<option value=""></option>'].concat((c.op || []).map(o => `<option>${o}</option>`)).join('');
                 return `<div><label class="fmt-lbl">${c.label}</label><select id="${dom}" class="fmt-in">${opts}</select></div>`;
+            }
+            if (c.tipo === 'raza') {
+                return `<div><label class="fmt-lbl">${c.label}</label><input type="text" id="${dom}" list="${dom}-razas" data-raza-de="c-especie" autocomplete="off" class="fmt-in"><datalist id="${dom}-razas"></datalist></div>`;
             }
             const t = c.tipo === 'fecha' ? 'date' : 'text';
             return `<div><label class="fmt-lbl">${c.label}</label><input type="${t}" id="${dom}" class="fmt-in"></div>`;
@@ -7159,6 +7189,7 @@
                 { id: 'fecha', label: 'Fecha de realización', tipo: 'fecha' },
                 { id: 'historia', label: 'Número de historia', tipo: 'texto' },
                 { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
+                { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto' },
                 { id: 'endoscopio', label: 'Endoscopio usado', tipo: 'texto' },
                 { id: 'materiales', label: 'Pinzas y materiales usados', tipo: 'texto' },
@@ -7210,6 +7241,7 @@
                 { id: 'fecha', label: 'Fecha de realización', tipo: 'fecha' },
                 { id: 'historia', label: 'Número de historia', tipo: 'texto' },
                 { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
+                { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto' },
                 { id: 'endoscopio', label: 'Endoscopio usado', tipo: 'texto' },
                 { id: 'materiales', label: 'Pinzas y materiales usados', tipo: 'texto' },
@@ -7260,10 +7292,10 @@
                 { id: 'paciente', label: 'Paciente', tipo: 'texto' },
                 { id: 'peso', label: 'Peso', tipo: 'texto' },
                 { id: 'fecha', label: 'Fecha', tipo: 'fecha' },
-                { id: 'especie', label: 'Especie', tipo: 'texto' },
+                { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
                 { id: 'edad', label: 'Edad', tipo: 'texto' },
                 { id: 'propietario', label: 'Propietario', tipo: 'texto' },
-                { id: 'raza', label: 'Raza', tipo: 'texto' },
+                { id: 'raza', label: 'Raza', tipo: 'raza' },
                 { id: 'sexo', label: 'Sexo', tipo: 'texto' },
                 { id: 'medico', label: 'Médico', tipo: 'texto', def: MEDICO_INFORMES },
             ] },
@@ -7372,8 +7404,8 @@
                 { id: 'peso', label: 'Peso', tipo: 'texto' },
                 { id: 'edad', label: 'Edad', tipo: 'texto' },
                 { id: 'sexo', label: 'Sexo', tipo: 'texto' },
-                { id: 'especie', label: 'Especie', tipo: 'texto' },
-                { id: 'raza', label: 'Raza', tipo: 'texto' },
+                { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
+                { id: 'raza', label: 'Raza', tipo: 'raza' },
                 { id: 'propietario', label: 'Propietario', tipo: 'texto' },
                 { id: 'medico', label: 'Médico', tipo: 'texto' },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto', ancho: true },
@@ -7530,7 +7562,8 @@
                 { id: 'fecha', label: 'Fecha de realización', tipo: 'fecha' },
                 { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
                 { id: 'historia', label: 'Historia clínica', tipo: 'texto' },
-                { id: 'raza', label: 'Raza', tipo: 'texto' },
+                { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
+                { id: 'raza', label: 'Raza', tipo: 'raza' },
                 { id: 'sexo', label: 'Sexo', tipo: 'texto' },
                 { id: 'medico', label: 'Médico a cargo', tipo: 'texto', def: MEDICO_INFORMES },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto', ancho: true },
@@ -7576,9 +7609,9 @@
                 });
                 return h;
             }
-            const altoT = 30 + 4 * filaH + 6;
+            const altoT = 30 + 5 * filaH + 6;
             tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
-                ["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Raza", val('raza')], ["Sexo", val('sexo')]
+                ["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Especie", val('especie')], ["Raza", val('raza')], ["Sexo", val('sexo')]
             ], altoT);
             tarjeta(M + cardW + gap, y, cardW, "DETALLES DEL ESTUDIO", [
                 ["Fecha de realización", fechaTxt], ["Médico a cargo", val('medico') !== '—' ? val('medico') : MEDICO_INFORMES]
@@ -7689,6 +7722,12 @@
         function endoCampoBase(pref, c) {
             const dom = pref + c.id;
             if (c.tipo === 'area') return `<div><label class="fmt-lbl">${c.label}</label><textarea id="${dom}" rows="${c.rows || 3}" class="fmt-in"></textarea></div>`;
+            if (c.tipo === 'raza') {
+                return `<div><label class="fmt-lbl">${c.label}</label><input type="text" id="${dom}" list="${dom}-razas" data-raza-de="${pref}especie" autocomplete="off" class="fmt-in"><datalist id="${dom}-razas"></datalist></div>`;
+            }
+            if (c.tipo === 'lista') {
+                return `<div><label class="fmt-lbl">${c.label}</label><input type="text" id="${dom}" list="${dom}-opc" autocomplete="off" class="fmt-in"><datalist id="${dom}-opc">${(c.op || []).map(o => `<option value="${o}"></option>`).join('')}</datalist></div>`;
+            }
             if (c.tipo === 'select') {
                 const opts = ['<option value=""></option>'].concat((c.op || []).map(o => `<option>${o}</option>`)).join('');
                 return `<div><label class="fmt-lbl">${c.label}</label><select id="${dom}" class="fmt-in">${opts}</select></div>`;
@@ -7755,6 +7794,12 @@
             return { campos, nombre: campos.paciente || '', hc: campos.historia || '', fecha: campos.fecha || '', imagenes: r.imagenes.slice() };
         }
 
+        // Si un valor guardado no está en la lista desplegable, se agrega para no perderlo
+        function asegurarOpcion(el, v) {
+            if (!el || el.tagName !== 'SELECT' || !v) return;
+            if (![...el.options].some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); }
+        }
+
         function endoVolcar(r, data) {
             const P = r.pref, campos = data.campos || {};
             r.secciones.forEach(sec => sec.campos.forEach(c => {
@@ -7769,7 +7814,7 @@
                         const com = document.getElementById(P + c.id + '__' + i + '_com'); if (com) com.value = found.com || '';
                     });
                 } else {
-                    const el = document.getElementById(P + c.id); if (el) el.value = campos[c.id] || '';
+                    const el = document.getElementById(P + c.id); if (el) { asegurarOpcion(el, campos[c.id]); el.value = campos[c.id] || ''; }
                 }
             }));
             const sF = document.getElementById(P + 'firma'); if (sF && !sF.value) sF.value = MEDICO_INFORMES;
@@ -16636,5 +16681,6 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     })();
     </script>
+    <datalist id="lista-especies"><option value="Canino"></option><option value="Felino"></option></datalist>
 </body>
 </html>
