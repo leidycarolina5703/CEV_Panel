@@ -12184,7 +12184,7 @@
             acreedorCC: "1.053.769.043",
             ciudad: "Manizales",
             banco: "BANCOLOMBIA: 912945129-21 AHORROS",
-            remitente: "servicioalclientecevmascotas@gmail.com",
+            remitente: "enviolaboratoriomascotas@gmail.com",
             correoDestino: ""
         };
         let LAB_CONFIG = { ...LAB_DEFAULTS };
@@ -12972,6 +12972,10 @@
                 const snap = await getDoc(doc(db, "configuracion", "laboratorio"));
                 registrarBaseDoc(snap.ref, snap.exists() ? snap.data() : null);
                 if (snap.exists()) LAB_CONFIG = { ...LAB_DEFAULTS, ...snap.data() };
+                // El remitente anterior quedó guardado por error: se reemplaza por el correo de envío del laboratorio
+                if (!LAB_CONFIG.remitente || /^servicioalclientecevmascotas@gmail\.com$/i.test(LAB_CONFIG.remitente.trim())) {
+                    LAB_CONFIG.remitente = LAB_DEFAULTS.remitente;
+                }
             } catch (e) { console.error("No se pudo leer la config de laboratorio:", e); }
             labConfigCargada = true;
             volcarConfigEnCampos();
