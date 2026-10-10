@@ -33,6 +33,19 @@
         /* Comentarios de los formatos: mientras están abiertos, la casilla ocupa
            toda la fila de la cuadrícula para que el cuadro de texto se vea amplio. */
         .nota-ancha { grid-column: 1 / -1; }
+        /* Escala de Glasgow (Neurología) */
+        .gcs-op { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; font-size: 12.5px; line-height: 1.3; color: #374151; background: #fff; transition: background .12s; }
+        .gcs-op:hover:not(:disabled) { background: #eff6ff; }
+        .gcs-op .gcs-num { flex: none; width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #154390; background: #e0e9f7; }
+        .gcs-op.gcs-sel { background: #dbeafe; color: #0f2f66; font-weight: 700; box-shadow: inset 4px 0 0 #154390; }
+        .gcs-op.gcs-sel .gcs-num { background: #154390; color: #fff; }
+        .gcs-op:disabled { cursor: default; }
+        .gcs-pron { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 13px; color: #6b7280; background: #fff; }
+        .gcs-pron i { font-size: 16px; color: #cbd5e1; }
+        .gcs-pron.gcs-on-bueno { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: 700; }
+        .gcs-pron.gcs-on-reservado { background: #fef3c7; border-color: #f59e0b; color: #92400e; font-weight: 700; }
+        .gcs-pron.gcs-on-grave { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: 700; }
+        .gcs-pron[class*="gcs-on-"] i { color: currentColor; }
         /* Señala por un momento la tarjeta de un paciente ya registrado */
         .bod-resaltada { box-shadow: 0 0 0 3px rgba(217,119,6,.5); }
         .rm-med-tabla { table-layout: fixed; width: 100%; min-width: 1100px; border-collapse: collapse; }
@@ -744,6 +757,7 @@
                     <div><label class="fmt-lbl">Propietario</label><input id="f-propietario" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Teléfono</label><input id="f-telefono" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Especie</label><input id="f-especie" list="lista-especies" autocomplete="off" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Raza</label><input id="f-raza" list="f-raza-razas" data-raza-de="f-especie" autocomplete="off" class="fmt-in"><datalist id="f-raza-razas"></datalist></div>
                     <div><label class="fmt-lbl">Sexo</label>
                         <select id="f-sexo" class="fmt-in"><option value=""></option><option>Macho</option><option>Hembra</option><option>Macho castrado</option><option>Hembra esterilizada</option></select>
                     </div>
@@ -1019,9 +1033,9 @@
                 <div class="mt-3"><label class="fmt-lbl">Observación</label><textarea id="o-eoe-observacion" rows="3" class="fmt-in"></textarea></div>
             </section>
 
-            <!-- EOM: regiones con imágenes -->
+            <!-- EOE: regiones con imágenes -->
             <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
-                <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-hand-dots"></i> EOM — Examen ortopédico manual</h2>
+                <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-2 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-hand-dots"></i> EOE — Evaluación Ortopédica Estática</h2>
                 <p class="text-xs text-gray-500 italic">Examinar las superficies contralaterales de ambas extremidades, observando asimetría producida por traumatismos, inflamación o neoplasia. Evaluar propiocepción miotática (0, 1, 2, 3, 4), buscar signos de inestabilidad, regiones dolorosas, grados de movilidad alterados y crepitaciones.</p>
             </section>
 
@@ -1122,6 +1136,7 @@
                     <div><label class="fmt-lbl">Nombre</label><input id="n-nombre" class="fmt-in"></div>
                     <div><label class="fmt-lbl">HC</label><input id="n-hc" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Especie</label><input id="n-especie" list="lista-especies" autocomplete="off" class="fmt-in"></div>
+                    <div><label class="fmt-lbl">Raza</label><input id="n-raza" list="n-raza-razas" data-raza-de="n-especie" autocomplete="off" class="fmt-in"><datalist id="n-raza-razas"></datalist></div>
                     <div><label class="fmt-lbl">Fecha</label><input type="date" id="n-fecha" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Edad</label><input id="n-edad" class="fmt-in"></div>
                     <div><label class="fmt-lbl">Sexo</label>
@@ -4793,6 +4808,75 @@
             document.querySelectorAll(`input[data-raza-de="${t.id}"]`).forEach(actualizarListaRazas);
         });
 
+        // Edad en los formatos: casilla para el número + lista "Años / Meses" (Años por defecto).
+        // El campo sigue guardando un solo texto ("5 años", "8 meses"), así que guardado, borradores, Excel y PDF no cambian.
+        const VALOR_INPUT = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+        function mejorarEdad(inp) {
+            if (!inp || inp.dataset.edadOk || inp.hasAttribute('data-rm')) return;
+            inp.dataset.edadOk = '1';
+            const sel = document.createElement('select');
+            sel.id = inp.id + '-u';
+            sel.className = 'fmt-in';
+            sel.style.cssText = 'width:96px;flex:none';
+            sel.title = 'Edad en años o en meses';
+            sel.innerHTML = '<option value="años">Años</option><option value="meses">Meses</option>';
+            const caja = document.createElement('div');
+            caja.className = 'flex gap-1.5';
+            inp.parentNode.insertBefore(caja, inp);
+            caja.appendChild(inp); caja.appendChild(sel);
+            inp.classList.add('flex-1', 'min-w-0');
+            inp.setAttribute('inputmode', 'decimal');
+            inp.setAttribute('autocomplete', 'off');
+            if (!inp.placeholder) inp.placeholder = 'Ej: 5';
+            const actual = VALOR_INPUT.get.call(inp);
+            Object.defineProperty(inp, 'value', {
+                configurable: true,
+                get() {
+                    const n = VALOR_INPUT.get.call(inp).trim();
+                    if (!n) return '';
+                    if (!/^\d+([.,]\d+)?$/.test(n)) return n;          // texto libre (registros antiguos)
+                    const uno = n === '1';
+                    return n + ' ' + (sel.value === 'meses' ? (uno ? 'mes' : 'meses') : (uno ? 'año' : 'años'));
+                },
+                set(v) {
+                    const t = String(v == null ? '' : v).trim();
+                    const m = /^(\d+(?:[.,]\d+)?)\s*(años?|anos?|a|mes(?:es)?|m)?\.?$/i.exec(t);
+                    if (m) { VALOR_INPUT.set.call(inp, m[1]); sel.value = (m[2] && /^m/i.test(m[2])) ? 'meses' : 'años'; }
+                    else { VALOR_INPUT.set.call(inp, t); sel.value = 'años'; }
+                }
+            });
+            inp.value = actual;
+            // la lista sigue el modo solo lectura de su casilla
+            sel.disabled = inp.disabled;
+            new MutationObserver(() => { sel.disabled = inp.disabled; }).observe(inp, { attributes: true, attributeFilter: ['disabled'] });
+        }
+        // Edad a partir de una fecha de nacimiento (para registros antiguos): "3 años" o "7 meses"
+        function edadDesdeNacimiento(iso) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '')); if (!m) return '';
+            const n = new Date(+m[1], +m[2] - 1, +m[3]), h = new Date();
+            let meses = (h.getFullYear() - n.getFullYear()) * 12 + (h.getMonth() - n.getMonth()) - (h.getDate() < n.getDate() ? 1 : 0);
+            if (meses < 0) return '';
+            if (meses < 12) return meses + (meses === 1 ? ' mes' : ' meses');
+            const a = Math.floor(meses / 12); return a + (a === 1 ? ' año' : ' años');
+        }
+        // En los PDF la edad siempre lleva unidad: si quedó guardada solo como número, se toma en años
+        function edadConUnidad(d) {
+            if (!d) return d;
+            const fix = v => { const t = String(v == null ? '' : v).trim(); return /^\d+([.,]\d+)?$/.test(t) ? t + (t === '1' ? ' año' : ' años') : v; };
+            const out = { ...d };
+            if (out.edad !== undefined) out.edad = fix(out.edad);
+            if (out.campos && out.campos.edad !== undefined) out.campos = { ...out.campos, edad: fix(out.campos.edad) };
+            return out;
+        }
+        function mejorarEdades(raiz) { (raiz || document).querySelectorAll('input[id$="-edad"]').forEach(mejorarEdad); }
+        mejorarEdades();
+        new MutationObserver(muts => {
+            for (const m of muts) for (const n of m.addedNodes) {
+                if (n.nodeType !== 1) continue;
+                if (n.matches && n.matches('input[id$="-edad"]')) mejorarEdad(n); else if (n.querySelectorAll) mejorarEdades(n);
+            }
+        }).observe(document.body, { childList: true, subtree: true });
+
         // Médico responsable por defecto (todos los formatos menos Monitoreo anestésico y Consulta clínica)
         const MEDICO_INFORMES = 'Juan Carlos Giraldo';
 
@@ -4821,13 +4905,20 @@
             if (!imgs.length) return y;
             const AZUL = [21, 67, 144], M = 40;
             const W = pdf.internal.pageSize.getWidth() - 2 * M, PH = pdf.internal.pageSize.getHeight();
-            const cols = 3, gap = 10, box = (W - gap * (cols - 1)) / cols;
-            if (y + 24 + box > PH - 50) { pdf.addPage(); y = topNueva; }
+            const LIM = PH - 46;
+            // Para no dejar espacios en blanco: si las fotos no caben en tamaño normal (3 por fila) junto al título,
+            // se usan más pequeñas en esta página; solo si ni así cabe la primera fila, empiezan en la página siguiente.
+            // En las páginas nuevas las fotos vuelven al tamaño normal.
+            const gap = 10, tam = c => (W - gap * (c - 1)) / c;
+            const altoTodo = c => 24 + Math.ceil(imgs.length / c) * (tam(c) + gap) - gap;
+            let cols = [3, 4, 5].find(c => y + altoTodo(c) <= LIM)          // todas caben en esta página
+                    || [3, 4, 5, 6, 7].find(c => y + 24 + tam(c) <= LIM);   // al menos el título y la primera fila
+            if (!cols) { pdf.addPage(); y = topNueva; cols = 3; }
+            let box = tam(cols), col = 0;
             pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
             pdf.text(titulo || "IMÁGENES", M, y + 10); y += 20;
             imgs.forEach((img, i) => {
-                const col = i % cols;
-                if (col === 0 && y + box > PH - 50) { pdf.addPage(); y = topNueva; }
+                if (col === 0 && y + box > LIM) { pdf.addPage(); y = topNueva; cols = 3; box = tam(3); }
                 const cx = M + col * (box + gap);
                 let w = box, h = box;
                 try { const pr = pdf.getImageProperties(img); const rt = pr.width / pr.height; if (rt >= 1) h = box / rt; else w = box * rt; } catch (e) { }
@@ -4835,7 +4926,8 @@
                 pdf.roundedRect(cx, y, box, box, 4, 4, 'FD');
                 w *= 0.94; h *= 0.94;
                 try { pdf.addImage(img, /^data:image\/png/.test(img) ? 'PNG' : 'JPEG', cx + (box - w) / 2, y + (box - h) / 2, w, h); } catch (e) { }
-                if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
+                col++;
+                if (col === cols || i === imgs.length - 1) { y += box + gap; col = 0; }
             });
             return y;
         }
@@ -4859,7 +4951,7 @@
         const ESTADOS_PRE = ["Alerta", "Excitado", "Deprimido", "Decúbito", "Comatoso", "Otro"];
         // Campos simples id->clave de guardado
         const FMT_CAMPOS = [
-            "paciente","hc","fecha","propietario","telefono","especie","sexo","edad","peso",
+            "paciente","hc","fecha","propietario","telefono","especie","raza","sexo","edad","peso",
             "anestesista","cirujano","rot-anest","rot-aux","asa",
             "dx1","int1","dx2","int2","canulacion","cateter","vena","venoclisis",
             "fc","fr","mucosas","tllc","temp","tsm","vasc","res","hidratacion","obs-pre",
@@ -5281,7 +5373,7 @@
                         row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}${etiquetaEspecie(it.especie || (it.campos || {}).especie)}</p>
                                 <p class="text-xs text-gray-500">${it.hc ? 'HC ' + it.hc : ''}${it.propietario ? ' · ' + it.propietario : ''}</p>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -5337,7 +5429,7 @@
             filas.push(["DATOS DEL PACIENTE", ""]);
             par("Paciente", d.paciente); par("HC", d.hc); par("Fecha", d.fecha);
             par("Propietario", d.propietario); par("Teléfono", d.telefono);
-            par("Especie", d.especie); par("Sexo", d.sexo); par("Edad", d.edad); par("Peso (kg)", d.peso);
+            par("Especie", d.especie); par("Raza", d.raza); par("Sexo", d.sexo); par("Edad", d.edad); par("Peso (kg)", d.peso);
             par("Anestesista", d.anestesista); par("Cirujano", d.cirujano);
             par("Rotante de anestesia", d["rot-anest"]); par("Rotante auxiliar", d["rot-aux"]); par("ASA", d.asa);
             filas.push(["", ""]);
@@ -5411,6 +5503,7 @@
 
         // ---- Exportar a PDF ----
         function construirPDF(d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) {
                 showToast("No se pudo cargar el generador de PDF. Revisa tu conexión.", true);
                 return null;
@@ -5453,7 +5546,7 @@
             seccionKV("DATOS DEL PACIENTE", [
                 ["Paciente", d.paciente], ["HC", d.hc], ["Fecha", d.fecha],
                 ["Propietario", d.propietario], ["Teléfono", d.telefono],
-                ["Especie", d.especie], ["Sexo", d.sexo], ["Edad", d.edad], ["Peso (kg)", d.peso],
+                ["Especie", d.especie], ["Raza", d.raza], ["Sexo", d.sexo], ["Edad", d.edad], ["Peso (kg)", d.peso],
                 ["Anestesista", d.anestesista], ["Cirujano", d.cirujano],
                 ["Rotante de anestesia", d["rot-anest"]], ["Rotante auxiliar", d["rot-aux"]], ["ASA", d.asa]
             ]);
@@ -5486,6 +5579,7 @@
             seccionTabla("MONITOREO POSTQUIRÚRGICO", ["Hora", "Estado", "FC", "FR", "TLLC", "Mucosas", "Temp."],
                 (d.postop || []).map(p => [p.hora, p.estado, p.fc, p.fr, p.tllc, p.mucosas, p.temp]));
             y = bloqueResponsablePDF(doc, y, d.anestesista || d.cirujano, 62);
+            if ((d.imagenes || []).length) y = fotosPDF(doc, d.imagenes, y + 4, 62);
 
             // Cuadrícula intraoperatoria en página horizontal
             const puntos = (d.intra && d.intra.puntos) || {};
@@ -5519,7 +5613,6 @@
                 columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 110 } },
                 margin: { left: M, right: M }
             });
-            if ((d.imagenes || []).length) { doc.addPage('a4', 'portrait'); fotosPDF(doc, d.imagenes, 62, 62); }
             sellarLogoPaginas(doc, M);
             numerarPaginasPDF(doc);
             return doc;
@@ -5839,7 +5932,7 @@
                         row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}</p>
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}${etiquetaEspecie(it.especie || (it.campos || {}).especie)}</p>
                                 <p class="text-xs text-gray-500">${it.hc ? 'HC ' + it.hc : ''}${it.propietario ? ' · ' + it.propietario : ''}</p>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -5910,7 +6003,7 @@
             par("Presencia de masas", d["eoe-masas"]); par("Dolor", d["eoe-dolor"]);
             par("Observación", d["eoe-observacion"]);
             filas.push(["", ""]);
-            filas.push(["EOM — EXAMEN ORTOPÉDICO MANUAL", ""]);
+            filas.push(["EOE — EVALUACIÓN ORTOPÉDICA ESTÁTICA", ""]);
             const regs = d.regiones || {};
             ORTO_REGIONES.forEach(reg => {
                 const etD = reg.grupo === 'anterior' ? 'MTD' : 'MPD';
@@ -5952,6 +6045,7 @@
         };
 
         function construirOrtoPDF(d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) {
                 showToast("No se pudo cargar el generador de PDF. Revisa tu conexión.", true);
                 return null;
@@ -6009,28 +6103,29 @@
             // Regiones seguidas (sin forzar una página por región), con imágenes pequeñas enmarcadas
             const regs = d.regiones || {};
             const PHo = pdf.internal.pageSize.getHeight();
-            const ALTO_IMG = 110;                       // alto máximo de cada imagen
+            const ALTO_IMG = 90;                        // alto máximo de cada imagen
             const anchoCol = (anchoUtil - 16) / 2;      // mitad derecha / izquierda
-            const medirImg = (img) => {
+            const medirImg = (img, altoMax) => {
                 try {
                     const p = pdf.getImageProperties(img);
-                    let h = ALTO_IMG, w = h * p.width / p.height;
+                    let h = altoMax || ALTO_IMG, w = h * p.width / p.height;
                     if (w > anchoCol - 20) { w = anchoCol - 20; h = w * p.height / p.width; }
                     return { w, h };
                 } catch (e) { return null; }
             };
-            pdf.addPage('a4', 'portrait'); y = 62;
             ORTO_REGIONES.forEach((reg, idx) => {
                 const etD = reg.grupo === 'anterior' ? 'MTD — derecho' : 'MPD — derecho';
                 const etI = reg.grupo === 'anterior' ? 'MTI — izquierdo' : 'MPI — izquierdo';
                 pdf.setFontSize(8);
                 const lineasDesc = pdf.splitTextToSize(reg.desc, anchoUtil);
                 const imgD = ORTO_IMGS[reg.id + '_d'], imgI = ORTO_IMGS[reg.id + '_i'];
-                const mD = imgD ? medirImg(imgD) : null, mI = imgI ? medirImg(imgI) : null;
-                const altoImgs = (mD || mI) ? Math.max(mD ? mD.h : 0, mI ? mI.h : 0) + 12 : 0;
-                // título + descripción + imágenes + ~4 filas de tabla deben caber juntos
-                const necesario = 18 + lineasDesc.length * 9 + 8 + altoImgs + 14 + 70;
-                if (idx > 0 && y + necesario > PHo - 50) { pdf.addPage('a4', 'portrait'); y = 62; }
+                let mD = imgD ? medirImg(imgD) : null, mI = imgI ? medirImg(imgI) : null;
+                let altoImgs = (mD || mI) ? Math.max(mD ? mD.h : 0, mI ? mI.h : 0) + 12 : 0;
+                // título + descripción + imágenes + encabezado y primera fila de la tabla deben caber juntos (el resto de la tabla puede seguir en la otra página)
+                const fijo = 22 + lineasDesc.length * 9 + 6 + 8 + 36;
+                // Cada región va completa en tamaño normal: título, descripción, imágenes y el inicio de su tabla juntos.
+                // Si no caben, la región empieza en la página siguiente (las imágenes no se achican ni quedan solas)
+                if (y + fijo + altoImgs > PHo - 50) { pdf.addPage('a4', 'portrait'); y = 62; }
 
                 // Título de la región con barra lateral
                 pdf.setFillColor(...AZUL); pdf.rect(M, y, 3, 14, 'F');
@@ -6071,21 +6166,16 @@
                 y = pdf.lastAutoTable.finalY + 20;
             });
 
-            // Procedimientos especiales
-            pdf.addPage('a4', 'portrait');
+            // Procedimientos especiales: sigue en la misma página si cabe el título, la imagen y el inicio de la tabla
+            const imgE = ORTO_IMGS['especiales'];
+            let wE = 0, hE = 0;
+            try { if (imgE) { const p = pdf.getImageProperties(imgE); hE = 150; wE = hE * p.width / p.height; if (wE > anchoUtil * 0.5) { wE = anchoUtil * 0.5; hE = wE * p.height / p.width; } } } catch (e) { hE = 0; }
+            let ye = y;
+            if (ye + 26 + (hE ? hE + 14 : 0) + 40 > PHo - 50) { pdf.addPage('a4', 'portrait'); ye = 56; }
             pdf.setFontSize(13); pdf.setTextColor(...AZUL); pdf.setFont(undefined, 'bold');
-            pdf.text("Procedimientos especiales", M, 56);
-            let ye = 70;
-            try {
-                const imgE = ORTO_IMGS['especiales'];
-                if (imgE) {
-                    const p = pdf.getImageProperties(imgE);
-                    let h = 150, w = h * p.width / p.height;
-                    if (w > anchoUtil * 0.5) { w = anchoUtil * 0.5; h = w * p.height / p.width; }
-                    pdf.addImage(imgE, 'JPEG', M, ye, w, h);
-                    ye += h + 14;
-                }
-            } catch (e) { console.error("Imagen no incluida:", e); }
+            pdf.text("Procedimientos especiales", M, ye + 10);
+            ye += 24;
+            if (hE) { try { pdf.addImage(imgE, 'JPEG', M, ye, wE, hE); ye += hE + 14; } catch (e) { console.error("Imagen no incluida:", e); } }
             pdf.autoTable({
                 startY: ye,
                 head: [[{ content: "PROCEDIMIENTOS ESPECIALES", styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
@@ -6160,7 +6250,7 @@
             ]},
             { id: "general", titulo: "Observaciones generales", icono: "fa-clipboard-list", campos: [
                 { id: "musculatura",    label: "Musculatura",             tipo: "texto" },
-                { id: "estado_mental",  label: "Estado mental",           tipo: "estado" },
+                { id: "estado_mental",  label: "Estado de conciencia",    tipo: "estado" },
                 { id: "postura",        label: "Postura",                 tipo: "postura" },
                 { id: "riesgo",         label: "Riesgo de manipulación",  tipo: "si_no" },
                 { id: "desplazamiento", label: "Desplazamiento",          tipo: "si_no" },
@@ -6173,6 +6263,14 @@
                 { id: "hemiplejia",     label: "Hemiplejia",              tipo: "si_no" },
                 { id: "paraplejia",     label: "Paraplejia",              tipo: "si_no" },
                 { id: "tetraplejia",    label: "Tetraplejia",             tipo: "si_no" }
+            ]},
+            { id: "glasgow", titulo: "Escala de Glasgow", icono: "fa-brain", glasgow: true, campos: [
+                { id: "motora",      label: "Actividad motora",            tipo: "glasgow" },
+                { id: "tallo",       label: "Reflejos del tallo cerebral", tipo: "glasgow" },
+                { id: "conciencia",  label: "Nivel de conciencia",         tipo: "glasgow" },
+                { id: "total",       label: "Total",                       tipo: "glasgow_calc" },
+                { id: "pronostico",  label: "Pronóstico",                  tipo: "glasgow_calc" },
+                { id: "comentarios", label: "Comentarios",                 tipo: "nota", boton: "Agregar comentario", titulo: "Comentario" }
             ]},
             { id: "pares", titulo: "Pares craneales", icono: "fa-diagram-project", bloques: [
                 { titulo: "I Olfatorio", campos: [
@@ -6304,7 +6402,116 @@
                 { id: "detalle", label: "Conclusiones", tipo: "abierto", ancho: true, rows: 5, ph: "Escribe las conclusiones..." }
             ]}
         ];
-        const NEURO_DATOS = ["nombre","hc","especie","fecha","edad","sexo","medico"];
+        // Escala de Glasgow modificada: 3 categorías de 1 a 6 puntos (total 3 a 18)
+        const GLASGOW_OPC = {
+            motora: [
+                [6, "Marcha normal, reflejos espinales normales"],
+                [5, "Hemiparesis, tetraparesis o actividad de descerebración"],
+                [4, "Recumbencia, extensión rígida intermitente"],
+                [3, "Recumbencia, extensión rígida constante"],
+                [2, "Recumbencia, extensión rígida constante con opistótonos"],
+                [1, "Recumbencia, hipotonía muscular, disminución o ausencia de reflejos espinales"]
+            ],
+            tallo: [
+                [6, "Reflejos pupilares a la luz y oculocefálicos normales"],
+                [5, "Reflejos pupilares a la luz y reflejos oculocefálicos de normales a reducidos"],
+                [4, "Miosis bilateral no responsiva con reflejos oculocefálicos de normales a reducidos"],
+                [3, "Miosis central bilateral con reflejos oculocefálicos reducidos a ausentes"],
+                [2, "Midriasis no responsiva unilateral con reflejos oculocefálicos reducidos a ausentes"],
+                [1, "Midriasis no responsiva bilateral con reflejos oculocefálicos reducidos a ausentes"]
+            ],
+            conciencia: [
+                [6, "Periodos ocasionales de alerta y respuesta al medio ambiente"],
+                [5, "Depresión o delirio, capaz de responder al medio ambiente pero de manera inapropiada"],
+                [4, "Semicomatoso, responsivo a estímulos visuales"],
+                [3, "Semicomatoso, responsivo a estímulos auditivos"],
+                [2, "Semicomatoso, responsivo solo a estímulos dolorosos"],
+                [1, "Comatoso, no responsivo a estímulos dolorosos repetitivos"]
+            ]
+        };
+        const GLASGOW_CATS = [["motora", "Actividad motora"], ["tallo", "Reflejos del tallo cerebral"], ["conciencia", "Nivel de conciencia"]];
+        const GLASGOW_PRON = [
+            { k: "bueno",     txt: "Buen pronóstico",      rango: "15 – 18", min: 15, max: 18, pdf: [220, 252, 231], borde: [34, 197, 94] },
+            { k: "reservado", txt: "Pronóstico reservado", rango: "9 – 14",  min: 9,  max: 14, pdf: [254, 243, 199], borde: [245, 158, 11] },
+            { k: "grave",     txt: "Pronóstico grave",     rango: "3 – 8",   min: 3,  max: 8,  pdf: [254, 226, 226], borde: [239, 68, 68] }
+        ];
+        // Total y pronóstico a partir de los tres puntajes (solo cuando están los tres)
+        function glasgowResultado(v) {
+            const pts = GLASGOW_CATS.map(([k]) => parseInt(v[k], 10)).filter(n => n >= 1 && n <= 6);
+            if (pts.length < 3) return { total: '', pron: null, faltan: 3 - pts.length };
+            const total = pts.reduce((a, b) => a + b, 0);
+            return { total: String(total), pron: GLASGOW_PRON.find(x => total >= x.min && total <= x.max) || null, faltan: 0 };
+        }
+        function glasgowHTML() {
+            const cats = GLASGOW_CATS.map(([k, nom]) => `
+                <div class="border border-gray-200 rounded-xl overflow-hidden flex flex-col">
+                    <div class="bg-[#154390] text-white px-3 py-2 flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wide">${nom}</span>
+                        <span id="gcs-pt-${k}" class="text-xs font-bold bg-white/20 rounded-md px-2 py-0.5 whitespace-nowrap">— pts</span>
+                    </div>
+                    <input type="hidden" id="n-glasgow-${k}">
+                    <div class="divide-y divide-gray-100 flex-1">
+                        ${GLASGOW_OPC[k].map(([v, t]) => `<button type="button" class="gcs-op js-gcs" data-gcs="${k}" data-v="${v}"><span class="gcs-num">${v}</span><span>${t}</span></button>`).join('')}
+                    </div>
+                </div>`).join('');
+            const pron = GLASGOW_PRON.map(x => `<div class="gcs-pron" data-gcs-pron="${x.k}"><i class="fa-regular fa-square"></i><span class="flex-1">${x.txt}</span><b class="whitespace-nowrap">${x.rango}</b></div>`).join('');
+            return `<p class="text-xs text-gray-500 mt-2">Toca la opción que corresponde en cada categoría. El total y el pronóstico se calculan solos.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-3">${cats}</div>
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-3 items-stretch">
+                    <div class="rounded-xl border-2 border-[#154390] bg-blue-50/60 flex flex-col items-center justify-center py-3">
+                        <span class="text-[11px] font-bold text-[#154390] uppercase tracking-wider">Total</span>
+                        <span id="gcs-total-num" class="text-4xl font-extrabold text-[#154390] leading-tight">—</span>
+                        <span class="text-[11px] text-gray-500">de 18 puntos</span>
+                        <input type="hidden" id="n-glasgow-total">
+                    </div>
+                    <div class="flex flex-col gap-2 justify-center">
+                        ${pron}
+                        <input type="hidden" id="n-glasgow-pronostico">
+                        <p id="gcs-falta" class="text-[11px] text-gray-500 italic"></p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100">
+                    <h3 class="text-sm font-bold text-[#154390] uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-comment-medical"></i> Comentarios</h3>
+                    <div id="celda-n-glasgow-comentarios">${notaNeuroHTML('glasgow', { id: 'comentarios', boton: 'Agregar comentario', titulo: 'Comentario' })}</div>
+                </div>`;
+        }
+        // Pinta la escala según los valores guardados y calcula total y pronóstico
+        function glasgowPintar(avisar) {
+            const val = k => (document.getElementById('n-glasgow-' + k) || {}).value || '';
+            const v = {}; GLASGOW_CATS.forEach(([k]) => { v[k] = val(k); });
+            GLASGOW_CATS.forEach(([k]) => {
+                document.querySelectorAll(`#fmt-neuro .js-gcs[data-gcs="${k}"]`).forEach(b => b.classList.toggle('gcs-sel', b.dataset.v === v[k]));
+                const pt = document.getElementById('gcs-pt-' + k); if (pt) pt.textContent = v[k] ? v[k] + ' pts' : '— pts';
+            });
+            const r = glasgowResultado(v);
+            const tot = document.getElementById('n-glasgow-total'), pro = document.getElementById('n-glasgow-pronostico');
+            if (tot) tot.value = r.total;
+            if (pro) pro.value = r.pron ? r.pron.txt : '';
+            const num = document.getElementById('gcs-total-num'); if (num) num.textContent = r.total || '—';
+            document.querySelectorAll('#fmt-neuro [data-gcs-pron]').forEach(el => {
+                const on = r.pron && r.pron.k === el.dataset.gcsPron;
+                GLASGOW_PRON.forEach(x => el.classList.remove('gcs-on-' + x.k));
+                if (on) el.classList.add('gcs-on-' + r.pron.k);
+                const ic = el.querySelector('i'); if (ic) ic.className = on ? 'fa-solid fa-square-check' : 'fa-regular fa-square';
+            });
+            const f = document.getElementById('gcs-falta');
+            if (f) f.textContent = r.faltan === 3 ? 'Selecciona una opción en cada categoría para calcular el pronóstico.' : (r.faltan ? `Falta${r.faltan > 1 ? 'n' : ''} ${r.faltan} categoría${r.faltan > 1 ? 's' : ''} por seleccionar.` : '');
+            if (avisar) { const h = document.getElementById('n-glasgow-motora'); if (h) h.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+        document.addEventListener('click', e => {
+            const b = e.target.closest('.js-gcs'); if (!b) return;
+            if (!puedeEditar('fmt_neuro')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const h = document.getElementById('n-glasgow-' + b.dataset.gcs); if (!h) return;
+            h.value = h.value === b.dataset.v ? '' : b.dataset.v;   // tocar de nuevo la misma opción la quita
+            glasgowPintar(true);
+        });
+        // Filas de la escala para el Excel
+        function glasgowFilasTexto(campos) {
+            const g = k => campos['glasgow_' + k] || '';
+            const desc = (k, v) => { const o = (GLASGOW_OPC[k] || []).find(x => String(x[0]) === String(v)); return v ? v + (o ? ' — ' + o[1] : '') : ''; };
+            return GLASGOW_CATS.map(([k, nom]) => [nom, desc(k, g(k))]).concat([["Total", g('total')], ["Pronóstico", g('pronostico')], ["Comentarios", g('comentarios')]]);
+        }
+        const NEURO_DATOS = ["nombre","hc","especie","raza","fecha","edad","sexo","medico"];
         let neuroIdActual = null;
 
         window.openNeuro = function() {
@@ -6346,7 +6553,7 @@
                 </button>
                 <div id="box-${dom}" class="hidden mt-1.5 border-l-2 border-[#154390] pl-2">
                     <div class="flex items-center justify-between gap-2 mb-1">
-                        <span class="fmt-lbl mb-0">Observaciones</span>
+                        <span class="fmt-lbl mb-0">${nota.titulo || 'Observaciones'}</span>
                         <button type="button" onclick="quitarNotaNeuro('${dom}')" class="js-editar text-[11px] font-semibold text-gray-400 hover:text-red-600 flex items-center gap-1">
                             <i class="fa-solid fa-xmark"></i> Quitar
                         </button>
@@ -6403,6 +6610,7 @@
                 html += `<section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                     <h2 class="text-base sm:text-lg font-bold text-[#154390] mb-1 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid ${sec.icono}"></i> ${sec.titulo}</h2>`;
                 if (sec.nota) html += `<p class="text-xs text-gray-500 italic mb-3">${sec.nota}</p>`;
+                if (sec.glasgow) { html += glasgowHTML() + `</section>`; return; }
                 if (sec.campos) {
                     html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">`;
                     html += camposNeuroHTML(sec.id, sec.campos);
@@ -6420,6 +6628,7 @@
                 html += `</section>`;
             });
             cont.innerHTML = html;
+            glasgowPintar(false);
         }
 
         // ---- Fotos adjuntas de la valoración ----
@@ -6514,6 +6723,7 @@
                 const ta = document.getElementById(dom);
                 verNotaNeuro(dom, !!(ta && ta.value.trim()));
             });
+            glasgowPintar(false);
         }
 
         function recorrerCamposNeuro(fn) {
@@ -6628,7 +6838,7 @@
                         row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin nombre)'}</p>
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin nombre)'}${etiquetaEspecie(it.especie || (it.campos || {}).especie)}</p>
                                 <p class="text-xs text-gray-500">${it.hc ? 'HC ' + it.hc : ''}</p>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -6681,11 +6891,12 @@
             filas.push(["", ""]);
             filas.push(["DATOS DEL PACIENTE", ""]);
             par("Nombre", d.nombre); par("HC", d.hc); par("Fecha", d.fecha);
-            par("Especie", d.especie); par("Edad", d.edad); par("Sexo", d.sexo);
+            par("Especie", d.especie); par("Raza", d.raza); par("Edad", d.edad); par("Sexo", d.sexo);
             const campos = d.campos || {};
             NEURO_SECCIONES.forEach(sec => {
                 filas.push(["", ""]);
                 filas.push([sec.titulo.toUpperCase(), ""]);
+                if (sec.glasgow) { glasgowFilasTexto(campos).forEach(f => par(f[0], f[1])); return; }
                 (sec.campos || []).forEach(c => par(c.label, campos[sec.id + '_' + c.id]));
                 (sec.bloques || []).forEach(b => {
                     filas.push([b.titulo, ""]);
@@ -6702,6 +6913,7 @@
         };
 
         function construirNeuroPDF(d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) {
                 showToast("No se pudo cargar el generador de PDF. Revisa tu conexión.", true);
                 return null;
@@ -6730,7 +6942,7 @@
 
             tabla("DATOS DEL PACIENTE", [
                 ["Nombre", d.nombre], ["HC", d.hc], ["Fecha", d.fecha],
-                ["Especie", d.especie], ["Edad", d.edad], ["Sexo", d.sexo]
+                ["Especie", d.especie], ["Raza", d.raza], ["Edad", d.edad], ["Sexo", d.sexo]
             ]);
             const campos = d.campos || {};
             // Bloque de texto libre: título arriba y el texto en la fila de abajo, a todo el ancho
@@ -6745,7 +6957,64 @@
                 });
                 y = pdf.lastAutoTable.finalY + 10;
             };
+            // Escala de Glasgow: las tres categorías con la opción elegida resaltada, total y pronóstico
+            const glasgowPDF = () => {
+                const g = k => String(campos['glasgow_' + k] || '');
+                // Si ni el encabezado y la primera categoría caben, empieza en la siguiente página (sin dejar huecos grandes)
+                if (y + 60 > pdf.internal.pageSize.getHeight() - 50) { pdf.addPage(); y = 62; }
+                const CLARO = [232, 238, 248];
+                const body = [];
+                GLASGOW_CATS.forEach(([k, nom]) => {
+                    body.push([{ content: nom.toUpperCase(), styles: { fillColor: CLARO, textColor: AZUL, fontStyle: 'bold' } },
+                               { content: 'PUNTAJE', styles: { fillColor: CLARO, textColor: AZUL, fontStyle: 'bold', halign: 'center' } }]);
+                    GLASGOW_OPC[k].forEach(([v, t]) => {
+                        const sel = g(k) === String(v);
+                        body.push([{ content: t, styles: sel ? { fillColor: [219, 234, 254], fontStyle: 'bold', textColor: [15, 47, 102] } : {} },
+                                   { content: String(v), styles: sel ? { fillColor: AZUL, textColor: 255, fontStyle: 'bold', halign: 'center' } : { halign: 'center', textColor: [120, 120, 120] } }]);
+                    });
+                });
+                body.push([{ content: 'TOTAL', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], fontSize: 10, textColor: AZUL } },
+                           { content: g('total') ? g('total') + ' / 18' : '—', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], fontSize: 10, halign: 'center', textColor: AZUL } }]);
+                pdf.autoTable({
+                    startY: y,
+                    head: [[{ content: 'ESCALA DE GLASGOW', colSpan: 2, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
+                    body, theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40], lineColor: [215, 222, 235] },
+                    columnStyles: { 1: { cellWidth: 70 } },
+                    margin: { left: M, right: M }
+                });
+                y = pdf.lastAutoTable.finalY + 6;
+                const total = parseInt(g('total'), 10);
+                const activo = GLASGOW_PRON.find(x => total >= x.min && total <= x.max);
+                pdf.autoTable({
+                    startY: y,
+                    body: GLASGOW_PRON.map(x => {
+                        const on = activo && activo.k === x.k;
+                        const st = on ? { fillColor: x.pdf, fontStyle: 'bold', textColor: [40, 40, 40] } : { textColor: [110, 110, 110] };
+                        return [{ content: '', styles: st }, { content: x.txt, styles: st }, { content: x.rango, styles: { ...st, halign: 'center' } }];
+                    }),
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 4, lineColor: [215, 222, 235] },
+                    columnStyles: { 0: { cellWidth: 26 }, 2: { cellWidth: 70 } },
+                    margin: { left: M, right: M },
+                    didDrawCell: data => {
+                        if (data.section !== 'body' || data.column.index !== 0) return;
+                        const x = GLASGOW_PRON[data.row.index], on = activo && activo.k === x.k;
+                        const s = 9, cx = data.cell.x + (data.cell.width - s) / 2, cy = data.cell.y + (data.cell.height - s) / 2;
+                        pdf.setLineWidth(0.9);
+                        if (on) {
+                            pdf.setFillColor(...x.borde); pdf.setDrawColor(...x.borde); pdf.rect(cx, cy, s, s, 'FD');
+                            pdf.setDrawColor(255, 255, 255); pdf.setLineWidth(1.4);
+                            pdf.line(cx + 2, cy + s * 0.55, cx + s * 0.42, cy + s - 2.2);
+                            pdf.line(cx + s * 0.42, cy + s - 2.2, cx + s - 1.8, cy + 2);
+                        } else { pdf.setDrawColor(160, 170, 185); pdf.rect(cx, cy, s, s, 'S'); }
+                    }
+                });
+                y = pdf.lastAutoTable.finalY + 10;
+                if (g('comentarios').trim()) bloqueLibre('COMENTARIOS — ESCALA DE GLASGOW', g('comentarios'));
+            };
             NEURO_SECCIONES.forEach(sec => {
+                if (sec.glasgow) { glasgowPDF(); return; }
                 if (sec.libre) {
                     const c = (sec.campos || [])[0];
                     bloqueLibre(sec.titulo.toUpperCase(), c ? campos[sec.id + '_' + c.id] : '');
@@ -6764,33 +7033,8 @@
 
             y = bloqueResponsablePDF(pdf, y, d.medico || MEDICO_INFORMES, 62);
 
-            // Fotos adjuntas, en cuadrícula al final
-            const imgs = d.imagenes || [];
-            if (imgs.length) {
-                const PH = pdf.internal.pageSize.getHeight();
-                const cols = 3, gap = 10, box = (anchoUtil - gap * (cols - 1)) / cols;
-                // El título y la primera fila de fotos viajan juntos
-                if (y + 20 + box > PH - 50) { pdf.addPage(); y = 62; }
-                pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
-                pdf.text("FOTOS", M, y + 10); y += 20;
-                imgs.forEach((img, i) => {
-                    const col = i % cols;
-                    if (col === 0 && y + box > PH - 50) { pdf.addPage(); y = 62; }
-                    const cx = M + col * (box + gap);
-                    let w = box, h = box;
-                    try {
-                        const p = pdf.getImageProperties(img);
-                        const rt = p.width / p.height;
-                        if (rt >= 1) { h = box / rt; } else { w = box * rt; }
-                    } catch (e) { }
-                    pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6); pdf.setFillColor(248, 250, 253);
-                    pdf.roundedRect(cx, y, box, box, 4, 4, 'FD');
-                    w *= 0.94; h *= 0.94;
-                    const ox = cx + (box - w) / 2, oy = y + (box - h) / 2;
-                    try { pdf.addImage(img, 'JPEG', ox, oy, w, h); } catch (e) { }
-                    if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
-                });
-            }
+            // Fotos adjuntas, en cuadrícula al final (el título siempre con su primera fila)
+            if ((d.imagenes || []).length) y = fotosPDF(pdf, d.imagenes, y, 62, "FOTOS");
 
             sellarLogoPaginas(pdf, M);
             numerarPaginasPDF(pdf);
@@ -6837,7 +7081,7 @@
                 { id: 'raza', label: 'Raza', tipo: 'raza' },
                 { id: 'sexo', label: 'Sexo', tipo: 'select', op: ['Macho', 'Hembra', 'Macho castrado', 'Hembra castrada'] },
                 { id: 'color', label: 'Color', tipo: 'texto' },
-                { id: 'nacido', label: 'Fecha de nacimiento', tipo: 'fecha' },
+                { id: 'edad', label: 'Edad', tipo: 'texto' },
                 { id: 'esteril', label: 'Estéril', tipo: 'select', op: ['Sí', 'No'] },
                 { id: 'propietario', label: 'Propietario / responsable', tipo: 'texto' },
                 { id: 'documento', label: 'Documento', tipo: 'texto' },
@@ -6949,6 +7193,8 @@
             CONSULTA_SECCIONES.forEach(sec => sec.campos.forEach(c => {
                 const el = document.getElementById('c-' + c.id); if (el) el.value = campos[c.id] || '';
             }));
+            const elEdad = document.getElementById('c-edad');
+            if (elEdad && !campos.edad && campos.nacido) elEdad.value = edadDesdeNacimiento(campos.nacido);
             fotosCargar('consulta', data.imagenes);
         }
 
@@ -7052,7 +7298,7 @@
                         row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin paciente)'}</p>
+                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin paciente)'}${etiquetaEspecie(it.especie || (it.campos || {}).especie)}</p>
                                 <p class="text-xs text-gray-500">${it.hc ? 'No. ' + it.hc : ''}</p>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -7099,6 +7345,7 @@
         };
 
         function construirConsultaPDF(d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ unit: 'pt', format: 'a4' }); prepararPDFInforme(pdf);
@@ -7140,7 +7387,7 @@
             }
             const hPac = tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
                 ["Nombre", val('nombre')], ["Especie", val('especie')], ["Raza", val('raza')],
-                ["Sexo", val('sexo')], ["Color", val('color')], ["Nacido", val('nacido')],
+                ["Sexo", val('sexo')], ["Color", val('color')], ["Edad", (campos.edad || '').toString().trim() || edadDesdeNacimiento(campos.nacido) || '—'],
                 ["Estéril", val('esteril')], ["H.C.", val('hc')]
             ]);
             const hDet = tarjeta(M + cardW + gap, y, cardW, "DETALLES DE CONSULTA", [
@@ -7157,27 +7404,45 @@
                 pdf.text(t.toUpperCase(), M + 14, y);
                 y += 12;
             }
+            // Recuadro que se parte entre páginas: en cada página caben las líneas que haya espacio
+            function cajaPartida(lineasPorBloque, dibujar) {
+                let i = 0;
+                while (i < lineasPorBloque.length) {
+                    let alto = 14, n = 0;
+                    while (i + n < lineasPorBloque.length && y + alto + lineasPorBloque[i + n] <= PH - 50) { alto += lineasPorBloque[i + n]; n++; }
+                    if (n === 0) { if (alto === 14 && y > 60) { pdf.addPage(); y = 44; continue; } n = 1; alto += lineasPorBloque[i]; }
+                    pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
+                    pdf.roundedRect(M, y, W, alto, 5, 5, 'S');
+                    dibujar(i, n, y + 13);
+                    i += n; y += alto;
+                    if (i < lineasPorBloque.length) { pdf.addPage(); y = 44; } else y += 12;
+                }
+            }
             function seccionTexto(titulo, texto) {
                 const t = (texto || '').toString().trim() || '—';
                 pdf.setFont(undefined, 'normal'); pdf.setFontSize(8.5);
                 const lineas = pdf.splitTextToSize(t, W - 24);
-                const alto = lineas.length * 11 + 14;
-                if (y + alto + 20 > PH - 44) { pdf.addPage(); y = 44; }
+                if (y + 12 + 14 + Math.min(lineas.length, 2) * 11 + 20 > PH - 44) { pdf.addPage(); y = 44; }   // título + 2 líneas
                 tituloSeccion(titulo);
-                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
-                pdf.roundedRect(M, y, W, alto, 5, 5, 'S');
-                pdf.setTextColor(50, 50, 50); pdf.setFontSize(8.5);
-                pdf.text(lineas, M + 12, y + 13);
-                y += alto + 12;
+                cajaPartida(lineas.map(() => 11), (i, n, ty) => {
+                    pdf.setFont(undefined, 'normal'); pdf.setTextColor(50, 50, 50); pdf.setFontSize(8.5);
+                    pdf.text(lineas.slice(i, i + n), M + 12, ty);
+                });
             }
             function grillaCampos(titulo, items) {
                 const cols = 3, cg = 10, cellW = (W - cg * (cols - 1)) / cols, cellH = 34;
                 const filas = Math.ceil(items.length / cols);
-                if (y + filas * (cellH + cg) + 20 > PH - 44) { pdf.addPage(); y = 44; }
+                if (y + 12 + cellH + 20 > PH - 44) { pdf.addPage(); y = 44; }   // título + primera fila
                 tituloSeccion(titulo);
+                let filaAct = -1, yFila = y;
                 items.forEach((it, i) => {
                     const c = i % cols, r = Math.floor(i / cols);
-                    const x = M + c * (cellW + cg), yy = y + r * (cellH + cg);
+                    if (r !== filaAct) {   // cada fila de casillas pasa a la siguiente página solo si no cabe
+                        yFila = filaAct < 0 ? y : yFila + cellH + cg;
+                        if (yFila + cellH > PH - 50) { pdf.addPage(); yFila = 44; }
+                        filaAct = r;
+                    }
+                    const x = M + c * (cellW + cg), yy = yFila;
                     pdf.setFillColor(...GRISCLARO); pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
                     pdf.roundedRect(x, yy, cellW, cellH, 5, 5, 'FD');
                     pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.3); pdf.setTextColor(...GRIS);
@@ -7185,7 +7450,7 @@
                     pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
                     pdf.text(String(it[1] || '—'), x + 8, yy + 26, { maxWidth: cellW - 16 });
                 });
-                y += filas * (cellH + cg) + 8;
+                y = (filaAct < 0 ? y : yFila + cellH + cg) + 8;
             }
 
             function seccionLista(titulo, pares) {
@@ -7202,20 +7467,18 @@
                     alto += Math.max(1, vlines.length) * 11;
                     return { lbl, lblW, vlines };
                 });
-                alto += 14;
-                if (y + alto + 20 > PH - 44) { pdf.addPage(); y = 44; }
+                const altos = prep.map(p => Math.max(1, p.vlines.length) * 11);
+                if (y + 12 + 14 + (altos[0] || 11) + 20 > PH - 44) { pdf.addPage(); y = 44; }   // título + primera fila
                 tituloSeccion(titulo);
-                pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
-                pdf.roundedRect(M, y, W, alto, 5, 5, 'S');
-                let ty = y + 13;
-                prep.forEach(p => {
-                    pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5); pdf.setTextColor(...AZUL);
-                    pdf.text(p.lbl, M + 12, ty);
-                    pdf.setFont(undefined, 'normal'); pdf.setTextColor(50, 50, 50);
-                    pdf.text(p.vlines, M + 12 + p.lblW + 4, ty);
-                    ty += Math.max(1, p.vlines.length) * 11;
+                cajaPartida(altos, (i, n, ty) => {
+                    prep.slice(i, i + n).forEach(p => {
+                        pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5); pdf.setTextColor(...AZUL);
+                        pdf.text(p.lbl, M + 12, ty);
+                        pdf.setFont(undefined, 'normal'); pdf.setTextColor(50, 50, 50);
+                        pdf.text(p.vlines, M + 12 + p.lblW + 4, ty);
+                        ty += Math.max(1, p.vlines.length) * 11;
+                    });
                 });
-                y += alto + 12;
             }
 
             // ---------- Contenido ----------
@@ -7298,6 +7561,8 @@
                 { id: 'historia', label: 'Número de historia', tipo: 'texto' },
                 { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
                 { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
+                { id: 'raza', label: 'Raza', tipo: 'raza' },
+                { id: 'edad', label: 'Edad', tipo: 'texto' },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto' },
                 { id: 'endoscopio', label: 'Endoscopio usado', tipo: 'texto' },
                 { id: 'materiales', label: 'Pinzas y materiales usados', tipo: 'texto' },
@@ -7350,6 +7615,8 @@
                 { id: 'historia', label: 'Número de historia', tipo: 'texto' },
                 { id: 'paciente', label: 'Nombre del paciente', tipo: 'texto' },
                 { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
+                { id: 'raza', label: 'Raza', tipo: 'raza' },
+                { id: 'edad', label: 'Edad', tipo: 'texto' },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto' },
                 { id: 'endoscopio', label: 'Endoscopio usado', tipo: 'texto' },
                 { id: 'materiales', label: 'Pinzas y materiales usados', tipo: 'texto' },
@@ -7417,6 +7684,7 @@
 
         // PDF con la misma estética de los demás formatos (encabezado, tarjetas y secciones)
         function construirTacPDF(titulo, secciones, d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ unit: 'pt', format: 'a4' }); prepararPDFInforme(pdf);
@@ -7545,6 +7813,7 @@
         ];
 
         function construirRinoPDF(titulo, secciones, d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ unit: 'pt', format: 'a4' }); prepararPDFInforme(pdf);
@@ -7672,6 +7941,7 @@
                 { id: 'historia', label: 'Historia clínica', tipo: 'texto' },
                 { id: 'especie', label: 'Especie', tipo: 'lista', op: ['Canino', 'Felino'] },
                 { id: 'raza', label: 'Raza', tipo: 'raza' },
+                { id: 'edad', label: 'Edad', tipo: 'texto' },
                 { id: 'sexo', label: 'Sexo', tipo: 'texto' },
                 { id: 'medico', label: 'Médico a cargo', tipo: 'texto', def: MEDICO_INFORMES },
                 { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto', ancho: true },
@@ -7688,6 +7958,7 @@
         ];
 
         function construirResoPDF(titulo, secciones, d) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ unit: 'pt', format: 'a4' }); prepararPDFInforme(pdf);
@@ -7719,7 +7990,7 @@
             }
             const altoT = 30 + 5 * filaH + 6;
             tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
-                ["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Especie", val('especie')], ["Raza", val('raza')], ["Sexo", val('sexo')]
+                ["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Especie", val('especie')], ["Raza", val('raza')], ["Edad", val('edad')], ["Sexo", val('sexo')]
             ], altoT);
             tarjeta(M + cardW + gap, y, cardW, "DETALLES DEL ESTUDIO", [
                 ["Fecha de realización", fechaTxt], ["Médico a cargo", val('medico') !== '—' ? val('medico') : MEDICO_INFORMES]
@@ -8067,7 +8338,7 @@
                     row.className = "flex items-center justify-between gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50";
                     row.innerHTML = `
                         <div class="min-w-0">
-                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin paciente)'}</p>
+                            <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.nombre || '(sin paciente)'}${etiquetaEspecie(it.especie || (it.campos || {}).especie)}</p>
                             <p class="text-xs text-gray-500">${it.hc ? 'Historia ' + it.hc + ' · ' : ''}${(it.fecha || '')}${it.imagenes && it.imagenes.length ? ' · 📷 ' + it.imagenes.length : ''}</p>
                         </div>
                         <div class="flex gap-2 shrink-0">
@@ -8109,6 +8380,7 @@
         }
 
         function construirEndoPDF(titulo, secciones, d, nombreInf, subInf) {
+            d = edadConUnidad(d);   // edad guardada solo con número (registros antiguos) → "5 años"
             if (!window.jspdf || !window.jspdf.jsPDF) { showToast("No se pudo cargar el generador de PDF.", true); return null; }
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ unit: 'pt', format: 'a4' }); prepararPDFInforme(pdf);
@@ -8171,25 +8443,8 @@
             flush();
             y = bloqueResponsablePDF(pdf, y + 6, campos.firma || MEDICO_INFORMES, 44);
 
-            const imgs = d.imagenes || [];
-            if (imgs.length) {
-                tit("IMÁGENES DEL PROCEDIMIENTO");
-                y += 6;
-                const cols = 3, gap = 10, box = (W - gap * (cols - 1)) / cols;
-                imgs.forEach((img, i) => {
-                    const col = i % cols;
-                    if (col === 0 && y + box > PH - 44) { pdf.addPage(); y = 44; }
-                    const cx = M + col * (box + gap);
-                    let w = box, h = box;
-                    try { const p = pdf.getImageProperties(img); const rt = p.width / p.height; if (rt >= 1) { h = box / rt; } else { w = box * rt; } } catch (e) { }
-                    pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6); pdf.setFillColor(248, 250, 253);
-                    pdf.roundedRect(cx, y, box, box, 4, 4, 'FD');
-                    w *= 0.94; h *= 0.94;
-                    const ox = cx + (box - w) / 2, oy = y + (box - h) / 2;
-                    try { pdf.addImage(img, 'JPEG', ox, oy, w, h); } catch (e) { }
-                    if (col === cols - 1 || i === imgs.length - 1) y += box + gap;
-                });
-            }
+            // Fotos: el título siempre queda en la misma página que la primera fila de imágenes
+            if ((d.imagenes || []).length) y = fotosPDF(pdf, d.imagenes, y + 10, 44, "IMÁGENES DEL PROCEDIMIENTO");
 
             const credito = "Este formulario estándar fue desarrollado por el Grupo de Estandarización Gastrointestinal de WSAVA (Dres. Washabau, Willard, Hall, Jergens, Day, Mansell, Wilcox, Minami, Guilford y Biltzer).";
             pdf.setFont(undefined, 'italic'); pdf.setFontSize(7); pdf.setTextColor(...GRIS);
@@ -9480,18 +9735,14 @@
             const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             const dias = []; const d = new Date(ini + 'T00:00:00'), dFin = new Date(fin + 'T00:00:00');
             let g = 0; while (d <= dFin && g++ < 120) { dias.push(iso(d)); d.setDate(d.getDate() + 1); }
-            const cuidado = idxCuidadoHosp();
-            const cant = (f, i) => { const x = (cuentaHospPorDia[f] || {})[i]; return x ? (x.am || 0) + (x.pm || 0) : 0; };
-            const sinCuidado = dias.filter(f => !cuidado.some(i => cant(f, i) > 0));
             const sinNada = dias.filter(f => !Object.values(cuentaHospPorDia[f] || {}).some(x => ((x.am || 0) + (x.pm || 0)) > 0));
             const chip = (f, cls) => `<button type="button" onclick="cambiarDiaHosp('${f}')" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${cls}" title="Ir a este día">${fechaCortaHosp(f)}</button>`;
             const nDias = dias.length;
-            if (!sinCuidado.length && !sinNada.length) {
-                cont.innerHTML = `<div class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1"><i class="fa-solid fa-circle-check"></i> Revisión de días: <b>${nDias}</b> día${nDias === 1 ? '' : 's'} de hospitalización, todos con <b>Cuidado paciente</b> cobrado.</div>`;
+            if (!sinNada.length) {
+                cont.innerHTML = `<div class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1"><i class="fa-solid fa-circle-check"></i> Revisión de días: <b>${nDias}</b> día${nDias === 1 ? '' : 's'} de hospitalización, todos con cargos registrados.</div>`;
             } else {
                 cont.innerHTML = `<div class="text-[11px] text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1.5 space-y-1">
                     <div><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> <b>Revisión de días:</b> ${nDias} día${nDias === 1 ? '' : 's'} de hospitalización (${fechaCortaHosp(ini)} → ${egr ? fechaCortaHosp(egr) : 'hoy'}).</div>
-                    ${sinCuidado.length ? `<div class="flex flex-wrap items-center gap-1"><span>Sin <b>Cuidado paciente</b> cobrado (${sinCuidado.length}):</span> ${sinCuidado.map(f => chip(f, 'bg-white text-red-700 border-red-300 hover:bg-red-50')).join('')}</div>` : ''}
                     ${sinNada.length ? `<div class="flex flex-wrap items-center gap-1"><span>Días <b>sin ningún cargo</b> (${sinNada.length}):</span> ${sinNada.map(f => chip(f, 'bg-white text-amber-800 border-amber-300 hover:bg-amber-100')).join('')}</div>` : ''}
                 </div>`;
             }
