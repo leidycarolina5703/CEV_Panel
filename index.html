@@ -4980,6 +4980,43 @@
 
         // Encabezado común de los informes clínicos: logo, datos del CEV, línea azul y nombre del informe.
         // Devuelve la posición "y" donde empieza el contenido.
+        // Dos tarjetas de datos lado a lado (paciente / estudio) con la MISMA altura.
+        // Si un valor no cabe junto a su etiqueta, se parte en varias líneas y la fila crece:
+        // ningún dato se monta sobre la etiqueta ni se sale del recuadro.
+        function tarjetasParPDF(pdf, y, titIzq, filasIzq, titDer, filasDer) {
+            const AZUL = [21, 67, 144], GRIS = [130, 130, 130], GRISCLARO = [246, 248, 251], BORDE = [223, 228, 236];
+            const M = 40, W = pdf.internal.pageSize.getWidth() - 2 * M, gap = 14, w = (W - gap) / 2, filaH = 21, lineaH = 10.5;
+            const medir = filas => filas.map(f => {
+                const etq = String(f[0]).toUpperCase(), valor = String(f[1] == null || f[1] === '' ? '—' : f[1]);
+                pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.3);
+                const anchoEtq = pdf.getTextWidth(etq);
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(9);
+                const anchoMax = Math.max(60, w - 24 - anchoEtq - 10);
+                const lineas = pdf.getTextWidth(valor) <= anchoMax ? [valor] : pdf.splitTextToSize(valor, anchoMax);
+                return { etq, lineas, alto: filaH + (lineas.length - 1) * lineaH };
+            });
+            const izq = medir(filasIzq), der = medir(filasDer);
+            const altoDe = rs => 30 + rs.reduce((a, r) => a + r.alto, 0) + 6;
+            const h = Math.max(altoDe(izq), altoDe(der));
+            const dibujar = (x, tit, rs) => {
+                pdf.setFillColor(...GRISCLARO); pdf.setDrawColor(...BORDE); pdf.setLineWidth(0.8);
+                pdf.roundedRect(x, y, w, h, 6, 6, 'FD');
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(9); pdf.setTextColor(...AZUL);
+                pdf.text(tit, x + 12, y + 19);
+                let yy = y + 38;
+                rs.forEach(r => {
+                    pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.3); pdf.setTextColor(...GRIS);
+                    pdf.text(r.etq, x + 12, yy);
+                    pdf.setFont(undefined, 'bold'); pdf.setFontSize(9); pdf.setTextColor(40, 40, 40);
+                    r.lineas.forEach((ln, k) => pdf.text(ln, x + w - 12, yy + 1 + k * lineaH, { align: 'right' }));
+                    yy += r.alto;
+                });
+            };
+            dibujar(M, titIzq, izq);
+            dibujar(M + w + gap, titDer, der);
+            return y + h + 16;
+        }
+
         function encabezadoInformePDF(pdf, titulo, subtitulo) {
             const AZUL = [21, 67, 144], GRIS = [130, 130, 130];
             const M = 40, W = pdf.internal.pageSize.getWidth() - 2 * M;
@@ -5009,6 +5046,7 @@
             const original = pdf.autoTable;
             pdf.autoTable = function(o) {
                 o = Object.assign({}, o);
+                if (o.rowPageBreak == null) o.rowPageBreak = 'avoid';   // una fila no se parte entre dos páginas
                 if (o.margin == null || (typeof o.margin === 'object' && !Array.isArray(o.margin))) {
                     o.margin = Object.assign({ top: 62, bottom: 46 }, o.margin || {});
                 }
@@ -5324,34 +5362,43 @@
         }
 
         // Cuadrícula de imágenes al final del PDF. Devuelve la nueva posición y.
+        // Siempre el mismo tamaño en todas las páginas: 3 por fila (2 si son 1 o 2 imágenes).
+        // Cada fila toma la altura de su imagen más alta, así las verticales se ven grandes.
+        // Si el título y la primera fila no caben, las imágenes empiezan en la página siguiente.
         function fotosPDF(pdf, imgs, y, topNueva, titulo) {
             imgs = imgs || [];
             if (!imgs.length) return y;
             const AZUL = [21, 67, 144], M = 40;
             const W = pdf.internal.pageSize.getWidth() - 2 * M, PH = pdf.internal.pageSize.getHeight();
             const LIM = PH - 46;
-            // Para no dejar espacios en blanco: si las fotos no caben en tamaño normal (3 por fila) junto al título,
-            // se usan más pequeñas en esta página; solo si ni así cabe la primera fila, empiezan en la página siguiente.
-            // En las páginas nuevas las fotos vuelven al tamaño normal.
-            const gap = 10, tam = c => (W - gap * (c - 1)) / c;
-            const altoTodo = c => 24 + Math.ceil(imgs.length / c) * (tam(c) + gap) - gap;
-            let cols = [3, 4, 5].find(c => y + altoTodo(c) <= LIM)          // todas caben en esta página
-                    || [3, 4, 5, 6, 7].find(c => y + 24 + tam(c) <= LIM);   // al menos el título y la primera fila
-            if (!cols) { pdf.addPage(); y = topNueva; cols = 3; }
-            let box = tam(cols), col = 0;
+            const gap = 10, pad = 5;
+            const cols = imgs.length <= 2 ? 2 : 3;
+            const cellW = (W - gap * (cols - 1)) / cols;
+            const maxH = Math.min(cellW * 1.35, LIM - topNueva - 30);
+            const medida = img => {
+                let rt = 1;
+                try { const pr = pdf.getImageProperties(img); rt = pr.width / pr.height || 1; } catch (e) { }
+                let w = cellW - 2 * pad, h = w / rt;
+                if (h > maxH - 2 * pad) { h = maxH - 2 * pad; w = h * rt; }
+                return { w, h };
+            };
+            const filas = [];
+            for (let i = 0; i < imgs.length; i += cols) {
+                const items = imgs.slice(i, i + cols).map(img => ({ img, ...medida(img) }));
+                filas.push({ items, alto: Math.max(...items.map(t => t.h)) + 2 * pad });
+            }
+            if (y + 20 + filas[0].alto > LIM) { pdf.addPage(); y = topNueva; }
             pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
             pdf.text(titulo || "IMÁGENES", M, y + 10); y += 20;
-            imgs.forEach((img, i) => {
-                if (col === 0 && y + box > LIM) { pdf.addPage(); y = topNueva; cols = 3; box = tam(3); }
-                const cx = M + col * (box + gap);
-                let w = box, h = box;
-                try { const pr = pdf.getImageProperties(img); const rt = pr.width / pr.height; if (rt >= 1) h = box / rt; else w = box * rt; } catch (e) { }
-                pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6); pdf.setFillColor(248, 250, 253);
-                pdf.roundedRect(cx, y, box, box, 4, 4, 'FD');
-                w *= 0.94; h *= 0.94;
-                try { pdf.addImage(img, /^data:image\/png/.test(img) ? 'PNG' : 'JPEG', cx + (box - w) / 2, y + (box - h) / 2, w, h); } catch (e) { }
-                col++;
-                if (col === cols || i === imgs.length - 1) { y += box + gap; col = 0; }
+            filas.forEach(f => {
+                if (y + f.alto > LIM) { pdf.addPage(); y = topNueva; }
+                f.items.forEach((t, c) => {
+                    const cx = M + c * (cellW + gap);
+                    pdf.setDrawColor(215, 222, 235); pdf.setLineWidth(0.6); pdf.setFillColor(248, 250, 253);
+                    pdf.roundedRect(cx, y, cellW, f.alto, 4, 4, 'FD');
+                    try { pdf.addImage(t.img, /^data:image\/png/.test(t.img) ? 'PNG' : 'JPEG', cx + (cellW - t.w) / 2, y + (f.alto - t.h) / 2, t.w, t.h); } catch (e) { }
+                });
+                y += f.alto + gap;
             });
             return y;
         }
@@ -5952,6 +5999,7 @@
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40] },
                     columnStyles: { 0: { cellWidth: 160, fontStyle: 'bold', textColor: [90, 90, 90] } },
+                    rowPageBreak: 'avoid',
                     margin: { left: M, right: M }
                 });
                 y = doc.lastAutoTable.finalY + 10;
@@ -6494,6 +6542,7 @@
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40] },
                     columnStyles: { 0: { cellWidth: 150, fontStyle: 'bold', textColor: [90, 90, 90] } },
+                    rowPageBreak: 'avoid',
                     margin: { left: M, right: M }
                 });
                 y = pdf.lastAutoTable.finalY + 10;
@@ -6588,6 +6637,7 @@
                     styles: { fontSize: 8, cellPadding: 3 },
                     headStyles: { fillColor: AZUL, textColor: 255 },
                     columnStyles: { 0: { cellWidth: 150, fontStyle: 'bold', textColor: [90, 90, 90] } },
+                    rowPageBreak: 'avoid',
                     margin: { left: M, right: M, top: 44 }
                 });
                 y = pdf.lastAutoTable.finalY + 20;
@@ -7362,7 +7412,8 @@
                     body: filas.map(f => [f[0], f[1] || '']),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40] },
-                    columnStyles: { 0: { cellWidth: 300, fontStyle: 'bold', textColor: [90, 90, 90] } },
+                    columnStyles: { 0: { cellWidth: 190, fontStyle: 'bold', textColor: [90, 90, 90] } },
+                    rowPageBreak: 'avoid',
                     margin: { left: M, right: M }
                 });
                 y = pdf.lastAutoTable.finalY + 10;
@@ -7388,11 +7439,17 @@
             // Escala de Glasgow: las tres categorías con la opción elegida resaltada, total y pronóstico
             const glasgowPDF = () => {
                 const g = k => String(campos['glasgow_' + k] || '');
+                // Solo se imprimen las categorías que se llenaron; si no se llenó ninguna, la escala no aparece en el PDF
+                const catsLlenas = GLASGOW_CATS.filter(([k]) => g(k) !== '');
+                if (!catsLlenas.length) {
+                    if (g('comentarios').trim()) bloqueLibre('COMENTARIOS — ESCALA DE GLASGOW', g('comentarios'));
+                    return;
+                }
                 // Si ni el encabezado y la primera categoría caben, empieza en la siguiente página (sin dejar huecos grandes)
                 if (y + 60 > pdf.internal.pageSize.getHeight() - 50) { pdf.addPage(); y = 62; }
                 const CLARO = [232, 238, 248];
                 const body = [];
-                GLASGOW_CATS.forEach(([k, nom]) => {
+                catsLlenas.forEach(([k, nom]) => {
                     body.push([{ content: nom.toUpperCase(), styles: { fillColor: CLARO, textColor: AZUL, fontStyle: 'bold' } },
                                { content: 'PUNTAJE', styles: { fillColor: CLARO, textColor: AZUL, fontStyle: 'bold', halign: 'center' } }]);
                     GLASGOW_OPC[k].forEach(([v, t]) => {
@@ -7790,10 +7847,18 @@
             y = encabezadoInformePDF(pdf, "Consulta clínica", "Reporte clínico de consulta");
             const numeroConsulta = (campos.numero || '').toString().trim();
             if (numeroConsulta) {
-                pdf.setFontSize(7); pdf.setTextColor(...GRIS);
-                pdf.text("ID CONSULTA", PW - M, 42, { align: 'right' });
-                pdf.setFont(undefined, 'bold'); pdf.setFontSize(13); pdf.setTextColor(...AZUL);
-                pdf.text("#" + numeroConsulta, PW - M, 58, { align: 'right' });
+                // A la derecha del título "Consulta clínica" (debajo de la línea azul), con ancho limitado
+                const yT = y - 28;
+                pdf.setFont(undefined, 'bold'); pdf.setTextColor(...AZUL);
+                let tam = 13; const maxW = W - 250;
+                let txt = "#" + numeroConsulta;
+                pdf.setFontSize(tam);
+                while (tam > 8 && pdf.getTextWidth(txt) > maxW) { tam -= 0.5; pdf.setFontSize(tam); }
+                txt = pdf.splitTextToSize(txt, maxW)[0];
+                const anchoNum = pdf.getTextWidth(txt);
+                pdf.text(txt, PW - M, yT, { align: 'right' });
+                pdf.setFont(undefined, 'normal'); pdf.setFontSize(7); pdf.setTextColor(...GRIS);
+                pdf.text("ID CONSULTA", PW - M - anchoNum - 6, yT, { align: 'right' });
             }
 
             // ---------- Tarjetas paciente / consulta ----------
@@ -7814,16 +7879,14 @@
                 });
                 return h;
             }
-            const hPac = tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
+            y = tarjetasParPDF(pdf, y, "INFORMACIÓN DEL PACIENTE", [
                 ["Nombre", val('nombre')], ["Especie", val('especie')], ["Raza", val('raza')],
                 ["Sexo", val('sexo')], ["Color", val('color')], ["Edad", (campos.edad || '').toString().trim() || edadDesdeNacimiento(campos.nacido) || '—'],
                 ["Estéril", val('esteril')], ["H.C.", val('hc')]
-            ]);
-            const hDet = tarjeta(M + cardW + gap, y, cardW, "DETALLES DE CONSULTA", [
+            ], "DETALLES DE CONSULTA", [
                 ["Propietario / responsable", val('propietario')], ["Documento", val('documento')],
                 ["Fecha de consulta", val('fecha')], ["Tipo", val('tipo_proc')], ["Veterinario", val('veterinario')]
             ]);
-            y += Math.max(hPac, hDet) + 16;
 
             // ---------- Helpers de sección ----------
             function tituloSeccion(t) {
@@ -7876,8 +7939,14 @@
                     pdf.roundedRect(x, yy, cellW, cellH, 5, 5, 'FD');
                     pdf.setFont(undefined, 'normal'); pdf.setFontSize(6.3); pdf.setTextColor(...GRIS);
                     pdf.text(String(it[0]).toUpperCase(), x + 8, yy + 12);
-                    pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL);
-                    pdf.text(String(it[1] || '—'), x + 8, yy + 26, { maxWidth: cellW - 16 });
+                    pdf.setFont(undefined, 'bold'); pdf.setTextColor(...AZUL);
+                    {   // el valor siempre dentro de la casilla: se reduce la letra y, si aún no cabe, va en dos líneas
+                        const txt = String(it[1] || '—'), maxW = cellW - 16;
+                        let tam = 10; pdf.setFontSize(tam);
+                        while (tam > 7.5 && pdf.getTextWidth(txt) > maxW) { tam -= 0.5; pdf.setFontSize(tam); }
+                        if (pdf.getTextWidth(txt) <= maxW) pdf.text(txt, x + 8, yy + 26);
+                        else { pdf.setFontSize(7.5); const ls = pdf.splitTextToSize(txt, maxW).slice(0, 2); pdf.text(ls, x + 8, yy + 21); }
+                    }
                 });
                 y = (filaAct < 0 ? y : yFila + cellH + cg) + 8;
             }
@@ -7910,6 +7979,24 @@
                 });
             }
 
+            // Tabla de dos columnas (Sistema | Hallazgos); se parte sola entre páginas
+            function tablaSistemas(titulo, pares) {
+                if (y + 12 + 14 + 44 > PH - 44) { pdf.addPage(); y = 44; }   // título + encabezado + primera fila
+                tituloSeccion(titulo);
+                pdf.autoTable({
+                    startY: y,
+                    head: [['Sistema', 'Hallazgos']],
+                    body: pares.map(p => [p[0], (p[1] || '').toString().trim()]),
+                    theme: 'grid',
+                    headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold', fontSize: 8.5 },
+                    styles: { fontSize: 8.5, cellPadding: 4, textColor: [50, 50, 50], lineColor: BORDE, lineWidth: 0.6, valign: 'top' },
+                    columnStyles: { 0: { cellWidth: 150, fontStyle: 'bold', textColor: AZUL, fillColor: GRISCLARO } },
+                    rowPageBreak: 'avoid', showHead: 'everyPage',
+                    margin: { left: M, right: M, top: 44, bottom: 50 }
+                });
+                y = pdf.lastAutoTable.finalY + 14;
+            }
+
             // ---------- Contenido ----------
             seccionTexto("Anamnesis", campos.anamnesicos);
             grillaCampos("Signos vitales", [
@@ -7920,7 +8007,7 @@
             grillaCampos("Actitud y condición corporal", [
                 ["Cond. corporal", campos.cond_corporal], ["Actitud (propietario)", campos.actitud_prop], ["Actitud (veterinario)", campos.actitud_vet]
             ]);
-            seccionLista("Examen físico por sistemas", [
+            tablaSistemas("Examen físico por sistemas", [
                 ["Piel y anexos", campos.piel_anexos], ["Sistema respiratorio", campos.sist_respiratorio],
                 ["Sistema digestivo", campos.sist_digestivo], ["Sistema genito-urinario", campos.sist_genitourinario],
                 ["Sistema cardiovascular", campos.sist_cardiovascular], ["Sistema reproductivo", campos.sist_reproductivo],
@@ -8146,14 +8233,12 @@
                 });
                 return h;
             }
-            const hPac = tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
+            y = tarjetasParPDF(pdf, y, "INFORMACIÓN DEL PACIENTE", [
                 ["Paciente", val('paciente')], ["Especie", val('especie')], ["Raza", val('raza')],
                 ["Sexo", val('sexo')], ["Edad", val('edad')], ["Peso", val('peso')]
-            ]);
-            const hEst = tarjeta(M + cardW + gap, y, cardW, "DETALLES DEL ESTUDIO", [
+            ], "DETALLES DEL ESTUDIO", [
                 ["Fecha", fechaTxt], ["Propietario", val('propietario')], ["Médico", val('medico') !== '—' ? val('medico') : MEDICO_INFORMES]
             ]);
-            y += Math.max(hPac, hEst) + 16;
 
             // ---------- Secciones de texto (continúan en otra página si son largas) ----------
             function tituloSeccion(t) {
@@ -8272,14 +8357,12 @@
                 });
                 return h;
             }
-            const hPac = tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
+            y = tarjetasParPDF(pdf, y, "INFORMACIÓN DEL PACIENTE", [
                 ["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Especie", val('especie')],
                 ["Raza", val('raza')], ["Sexo", val('sexo')], ["Edad", val('edad')], ["Peso", val('peso')]
-            ]);
-            const hPro = tarjeta(M + cardW + gap, y, cardW, "DETALLES DEL PROCEDIMIENTO", [
+            ], "DETALLES DEL PROCEDIMIENTO", [
                 ["Fecha de realización", fechaTxt], ["Propietario", val('propietario')], ["Médico", val('medico')], ["Procedimiento", val('procedimiento')]
             ]);
-            y += Math.max(hPac, hPro) + 16;
 
             // ---------- Helpers de sección ----------
             function tituloSeccion(t) {
@@ -8417,14 +8500,9 @@
                 });
                 return h;
             }
-            const altoT = 30 + 5 * filaH + 6;
-            tarjeta(M, y, cardW, "INFORMACIÓN DEL PACIENTE", [
-                ["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Especie", val('especie')], ["Raza", val('raza')], ["Edad", val('edad')], ["Sexo", val('sexo')]
-            ], altoT);
-            tarjeta(M + cardW + gap, y, cardW, "DETALLES DEL ESTUDIO", [
-                ["Fecha de realización", fechaTxt], ["Médico a cargo", val('medico') !== '—' ? val('medico') : MEDICO_INFORMES]
-            ], altoT);
-            y += altoT + 16;
+            const filasPac = [["Paciente", val('paciente')], ["Historia clínica", val('historia')], ["Especie", val('especie')], ["Raza", val('raza')], ["Edad", val('edad')], ["Sexo", val('sexo')]];
+            const filasEst = [["Fecha de realización", fechaTxt], ["Médico a cargo", val('medico') !== '—' ? val('medico') : MEDICO_INFORMES]];
+            y = tarjetasParPDF(pdf, y, "INFORMACIÓN DEL PACIENTE", filasPac, "DETALLES DEL ESTUDIO", filasEst);
 
             // ---------- Secciones ----------
             function tituloSeccion(t) {
@@ -9319,7 +9397,7 @@
             const baseStyles = { fontSize: 8, cellPadding: 4, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5, overflow: 'linebreak' };
             function tablaDatos(rows) {
                 pdf.autoTable({ startY: y, body: rows.map(r => [r[0], (r[1] || '').toString()]), theme: 'grid', styles: baseStyles,
-                    columnStyles: { 0: { cellWidth: 200, fontStyle: 'bold', fillColor: ENCA, textColor: AZUL } }, margin: { left: M, right: M } });
+                    columnStyles: { 0: { cellWidth: 170, fontStyle: 'bold', fillColor: ENCA, textColor: AZUL } }, margin: { left: M, right: M } });
                 y = pdf.lastAutoTable.finalY;
             }
             function tablaOpciones(titulo, opciones, sel) {
