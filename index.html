@@ -4459,6 +4459,38 @@
             return 'no';
         }
 
+        // ---- "Todos los formatos": un solo control para todo el grupo ----
+        const GRUPO_TODOS = { 'Formatos clínicos': 'Todos los formatos' };
+        function nivelComun(niveles) { return niveles.length && niveles.every(n => n === niveles[0]) ? niveles[0] : 'mixto'; }
+        function filaTodosHTML(grupo, nivel, onclickBase) {
+            return `<div class="w-full flex items-center justify-between gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 mb-1">
+                <span class="text-xs sm:text-sm font-bold text-[#154390] flex items-center gap-2 min-w-0"><i class="fa-solid fa-layer-group"></i> <span class="truncate">${GRUPO_TODOS[grupo]}</span>${nivel === 'mixto' ? ' <span class="text-[10px] font-semibold text-gray-400">(mixto)</span>' : ''}</span>
+                ${segmentoNivel(nivel, onclickBase)}
+            </div>`;
+        }
+        window.setNivelGrupoNuevo = function(grupo, nivel) {
+            MODULOS.filter(m => m.grupo === grupo).forEach(m => {
+                nuevoPermisosSel[m.id] = (nivel !== 'no');
+                nuevoPermisosSel[m.id + '_edit'] = (nivel === 'editar');
+            });
+            renderNuevoPermisos();
+        };
+        window.setNivelGrupoUsuario = async function(uid, grupo, nivel) {
+            try {
+                const patch = {};
+                MODULOS.filter(m => m.grupo === grupo).forEach(m => {
+                    patch[m.id] = (nivel !== 'no');
+                    patch[m.id + '_edit'] = (nivel === 'editar');
+                });
+                if (grupo === 'Formatos clínicos') patch.formatos = false;   // retira el permiso antiguo único "formatos"
+                await setDoc(doc(db, "usuarios", uid), patch, { merge: true });
+                cargarUsuarios();
+            } catch (error) {
+                showToast("No se pudo actualizar el permiso.", true);
+                console.error(error);
+            }
+        };
+
         window.setNivelNuevo = function(id, nivel) {
             nuevoPermisosSel[id] = (nivel !== 'no');
             nuevoPermisosSel[id + '_edit'] = (nivel === 'editar');
@@ -4488,6 +4520,11 @@
                         h.className = "w-full text-xs font-bold text-gray-400 uppercase tracking-wide mt-2 mb-1";
                         h.textContent = g;
                         cont.appendChild(h);
+                        if (GRUPO_TODOS[g]) {
+                            const t = document.createElement('div'); t.className = 'w-full';
+                            t.innerHTML = filaTodosHTML(g, nivelComun(MODULOS.filter(x => x.grupo === g).map(x => nivelDe(nuevoPermisosSel, x.id))), `setNivelGrupoNuevo('${g}',`);
+                            cont.appendChild(t.firstElementChild);
+                        }
                     }
                 }
                 const nivel = nivelDe(nuevoPermisosSel, m.id);
@@ -4624,15 +4661,22 @@
                     let grpAnt = '__x__';
                     const enCompatFmt = (u.formatos === true && u.fmt_monitoreo === undefined && u.fmt_ortopedico === undefined && u.fmt_neuro === undefined);
                     let nAcceso = 0;
-                    const permisosBtns = MODULOS.map(m => {
-                        let header = '';
-                        const g = m.grupo || '';
-                        if (g !== grpAnt) { grpAnt = g; if (g) header = `<div class="w-full text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">${g}</div>`; }
-                        // Nivel actual (con compatibilidad)
+                    // Nivel actual de cada módulo (con compatibilidad)
+                    const nivelU = m => {
                         let ver = u[m.id] === true;
                         let edit = (u[m.id + '_edit'] !== undefined) ? (u[m.id + '_edit'] === true) : ver;
                         if (m.grupo === 'Formatos clínicos' && enCompatFmt) { ver = true; edit = true; }
-                        const nivel = edit ? 'editar' : (ver ? 'ver' : 'no');
+                        return edit ? 'editar' : (ver ? 'ver' : 'no');
+                    };
+                    const permisosBtns = MODULOS.map(m => {
+                        let header = '';
+                        const g = m.grupo || '';
+                        if (g !== grpAnt) {
+                            grpAnt = g;
+                            if (g) header = `<div class="w-full text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-1">${g}</div>`;
+                            if (g && GRUPO_TODOS[g]) header += filaTodosHTML(g, nivelComun(MODULOS.filter(x => x.grupo === g).map(nivelU)), `setNivelGrupoUsuario('${u.uid}','${g}',`);
+                        }
+                        const nivel = nivelU(m);
                         if (nivel !== 'no') nAcceso++;
                         return header + `<div class="w-full flex items-center justify-between gap-2 py-0.5">
                             <span class="text-xs font-medium text-gray-600 flex items-center gap-1.5 min-w-0"><i class="fa-solid ${m.icono} text-gray-400"></i> <span class="truncate">${m.nombre}</span></span>
