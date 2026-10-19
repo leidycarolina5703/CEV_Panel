@@ -1917,6 +1917,7 @@
                 <button onclick="nuevaCuentaHosp()" class="px-3 py-1.5 text-sm bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-1.5 border border-blue-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
                 <button onclick="abrirCuentasGuardadasHosp()" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
                 <button id="cta-btn-ingresos" onclick="abrirIngresosHosp()" title="Reporte de ingresos (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-lg font-semibold flex items-center gap-1.5 border border-emerald-200 justify-center whitespace-nowrap"><i class="fa-solid fa-chart-column"></i> Ingresos</button>
+                <button id="cta-btn-precios" onclick="abrirPreciosHosp()" title="Buscar y modificar los precios de insumos, servicios, medicamentos y exámenes" class="hidden px-3 py-1.5 text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-1.5 border border-amber-200 justify-center whitespace-nowrap"><i class="fa-solid fa-tags"></i> Precios</button>
                 <button onclick="abrirInformeHosp()" title="Informe de insumos por rango de fecha y hora" class="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-semibold flex items-center gap-1.5 border border-indigo-200 justify-center whitespace-nowrap"><i class="fa-solid fa-magnifying-glass-chart"></i> Informe</button>
                 <button onclick="exportarAgregadosExcel()" title="Descargar en Excel los insumos/laboratorios agregados a mano en todas las cuentas" class="px-3 py-1.5 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold flex items-center gap-1.5 border border-green-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-excel"></i> Excel agregados</button>
                 <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-1.5 border border-red-200 justify-center whitespace-nowrap"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
@@ -2160,7 +2161,7 @@
 
 
         <!-- Totales -->
-        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 sticky bottom-2">
+        <section class="cta-bloqueable bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                 <div class="space-y-1.5">
                     <div class="flex justify-between items-center border-b border-gray-100 pb-1">
@@ -2469,6 +2470,23 @@
 
     <!-- Modal gestor de médicos (MV tratante) -->
     <!-- Equipo quirúrgico (Registro quirúrgico y anestésico): nombres que se sugieren en los campos del equipo -->
+    <!-- Cuentas de cobro: editor de precios (solo quien tenga el permiso "modificar precios") -->
+    <div id="cta-precios-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-tags"></i> Precios de cuentas de cobro</h3>
+                <button onclick="cerrarPreciosHosp()" class="w-9 h-9 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100" aria-label="Cerrar"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Busca el insumo, servicio, medicamento o examen y pulsa el lápiz para cambiar su precio. El cambio se guarda para todos.</p>
+            <div class="relative mb-2">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                <input type="text" id="cta-precios-buscar" oninput="renderPreciosHospModal()" autocomplete="off" placeholder="Buscar por nombre..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
+            </div>
+            <p id="cta-precios-conteo" class="text-[11px] text-gray-400 mb-2"></p>
+            <div id="cta-precios-lista" class="space-y-1 overflow-y-auto flex-1 min-h-0 pr-1"></div>
+        </div>
+    </div>
+
     <div id="rq-equipo-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-2">
@@ -2966,6 +2984,8 @@
                 permisosActuales['cuentas_hosp_borrar'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_borrar'] === true : false);
                 // Permiso especial: agregar insumos que no están en la lista (cuenta de cobro)
                 permisosActuales['cuentas_hosp_agregar'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_agregar'] === true : false);
+                // Permiso especial: modificar los precios del catálogo de cuentas de cobro
+                permisosActuales['cuentas_hosp_precios'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_precios'] === true : false);
 
                 aplicarPermisosEnPanel();
 
@@ -4742,6 +4762,10 @@
                         <label class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-600 cursor-pointer">
                             <input type="checkbox" ${u.cuentas_hosp_agregar === true ? 'checked' : ''} onchange="setPermisoAgregarHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-[#154390]">
                             <i class="fa-solid fa-plus text-[#154390]"></i> Puede <b>agregar insumos que no están en la lista</b>
+                        </label>
+                        <label class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-600 cursor-pointer">
+                            <input type="checkbox" ${u.cuentas_hosp_precios === true ? 'checked' : ''} onchange="setPermisoPreciosHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-amber-600">
+                            <i class="fa-solid fa-tags text-amber-600"></i> Puede <b>modificar precios</b> en cuentas de cobro
                         </label>`}
                             </div>
                         </div>
@@ -4787,6 +4811,16 @@
             try {
                 await setDoc(doc(db, "usuarios", uid), { cuentas_hosp_agregar: permitido === true }, { merge: true });
                 showToast(permitido ? "Permiso de agregar insumos concedido." : "Permiso de agregar insumos retirado.");
+            } catch (error) {
+                showToast("No se pudo actualizar el permiso.", true);
+                console.error(error);
+            }
+        };
+
+        window.setPermisoPreciosHosp = async function(uid, permitido) {
+            try {
+                await setDoc(doc(db, "usuarios", uid), { cuentas_hosp_precios: permitido === true }, { merge: true });
+                showToast(permitido ? "Permiso de modificar precios concedido." : "Permiso de modificar precios retirado.");
             } catch (error) {
                 showToast("No se pudo actualizar el permiso.", true);
                 console.error(error);
@@ -8582,7 +8616,6 @@
                 { id: 'peso', label: 'Peso', tipo: 'texto' }
             ]},
             { id: 'equipo', titulo: '2. Procedimiento y equipo quirúrgico', icono: 'fa-user-doctor', grid: true, campos: [
-                { id: 'procedimiento', label: 'Procedimiento', tipo: 'texto', ancho: true },
                 { id: 'tipo_proc', label: 'Tipo', tipo: 'opciones', op: ['Electivo', 'Urgente', 'Emergencia'], ancho: true },
                 { id: 'cirujano', label: 'Cirujano principal', tipo: 'equipo', lista: 'cirujano' },
                 { id: 'cirujano2', label: 'Segundo cirujano / auxiliar', tipo: 'equipo', lista: 'cirujano2' },
@@ -8590,18 +8623,13 @@
                 { id: 'anestesiologo', label: 'Anestesiólogo/a', tipo: 'equipo', lista: 'anestesiologo' },
                 { id: 'dx_pre', label: 'Diagnóstico preoperatorio', tipo: 'texto' },
                 { id: 'dx_post', label: 'Diagnóstico postoperatorio', tipo: 'texto' },
-                { id: 'proc_plan', label: 'Procedimiento planificado', tipo: 'texto' },
-                { id: 'proc_real', label: 'Procedimiento realizado', tipo: 'texto' }
+                { id: 'proc_plan', label: 'Procedimiento planificado', tipo: 'texto' }
             ]},
             { id: 'descripcion', titulo: '3. Descripción detallada del procedimiento quirúrgico', icono: 'fa-file-medical', campos: [
                 { id: 'nombre_exacto', label: 'Nombre exacto del procedimiento', tipo: 'texto' },
-                { id: 'region', label: 'Región anatómica', tipo: 'texto' },
                 { id: 'lateralidad', label: 'Lateralidad', tipo: 'opciones', op: ['Derecha', 'Izquierda', 'Bilateral', 'No aplica'] },
-                { id: 'abordaje', label: 'Lugar exacto de abordaje', tipo: 'texto', junto: 'abordaje' },
-                { id: 'referencias', label: 'Referencias anatómicas', tipo: 'texto', junto: 'abordaje' },
+                { id: 'abordaje', label: 'Lugar exacto de abordaje', tipo: 'texto' },
                 { id: 'posicion', label: 'Posición del paciente', tipo: 'texto' },
-                { id: 'incision_tipo', label: 'Incisión — tipo', tipo: 'texto', junto: 'incision' },
-                { id: 'incision_longitud', label: 'Incisión — longitud', tipo: 'texto', junto: 'incision', ph: 'Ej: 8 cm' },
                 { id: 'planos', label: 'Planos anatómicos atravesados / estructuras expuestas', tipo: 'area', rows: 2 },
                 { id: 'tecnica', label: 'Técnica quirúrgica empleada — descripción paso a paso', tipo: 'area', rows: 4 },
                 { id: 'diseccion', label: 'Método de disección y manipulación tisular', tipo: 'texto' },
@@ -9562,7 +9590,7 @@
             {"n": "Aquadent 250 ml", "v": 51000, "g": "Insumos", "cat": "Insumos", "id": "xefacf12da1"},
             {"n": "Arena Freemiau 4.5 kg", "v": 30000, "g": "Insumos", "cat": "Insumos", "id": "x5f36457c52"},
             {"n": "Arena Freemiau x 10 kg", "v": 60000, "g": "Insumos", "cat": "Insumos", "id": "x5f88bccc98"},
-            {"n": "Arena gato", "v": 3000, "g": "Insumos", "cat": "Insumos", "id": "xbe6baebcd9"},
+            {"n": "Arena gato", "v": 6000, "g": "Insumos", "cat": "Insumos", "id": "xbe6baebcd9"},
             {"n": "Atropina Gotas", "v": 38000, "g": "Insumos", "cat": "Insumos", "id": "xc657c712ef"},
             {"n": "Baxidin Champú", "v": 50000, "g": "Insumos", "cat": "Insumos", "id": "x0024cc9c44"},
             {"n": "Baxidin Frasco 120 ml", "v": 33500, "g": "Insumos", "cat": "Insumos", "id": "xaf8f9ef3ac"},
@@ -11305,37 +11333,80 @@
             pintarDiaHosp();
             recalcularCuentaHosp();
         }
-        window.abrirPreciosHosp = function() {
-            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar precios.", true); return; }
+        function puedeCambiarPreciosHosp() { return esAdmin === true || permisosActuales['cuentas_hosp_precios'] === true; }
+        let precioHospEditando = null;   // índice del ítem que se está editando en el modal
+        window.abrirPreciosHosp = async function() {
+            if (!puedeCambiarPreciosHosp()) { showToast("No tienes permiso para modificar precios.", true); return; }
+            precioHospEditando = null;
+            document.getElementById('cta-precios-buscar').value = '';
+            await cargarYAplicarPreciosHosp();   // trae los precios más recientes antes de editar
             renderPreciosHospModal();
             document.getElementById('cta-precios-modal').classList.remove('hidden');
+            setTimeout(() => { const b = document.getElementById('cta-precios-buscar'); if (b) b.focus(); }, 50);
         };
-        window.cerrarPreciosHosp = function() { document.getElementById('cta-precios-modal').classList.add('hidden'); };
+        window.cerrarPreciosHosp = function() { precioHospEditando = null; document.getElementById('cta-precios-modal').classList.add('hidden'); };
         window.renderPreciosHospModal = function() {
             const cont = document.getElementById('cta-precios-lista'); if (!cont) return;
             const q = sinTildes((document.getElementById('cta-precios-buscar').value || '').trim());
-            let items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx })).filter(it => !q || sinTildes(it.n).includes(q));
-            items.sort((a, b) => ((a.cat || a.g)).localeCompare((b.cat || b.g), 'es') || (a.n || '').localeCompare((b.n || ''), 'es', { sensitivity: 'base' }));
-            const tope = 400, total = items.length;
+            const qc = compactarBusqueda(q);
+            let items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx }))
+                .filter((it, k, arr) => arr.findIndex(x => keyPrecioHosp(x) === keyPrecioHosp(it)) === k)   // sin repetidos
+                .filter(it => !q || coincideBusqueda(sinTildes(it.n), q) || (qc && compactarBusqueda(sinTildes(it.n)).includes(qc)));
+            items.sort((a, b) => (a.n || '').localeCompare((b.n || ''), 'es', { sensitivity: 'base' }));
+            const tope = 300, total = items.length;
+            const cnt = document.getElementById('cta-precios-conteo');
+            if (cnt) cnt.textContent = total === 1 ? '1 resultado' : `${total.toLocaleString('es-CO')} resultados` + (total > tope ? ` · mostrando ${tope}, usa el buscador para encontrar más` : '');
             items = items.slice(0, tope);
-            cont.innerHTML = items.map(it => `
-                <div class="flex items-center gap-2 border border-gray-100 rounded-lg px-2 py-1.5">
-                    <div class="flex-1 min-w-0"><p class="text-sm text-gray-800 truncate" title="${it.n}">${it.n}</p><p class="text-[10px] text-gray-400">${it.cat || it.g}</p></div>
-                    <div class="flex items-center gap-1 shrink-0"><span class="text-gray-400 text-sm">$</span>
-                        <input type="text" inputmode="numeric" value="${(it.v || 0).toLocaleString('es-CO')}" oninput="formatearMilesInput(this)" onchange="guardarPrecioItemHosp(${it.idx}, this.value)" class="w-24 border border-gray-300 rounded px-2 py-1 text-sm text-right"></div>
-                </div>`).join('') || '<p class="text-xs text-gray-400 italic py-2">Sin coincidencias.</p>';
-            if (total > tope) cont.innerHTML += `<p class="text-[11px] text-gray-400 italic py-2 text-center">Mostrando ${tope} de ${total}. Usa el buscador para encontrar más.</p>`;
+            const esc = t => String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            cont.innerHTML = items.map(it => {
+                const cat = it.g === 'Laboratorio' ? (it.cat && it.cat !== 'Laboratorio' ? it.cat : 'Laboratorio') : (it.cat || it.g);
+                const unidad = it.cat === 'Inyectables ML' ? ' por ml' : '';
+                const izq = `<div class="flex-1 min-w-0"><p class="text-sm text-gray-800 truncate" title="${esc(it.n)}">${esc(it.n)}</p><p class="text-[10px] text-gray-400">${esc(cat)}</p></div>`;
+                if (precioHospEditando === it.idx) {
+                    return `<div class="flex items-center gap-2 border-2 border-amber-300 bg-amber-50 rounded-lg px-2 py-1.5">${izq}
+                        <div class="flex items-center gap-1 shrink-0"><span class="text-gray-500 text-sm">$</span>
+                            <input type="text" inputmode="numeric" id="cta-precio-edit" value="${(it.v || 0).toLocaleString('es-CO')}" oninput="formatearMilesInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();guardarPrecioItemHosp(${it.idx});}else if(event.key==='Escape'){editarPrecioHosp(null);}" class="w-28 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-white">
+                            <button type="button" onclick="guardarPrecioItemHosp(${it.idx})" title="Guardar" class="w-8 h-8 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 flex items-center justify-center"><i class="fa-solid fa-check"></i></button>
+                            <button type="button" onclick="editarPrecioHosp(null)" title="Cancelar" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                        </div></div>`;
+                }
+                return `<div class="flex items-center gap-2 border border-gray-100 rounded-lg px-2 py-1.5 hover:bg-gray-50">${izq}
+                    <span class="text-sm font-semibold text-gray-700 shrink-0">${fmtCOPHosp(it.v || 0)}<span class="text-[10px] font-normal text-gray-400">${unidad}</span></span>
+                    <button type="button" onclick="editarPrecioHosp(${it.idx})" title="Modificar precio" class="w-8 h-8 rounded-lg text-[#154390] hover:bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-pen"></i></button>
+                </div>`;
+            }).join('') || '<p class="text-xs text-gray-400 italic py-2">Sin coincidencias.</p>';
+            if (precioHospEditando != null) { const inp = document.getElementById('cta-precio-edit'); if (inp) { inp.focus(); inp.select(); } }
         };
-        window.guardarPrecioItemHosp = async function(idx, val) {
-            if (!puedeEditar('cuentas_hosp')) return;
+        window.editarPrecioHosp = function(idx) {
+            precioHospEditando = idx;
+            renderPreciosHospModal();
+        };
+        window.guardarPrecioItemHosp = async function(idx) {
+            if (!puedeCambiarPreciosHosp()) { showToast("No tienes permiso para modificar precios.", true); return; }
             const it = CATALOGO_CUENTAS[idx]; if (!it) return;
-            const nuevo = parseInt((val || '').replace(/\D/g, ''), 10) || 0;
-            it.v = nuevo;
-            preciosHospOverrides[keyPrecioHosp(it)] = nuevo;
-            await guardarPreciosHosp();
+            const inp = document.getElementById('cta-precio-edit');
+            const txt = inp ? inp.value : '';
+            if (!String(txt).replace(/\D/g, '')) { showToast("Escribe el nuevo precio.", true); return; }
+            const nuevo = parseInt(String(txt).replace(/\D/g, ''), 10) || 0;
+            const antes = it.v || 0;
+            if (nuevo === antes) { editarPrecioHosp(null); return; }
+            if (!confirm(`¿Cambiar el precio de "${it.n}"?\n\nAntes: ${fmtCOPHosp(antes)}\nAhora: ${fmtCOPHosp(nuevo)}\n\nEl cambio aplica para todos.`)) return;
+            const k = keyPrecioHosp(it);
+            try {
+                await setDoc(doc(db, "cuentas_config", "precios"), {
+                    precios: { [k]: nuevo },
+                    actualizadoEn: new Date().toISOString(),
+                    actualizadoPor: usuarioSesion ? usuarioSesion.nombre : ''
+                }, { merge: true });
+            } catch (e) { console.error(e); showToast("No se pudo guardar el precio. Revisa la conexión o los permisos.", true); return; }
+            preciosHospOverrides[k] = nuevo;
+            // aplica a todas las entradas del catálogo con la misma clave (por si el ítem aparece repetido)
+            CATALOGO_CUENTAS.forEach(x => { if (keyPrecioHosp(x) === k) x.v = nuevo; });
+            precioHospEditando = null;
             renderCatalogoCuentasHosp();
             pintarDiaHosp();
             recalcularCuentaHosp();
+            renderPreciosHospModal();
             showToast(`Precio de ${it.n}: ${fmtCOPHosp(nuevo)}.`);
         };
 
@@ -11758,6 +11829,8 @@
             if (btnElim) btnElim.classList.toggle('hidden', !esAdmin);
             const btnIng = document.getElementById('cta-btn-ingresos');
             if (btnIng) btnIng.classList.toggle('hidden', !esAdmin);
+            const btnPre = document.getElementById('cta-btn-precios');
+            if (btnPre) btnPre.classList.toggle('hidden', !puedeCambiarPreciosHosp());
             // Al entrar solo se muestran las "hospitalizaciones en curso" (el formulario aparece con Nueva/Abrir)
             vistaInicioHosp();
             renderHospEnCurso();
