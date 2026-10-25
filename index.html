@@ -19373,6 +19373,18 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 : '<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700"><i class="fa-solid fa-check"></i> Todas las casillas del mes están llenas</span>';
         }
 
+        // Enter baja a la misma columna de la fila siguiente (Shift + Enter sube)
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Enter' || e.isComposing) return;
+            const inp = e.target;
+            if (!inp || !inp.classList || !inp.classList.contains('terr-in') || !inp.closest('#terr-tabla-body')) return;
+            e.preventDefault();
+            const i = Number(inp.dataset.i) + (e.shiftKey ? -1 : 1);
+            const sig = document.querySelector(`#terr-tabla-body .terr-in[data-i="${i}"][data-campo="${inp.dataset.campo}"]`);
+            if (sig) { sig.focus(); try { sig.select(); } catch (_) {} sig.scrollIntoView({ block: 'nearest' }); }
+            else inp.blur();
+        });
+
         function terrRender() {
             const cont = document.getElementById('terr-tabla-body');
             const filas = terrActual.filas;
