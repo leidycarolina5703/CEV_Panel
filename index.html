@@ -13250,6 +13250,37 @@
             abrirCuentasGuardadasHosp();
         };
 
+        // Días de hospitalización (ingreso → egreso u hoy) que no tienen ningún cargo registrado
+        function diasSinCobroHosp(it) {
+            const ini = String(it.fecha || '').slice(0, 10);
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(ini)) return null;
+            const hoy = hoyISOHosp();
+            const fin = (it.fechaEgreso && String(it.fechaEgreso).slice(0, 10)) || hoy;
+            if (fin < ini) return null;
+            const conCargo = new Set();
+            (it.items || []).forEach(x => {
+                if (x && x.dias && typeof x.dias === 'object') Object.keys(x.dias).forEach(f => { const v = x.dias[f] || {}; if ((Number(v.am) || 0) + (Number(v.pm) || 0) > 0) conCargo.add(f); });
+            });
+            const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            const dias = []; const d = new Date(ini + 'T00:00:00'), dFin = new Date(fin + 'T00:00:00');
+            let g = 0; while (d <= dFin && g++ < 120) { dias.push(iso(d)); d.setDate(d.getDate() + 1); }
+            return { total: dias.length, faltan: dias.filter(f => !conCargo.has(f)), hoy };
+        }
+
+        // Abre la cuenta directamente en el día que falta cobrar
+        window.abrirCuentaEnDiaHosp = async function(id, fecha) {
+            await cargarCuentaHosp(id);
+            if (fecha && typeof window.cambiarDiaHosp === 'function') window.cambiarDiaHosp(fecha);
+        };
+
+        function estadoCobroHospHTML(it) {
+            const r = diasSinCobroHosp(it);
+            if (!r || !r.total) return '';
+            if (!r.faltan.length) return `<p class="mt-1 text-[11px] font-semibold text-emerald-700"><i class="fa-solid fa-circle-check"></i> Cobro al día · ${r.total} día${r.total === 1 ? '' : 's'} con cargos</p>`;
+            const chips = r.faltan.map(f => `<button type="button" onclick="abrirCuentaEnDiaHosp('${it.id}','${f}')" title="Abrir la cuenta en este día" class="px-2 py-0.5 rounded-full border border-amber-300 bg-white text-amber-800 hover:bg-amber-100 font-semibold">${f === r.hoy ? 'Hoy' : fechaCortaHosp(f)}</button>`).join('');
+            return `<div class="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1"><span class="font-semibold"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Falta cobrar ${r.faltan.length} día${r.faltan.length === 1 ? '' : 's'}:</span> ${chips}</div>`;
+        }
+
         // Lista de pacientes EN CURSO (sin fecha de egreso), separados por tipo de atención
         window.renderHospEnCurso = async function() {
             const cont = document.getElementById('cta-encurso-container');
@@ -13273,6 +13304,7 @@
                             <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}${etiquetaEspecie(it.especie)}</p>
                             <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${(it.fecha || '')} · <span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span>${(Number(it.deposito) || 0) > 0 && (Number(it.total) || 0) > (Number(it.deposito) || 0) ? ` <span class="text-[11px] text-red-600 font-semibold">saldo ${fmtCOPHosp((it.total || 0) - (it.deposito || 0))}</span>` : ''}</p>
                             ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
+                            ${esAmb(it) ? '' : estadoCobroHospHTML(it)}
                         </div>
                         <div class="flex gap-2 shrink-0">
                             <button onclick="cargarCuentaHosp('${it.id}')" class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Abrir</button>
