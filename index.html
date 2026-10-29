@@ -2246,9 +2246,10 @@
                         <span class="text-sm text-gray-600">Mascotas (insumos)</span>
                         <span id="cta-sub-mascotas" class="text-sm font-semibold text-gray-800">$ 0</span>
                     </div>
-                    <div class="flex justify-between items-center gap-2">
-                        <span class="text-sm text-gray-600 shrink-0">CX (cirugía)</span>
-                        <input type="text" inputmode="numeric" id="cta-cx" oninput="formatearMilesInput(this); recalcularCuentaHosp()" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50" placeholder="0">
+                    <div>
+                        <input type="hidden" id="cta-cx">
+                        <div id="cta-cirugias" class="space-y-1.5"></div>
+                        <button type="button" onclick="agregarCirugiaHosp()" class="js-editar mt-1.5 px-2.5 py-1 text-xs font-semibold text-[#154390] bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 inline-flex items-center gap-1"><i class="fa-solid fa-plus"></i> Agregar cirugía</button>
                     </div>
                     <div class="flex justify-between items-center border-b border-gray-100 py-1">
                         <span class="text-sm text-gray-600">CX (total)</span>
@@ -11364,6 +11365,7 @@
             return {
                 items: (data.items || []).map(it => ({ n: it.n, g: it.g, cant: it.cant, v: it.v || 0 })), det,
                 cx: data.cx || 0, deposito: data.deposito || 0, campos,
+                cirugias: Array.isArray(data.cirugias) ? data.cirugias.map(c => ({ id: c.id, desc: c.desc || '', valor: Number(c.valor) || 0 })) : ((Number(data.cx) || 0) > 0 ? [{ id: 'cx_ant', desc: '', valor: Number(data.cx) || 0 }] : []),
                 abonos: Array.isArray(data.abonos) ? data.abonos.map(a => ({ id: a.id || '', valor: a.valor || 0, medio: a.medio || '', fecha: a.fecha || '' })) : null
             };
         }
@@ -11397,7 +11399,16 @@
             Object.keys(at).forEach(k => {
                 if (pt[k] > 0 && at[k] > 0 && k in pv && pv[k] !== av[k]) cambios.push(`Cambió el valor de ${k.split('||')[0]}: ${fmtCOPHosp(pv[k])} → ${fmtCOPHosp(av[k])}`);
             });
-            if ((prev.cx || 0) !== (act.cx || 0)) cambios.push(`CX: ${fmtCOPHosp(prev.cx || 0)} → ${fmtCOPHosp(act.cx || 0)}`);
+            if (Array.isArray(prev.cirugias) && Array.isArray(act.cirugias)) {
+                const nom = (c, arr) => c.desc || (arr.indexOf(c) === 0 ? 'CX (cirugía)' : 'cirugía sin nombre');
+                act.cirugias.forEach(c => {
+                    const o = prev.cirugias.find(x => x.id === c.id);
+                    if (!o) cambios.push(`Agregó cirugía: ${nom(c, act.cirugias)} (${fmtCOPHosp(c.valor)})`);
+                    else if (o.desc !== c.desc) cambios.push(`Cambió cirugía: ${nom(o, prev.cirugias)} ${fmtCOPHosp(o.valor)} → ${nom(c, act.cirugias)} ${fmtCOPHosp(c.valor)}`);
+                    else if (o.valor !== c.valor) cambios.push(`${nom(c, act.cirugias)}: ${fmtCOPHosp(o.valor)} → ${fmtCOPHosp(c.valor)}`);
+                });
+                prev.cirugias.forEach(o => { if (!act.cirugias.some(c => c.id === o.id)) cambios.push(`Quitó cirugía: ${nom(o, prev.cirugias)} (${fmtCOPHosp(o.valor)})`); });
+            } else if ((prev.cx || 0) !== (act.cx || 0)) cambios.push(`CX: ${fmtCOPHosp(prev.cx || 0)} → ${fmtCOPHosp(act.cx || 0)}`);
             let lineasAbono = 0;
             if (Array.isArray(prev.abonos) && Array.isArray(act.abonos)) {
                 const ids = new Set(prev.abonos.map(a => a.id));
@@ -11480,6 +11491,7 @@
             });
             d.items.forEach(it => { const t = (Number(it.cant) || 0) * (Number(it.v) || 0); if (it.g === 'Laboratorio') subL += t; else subM += t; });
             d.subMascotas = subM; d.subLab = subL;
+            if (Array.isArray(d.cirugias) && d.cirugias.length) d.cx = d.cirugias.reduce((a, c) => a + (Number(c.valor) || 0), 0);
             d.total = subM + (Number(d.cx) || 0) + subL;
             if (Array.isArray(d.abonos)) d.deposito = sumaAbonosHosp(d.abonos);
             d.resta = d.total - (Number(d.deposito) || 0);
@@ -11488,6 +11500,7 @@
         function claveCuentaHosp(x) {
             if (!x || typeof x !== 'object') return null;
             if ('medio' in x && x.id) return x.id;   // abonos
+            if ('desc' in x && 'valor' in x && x.id) return x.id;   // cirugías
             if ('n' in x && 'v' in x) return claveItemCuentaHosp(x);
             return claveLogCuentaHosp(x);
         }
@@ -11787,6 +11800,60 @@
             const el = document.getElementById(id);
             return el ? (parseInt((el.value || '').replace(/\D/g, ''), 10) || 0) : 0;
         };
+
+        // ===== Cirugías (CX): uno o varios procedimientos; el total va en "cx" =====
+        let cuentaHospCirugias = [];   // [{ id, desc, valor }]
+        const idCirugiaHosp = () => 'cx_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        function sincronizarCxHosp() {
+            const tot = cuentaHospCirugias.reduce((a, c) => a + (Number(c.valor) || 0), 0);
+            const h = document.getElementById('cta-cx'); if (h) h.value = tot ? tot.toLocaleString('es-CO') : '';
+        }
+        function renderCirugiasHosp() {
+            const cont = document.getElementById('cta-cirugias'); if (!cont) return;
+            if (!cuentaHospCirugias.length) cuentaHospCirugias = [{ id: idCirugiaHosp(), desc: '', valor: 0 }];
+            const editable = puedeEditar('cuentas_hosp');
+            const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+            const campoValor = (c, i) => `<input type="text" inputmode="numeric" value="${c.valor ? Number(c.valor).toLocaleString('es-CO') : ''}" oninput="formatearMilesInput(this); cambiarCirugiaHosp(${i}, 'valor', this.value)" placeholder="0" class="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right bg-gray-50">`;
+            cont.innerHTML = cuentaHospCirugias.map((c, i) => i === 0 ? `
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-sm text-gray-600 shrink-0">CX (cirugía)</span>
+                    ${campoValor(c, i)}
+                </div>` : `
+                <div class="flex justify-between items-center gap-2">
+                    <input type="text" value="${esc(c.desc)}" oninput="cambiarCirugiaHosp(${i}, 'desc', this.value)" placeholder="Cirugía ${i + 1} (escriba el nombre)" title="Puede escribir o cambiar el nombre" class="flex-1 min-w-0 border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-700 bg-white">
+                    <div class="flex items-center gap-1 shrink-0">
+                        ${campoValor(c, i)}
+                        ${editable ? `<button type="button" onclick="quitarCirugiaHosp(${i})" title="Quitar esta cirugía" class="w-7 h-7 shrink-0 rounded-full text-red-500 hover:bg-red-50"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                    </div>
+                </div>`).join('');
+            if (!editable) cont.querySelectorAll('input').forEach(x => x.disabled = true);
+            sincronizarCxHosp();
+        }
+        window.agregarCirugiaHosp = function() {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            cuentaHospCirugias.push({ id: idCirugiaHosp(), desc: '', valor: 0 });
+            renderCirugiasHosp();
+            const ins = document.querySelectorAll('#cta-cirugias input:not([inputmode])'); if (ins.length) ins[ins.length - 1].focus();
+        };
+        window.cambiarCirugiaHosp = function(i, campo, val) {
+            const c = cuentaHospCirugias[i]; if (!c) return;
+            c[campo] = campo === 'valor' ? (parseInt(String(val || '').replace(/\D/g, ''), 10) || 0) : val;
+            sincronizarCxHosp();
+            recalcularCuentaHosp();
+            marcarCambioCuentaHosp();
+        };
+        window.quitarCirugiaHosp = async function(i) {
+            const c = cuentaHospCirugias[i]; if (!c) return;
+            if ((c.desc || c.valor) && !(await confirmarEnApp('¿Quitar este procedimiento?', (c.desc || 'Sin descripción') + (c.valor ? ' · ' + fmtCOPHosp(c.valor) : ''), 'Sí, quitar'))) return;
+            cuentaHospCirugias.splice(i, 1);
+            renderCirugiasHosp();
+            recalcularCuentaHosp();
+            marcarCambioCuentaHosp();
+        };
+        function cirugiasDeDatosHosp(data) {
+            if (Array.isArray(data.cirugias) && data.cirugias.length) return data.cirugias.map(c => ({ id: c.id || idCirugiaHosp(), desc: c.desc || '', valor: Number(c.valor) || 0 }));
+            return (Number(data.cx) || 0) > 0 ? [{ id: 'cx_ant', desc: '', valor: Number(data.cx) || 0 }] : [];
+        }
 
         // ===== Hoja por día (AM/PM por fecha) =====
         function diaStoreHosp(fecha) { if (!cuentaHospPorDia[fecha]) cuentaHospPorDia[fecha] = {}; return cuentaHospPorDia[fecha]; }
@@ -12828,6 +12895,7 @@
                 fecha: document.getElementById('cta-fecha').value,
                 fechaEgreso: document.getElementById('cta-fecha-egreso').value,
                 items, cx, subMascotas, subLab, deposito, total, resta: total - deposito,
+                cirugias: ((l) => (l.length === 1 && !(Number(l[0].valor) > 0) && !(l[0].desc || '').trim()) ? [] : l)(cuentaHospCirugias.filter((c, i) => i === 0 || (c.desc || '').trim() || (Number(c.valor) || 0) > 0)).map(c => ({ id: c.id, desc: (c.desc || '').trim(), valor: Number(c.valor) || 0 })),
                 abonos: cuentaHospAbonos.map(a => ({ ...a })),
                 nombre: document.getElementById('cta-paciente').value.trim()
             };
@@ -12858,6 +12926,8 @@
             document.getElementById('cta-fecha').value = data.fecha || '';
             document.getElementById('cta-fecha-egreso').value = data.fechaEgreso || '';
             document.getElementById('cta-cx').value = data.cx ? Number(data.cx).toLocaleString('es-CO') : '';
+            cuentaHospCirugias = cirugiasDeDatosHosp(data);
+            renderCirugiasHosp();
             // Abonos: si la cuenta es antigua (un solo "depósito"), se convierte en un abono
             cuentaHospAbonos = Array.isArray(data.abonos) ? data.abonos.map(a => ({ ...a }))
                 : ((Number(data.deposito) || 0) > 0 ? [{ id: 'ab_anterior', fecha: data.fecha || '', valor: Number(data.deposito) || 0, medio: 'Registrado antes', nota: '', por: '' }] : []);
@@ -13850,6 +13920,8 @@
             document.getElementById('cta-especie').value = '';
             pintarTipoAtencionHosp('Hospitalización');
             document.getElementById('cta-cx').value = '';
+            cuentaHospCirugias = [];
+            renderCirugiasHosp();
             document.getElementById('cta-deposito').value = '';
             cuentaHospAbonos = []; cerrarFormAbonoHosp(); renderAbonosHosp();
             document.getElementById('cta-fecha-egreso').value = '';
@@ -14317,6 +14389,18 @@
             };
             tablaItems("INSUMO / SERVICIO", filas.length ? filas : [["(sin insumos)", "", "", ""]], AZUL);
             if (filasLab.length) tablaItems("LABORATORIO", filasLab, [8, 145, 178]);
+            const cxPdf = (Array.isArray(d.cirugias) ? d.cirugias : []).filter(c => (Number(c.valor) || 0) > 0 || (c.desc || '').trim());
+            if (cxPdf.length > 1) {
+                pdf.autoTable({
+                    startY: y, head: [["CIRUGÍA / PROCEDIMIENTO", "VALOR"]],
+                    body: cxPdf.map((c, i) => [c.desc || ('Cirugía ' + (i + 1)), fmtCOPHosp(c.valor || 0)]),
+                    theme: 'grid', styles: { fontSize: 8, cellPadding: 3, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
+                    headStyles: { fillColor: [109, 40, 217], textColor: 255, fontStyle: 'bold' },
+                    columnStyles: { 1: { halign: 'right', cellWidth: 90 } },
+                    margin: { left: M, right: M }
+                });
+                y = pdf.lastAutoTable.finalY + 8;
+            }
 
             // Detalle de abonos
             const abonosPdf = Array.isArray(d.abonos) ? d.abonos.slice().sort((a, b) => String(a.fecha || '').localeCompare(String(b.fecha || ''))) : [];
