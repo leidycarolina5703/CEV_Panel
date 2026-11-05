@@ -2843,6 +2843,7 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <button onclick="turnoMostrarInicio()" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg font-semibold flex items-center gap-2 border border-gray-200 text-sm"><i class="fa-solid fa-table-columns"></i> Inicio</button>
                 <button id="tur-btn-seg" onclick="turnoAbrirSeguimiento()" class="hidden px-4 py-2 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-2 border border-amber-200 text-sm"><i class="fa-solid fa-chart-column"></i> Seguimiento</button>
                 <button onclick="turnoAbrirAuxiliares()" class="js-editar px-4 py-2 bg-white text-[#154390] hover:bg-blue-50 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 text-sm"><i class="fa-solid fa-users-gear"></i> Auxiliares</button>
                 <button onclick="turnoNuevo()" class="js-editar px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 text-sm"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
@@ -2868,7 +2869,7 @@
                     <h2 class="text-base sm:text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-chart-column"></i> Tablero de seguimiento</h2>
                     <div class="flex gap-2">
                         <button onclick="turnoSegExcel()" class="px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 rounded-lg border border-green-200 flex items-center gap-1"><i class="fa-solid fa-file-excel"></i> Excel</button>
-                        <button onclick="turnoCerrarSeguimiento()" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+                        <button onclick="turnoMostrarInicio()" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg border border-gray-200 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Cerrar</button>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-end gap-2">
@@ -2901,7 +2902,22 @@
             </section>
         </div>
 
-        <div id="tur-form" class="space-y-4 sm:space-y-5">
+        <!-- Tablero inicial: quién ha entregado turno -->
+        <div id="tur-inicio" class="space-y-4 sm:space-y-5">
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-100 pb-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-clipboard-check"></i> Entregas de turno</h2>
+                        <p class="text-xs text-gray-500 mt-0.5">Quién ha entregado turno en los últimos 7 días.</p>
+                    </div>
+                    <button onclick="turnoNuevo()" class="js-editar px-5 py-2.5 bg-[#154390] text-white hover:bg-[#0f3268] rounded-xl font-bold flex items-center gap-2 shadow-sm"><i class="fa-solid fa-file-circle-plus"></i> Nueva entrega de turno</button>
+                </div>
+                <div id="tur-inicio-hoy" class="mb-4"></div>
+                <div id="tur-inicio-lista" class="space-y-4"></div>
+            </section>
+        </div>
+
+        <div id="tur-form" class="hidden space-y-4 sm:space-y-5">
         <!-- Datos del turno -->
         <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2 mb-3">
@@ -21480,8 +21496,68 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             aplicarModoLectura('turno-screen', 'entrega_turno');
             document.getElementById('tur-entrega').disabled = true;
             document.getElementById('tur-btn-seg').classList.toggle('hidden', !turnoPuedeSeguimiento());
-            if (!turnoPuedeSeguimiento()) turnoCerrarSeguimiento();
+            await turnoMostrarInicio();
         };
+
+        // ---------- Tablero inicial del módulo ----------
+        function turnoMostrarForm() {
+            const i = document.getElementById('tur-inicio'); if (i) i.classList.add('hidden');
+            document.getElementById('tur-form').classList.remove('hidden');
+        }
+        window.turnoMostrarInicio = async function() {
+            if (turnoPendiente) await turnoGuardar();
+            ['tur-form', 'tur-lista', 'tur-seg'].forEach(x => { const e = document.getElementById(x); if (e) e.classList.add('hidden'); });
+            document.getElementById('tur-inicio').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            await turnoCargarInicio();
+        };
+        async function turnoCargarInicio() {
+            const cont = document.getElementById('tur-inicio-lista'), hoyBox = document.getElementById('tur-inicio-hoy');
+            cont.innerHTML = '<div class="text-center py-6"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            hoyBox.innerHTML = '';
+            try {
+                const hoy = turnoHoy(), ini = new Date(); ini.setDate(ini.getDate() - 6);
+                const desde = turnoISO(ini);
+                const snap = await getDocs(collection(db, TURNO_COL));
+                let items = [];
+                snap.forEach(x => { if (!x.id.startsWith('_')) items.push({ id: x.id, ...x.data() }); });
+                items = items.filter(it => (it.fecha || '') >= desde && (it.fecha || '') <= hoy);
+                const orden = { 'Día completo': 0, 'Mañana': 1, 'Tarde': 2, 'Noche': 3, 'Domingo / Festivo': 4 };
+                items.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '') || (orden[b.turno] || 0) - (orden[a.turno] || 0));
+                // Resumen de hoy
+                const deHoy = items.filter(it => it.fecha === hoy).slice().reverse();   // en orden del día: mañana, tarde, noche
+                hoyBox.innerHTML = `<div class="rounded-xl border ${deHoy.length ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'} p-3 flex flex-wrap items-center gap-2 text-sm">
+                    <span class="font-bold ${deHoy.length ? 'text-emerald-800' : 'text-amber-800'}"><i class="fa-solid fa-calendar-day"></i> Hoy, ${turnoEsc(fechaLegibleHosp(hoy))}:</span>
+                    ${deHoy.length ? deHoy.map(it => `<span class="px-2.5 py-1 rounded-full bg-white border border-emerald-200 text-emerald-800 text-xs font-semibold">${turnoEsc(it.turno || 'Sin turno')} · ${turnoEsc(it.auxiliar || 'Sin auxiliar')}</span>`).join('')
+                        : '<span class="text-amber-800">todavía no se ha entregado ningún turno.</span>'}
+                </div>`;
+                if (!items.length) { cont.innerHTML = '<p class="text-gray-400 italic text-sm text-center py-6">No hay entregas de turno en los últimos 7 días.</p>'; return; }
+                const grupos = {};
+                items.forEach(it => (grupos[it.fecha] = grupos[it.fecha] || []).push(it));
+                const editable = puedeEditar('entrega_turno');
+                cont.innerHTML = Object.keys(grupos).sort((a, b) => b.localeCompare(a)).map(f => `
+                    <div>
+                        <p class="text-sm font-bold text-[#154390] mb-2 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> ${turnoEsc(fechaLegibleHosp(f))}${f === hoy ? ' <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#154390] text-white">HOY</span>' : ''} <span class="text-xs text-gray-400 font-normal">(${grupos[f].length})</span></p>
+                        <div class="overflow-x-auto"><table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                            <thead><tr class="bg-gray-50 text-[11px] text-gray-500 uppercase"><th class="text-left px-3 py-2">Turno</th><th class="text-left px-3 py-2">Entregó</th><th class="text-left px-3 py-2">Recibió</th><th class="text-center px-3 py-2">Lista</th><th class="text-center px-3 py-2">«No»</th><th class="text-center px-3 py-2">Fotos</th><th class="px-3 py-2"></th></tr></thead>
+                            <tbody>${grupos[f].map(it => {
+                                const total = it.total || TURNO_ITEMS.length, resp = it.respondidas || 0, completa = resp >= total;
+                                return `<tr class="border-t border-gray-100 hover:bg-gray-50">
+                                    <td class="px-3 py-2 font-semibold text-gray-700 whitespace-nowrap">${turnoEsc(it.turno || '—')}</td>
+                                    <td class="px-3 py-2 font-bold text-gray-800 whitespace-nowrap"><i class="fa-solid fa-user text-[#154390] text-xs"></i> ${turnoEsc(it.auxiliar || '—')}</td>
+                                    <td class="px-3 py-2 text-gray-600 whitespace-nowrap">${turnoEsc(it.recibe || '—')}</td>
+                                    <td class="px-3 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${completa ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'}">${completa ? '✓ Completa' : resp + '/' + total}</span></td>
+                                    <td class="px-3 py-2 text-center font-bold ${it.no ? 'text-red-600' : 'text-gray-300'}">${it.no || 0}</td>
+                                    <td class="px-3 py-2 text-center text-xs ${it.fotosN ? 'text-[#154390] font-semibold' : 'text-gray-300'}"><i class="fa-solid fa-camera"></i> ${it.fotosN || 0}</td>
+                                    <td class="px-3 py-2"><div class="flex gap-1.5 justify-end">
+                                        <button onclick="turnoAbrir('${it.id}')" class="px-3 py-1 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200"><i class="fa-solid fa-pen-to-square"></i> ${editable ? 'Abrir' : 'Ver'}</button>
+                                        <button onclick="turnoDescargarPDF('${it.id}')" title="PDF (opcional)" class="px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200"><i class="fa-solid fa-file-pdf"></i></button>
+                                    </div></td>
+                                </tr>`; }).join('')}</tbody>
+                        </table></div>
+                    </div>`).join('');
+            } catch (e) { cont.innerHTML = '<p class="text-red-500 text-sm text-center py-4">No se pudo cargar. Revisa la conexión.</p>'; console.error(e); }
+        }
 
         window.turnoVolver = async function() {
             if (turnoPendiente) await turnoGuardar();
@@ -21495,6 +21571,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             document.getElementById('tur-entrega').disabled = true;
             document.getElementById('tur-lista').classList.add('hidden');
             turnoCerrarSeguimiento();
+            turnoMostrarForm();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             showToast('Lista nueva lista para diligenciar.');
         };
@@ -21504,7 +21581,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             const l = document.getElementById('tur-lista');
             const abrir = l.classList.contains('hidden');
             l.classList.toggle('hidden', !abrir);
-            if (abrir) turnoCargarLista();
+            if (abrir) { const i = document.getElementById('tur-inicio'); if (i) i.classList.add('hidden'); if (!turnoId && !turnoPendiente) document.getElementById('tur-form').classList.add('hidden'); turnoCargarLista(); }
         };
 
         window.turnoCargarLista = async function() {
@@ -21563,6 +21640,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 document.getElementById('tur-entrega').disabled = true;
                 document.getElementById('tur-lista').classList.add('hidden');
                 turnoCerrarSeguimiento();
+                turnoMostrarForm();
                 turnoEstado('');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 showToast('Lista cargada.');
@@ -21762,6 +21840,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             if (turnoPendiente) await turnoGuardar();
             document.getElementById('tur-form').classList.add('hidden');
             document.getElementById('tur-lista').classList.add('hidden');
+            document.getElementById('tur-inicio').classList.add('hidden');
             document.getElementById('tur-seg').classList.remove('hidden');
             const d = document.getElementById('tur-seg-desde'), h = document.getElementById('tur-seg-hasta');
             if (!d.value || !h.value) { const hoy = new Date(), ini = new Date(); ini.setDate(ini.getDate() - 6); d.value = turnoISO(ini); h.value = turnoISO(hoy); }
