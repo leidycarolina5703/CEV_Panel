@@ -2267,7 +2267,15 @@
                 <div><label class="fmt-lbl">Fecha de ingreso <span class="text-red-500">*</span></label><input type="date" id="cta-fecha" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
                 <div><label class="fmt-lbl">Nombre del paciente <span class="text-red-500">*</span></label><input type="text" id="cta-paciente" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
                 <div><label class="fmt-lbl">Propietario <span class="text-red-500">*</span></label><input type="text" id="cta-propietario" oninput="validarDatosCuentaHosp()" class="fmt-in"></div>
-                <div><label class="fmt-lbl">Cédula de ciudadanía <span class="text-red-500">*</span></label><input type="text" inputmode="numeric" id="cta-cedula" oninput="this.value=this.value.replace(/[^0-9]/g,''); validarDatosCuentaHosp()" class="fmt-in" placeholder="Solo números"></div>
+                <div><label class="fmt-lbl">Documento del propietario <span class="text-red-500">*</span></label>
+                    <div class="flex gap-2">
+                        <select id="cta-tipodoc" onchange="cambioTipoDocHosp()" class="fmt-in" style="width:46%;flex:none" title="Tipo de documento">
+                            <option value="CC">Cédula de ciudadanía</option>
+                            <option value="CE">Cédula de extranjería</option>
+                            <option value="NIT">NIT</option>
+                        </select>
+                        <input type="text" inputmode="numeric" id="cta-cedula" oninput="filtrarDocHosp(this); validarDatosCuentaHosp()" class="fmt-in flex-1 min-w-0" placeholder="Número (solo números)">
+                    </div></div>
                 <div><label class="fmt-lbl">Especie <span class="text-red-500">*</span></label>
                     <input type="text" id="cta-especie" list="cta-especie-list" oninput="validarDatosCuentaHosp()" autocomplete="off" placeholder="Escribe o elige…" class="fmt-in">
                     <datalist id="cta-especie-list">
@@ -11817,8 +11825,22 @@
             }
         };
 
+        // Documento del propietario: cédula de ciudadanía, de extranjería o NIT (el NIT admite el guion del dígito de verificación)
+        const TIPOS_DOC_HOSP = { CC: { corto: 'C.C.', pdf: 'CÉDULA' }, CE: { corto: 'C.E.', pdf: 'CÉD. EXTRANJERÍA' }, NIT: { corto: 'NIT', pdf: 'NIT' } };
+        function limpiarDocHosp(v, tipo) { return tipo === 'NIT' ? String(v || '').replace(/[^0-9-]/g, '') : String(v || '').replace(/[^0-9]/g, ''); }
+        window.filtrarDocHosp = function(el) {
+            const tipo = (document.getElementById('cta-tipodoc') || {}).value || 'CC';
+            const v = limpiarDocHosp(el.value, tipo); if (v !== el.value) el.value = v;
+        };
+        window.cambioTipoDocHosp = function() {
+            const tipo = document.getElementById('cta-tipodoc').value, inp = document.getElementById('cta-cedula');
+            inp.placeholder = tipo === 'NIT' ? 'Número (ej.: 900123456-7)' : 'Número (solo números)';
+            inp.value = limpiarDocHosp(inp.value, tipo);
+            if (typeof marcarCambioCuentaHosp === 'function') marcarCambioCuentaHosp();
+            validarDatosCuentaHosp();
+        };
         const CAMPOS_HIST_HOSP = [
-            ['paciente', 'Paciente'], ['historia', 'Historia clínica'], ['propietario', 'Propietario'], ['cedula', 'Cédula'],
+            ['paciente', 'Paciente'], ['historia', 'Historia clínica'], ['propietario', 'Propietario'], ['tipoDoc', 'Tipo de documento'], ['cedula', 'Número de documento'],
             ['especie', 'Especie'], ['tipoAtencion', 'Tipo de atención'], ['fecha', 'Fecha de ingreso'], ['fechaEgreso', 'Fecha de egreso']
         ];
         function snapDeCuentaHosp(data) {
@@ -13367,7 +13389,8 @@
                 paciente: document.getElementById('cta-paciente').value.trim(),
                 historia: document.getElementById('cta-historia').value.trim(),
                 propietario: document.getElementById('cta-propietario').value.trim(),
-                cedula: (document.getElementById('cta-cedula').value || '').replace(/[^0-9]/g, ''),
+                tipoDoc: (document.getElementById('cta-tipodoc') || {}).value || 'CC',
+                cedula: limpiarDocHosp(document.getElementById('cta-cedula').value, (document.getElementById('cta-tipodoc') || {}).value || 'CC'),
                 especie: document.getElementById('cta-especie').value,
                 tipoAtencion: (document.getElementById('cta-tipo') || {}).value || 'Hospitalización',
                 fecha: document.getElementById('cta-fecha').value,
@@ -13398,6 +13421,7 @@
             document.getElementById('cta-paciente').value = data.paciente || '';
             document.getElementById('cta-historia').value = data.historia || '';
             document.getElementById('cta-propietario').value = data.propietario || '';
+            document.getElementById('cta-tipodoc').value = TIPOS_DOC_HOSP[data.tipoDoc] ? data.tipoDoc : 'CC';
             document.getElementById('cta-cedula').value = data.cedula || '';
             document.getElementById('cta-especie').value = data.especie || '';
             pintarTipoAtencionHosp(data.tipoAtencion || 'Hospitalización');
@@ -14399,6 +14423,7 @@
             document.getElementById('cta-historia').value = '';
             document.getElementById('cta-propietario').value = '';
             document.getElementById('cta-cedula').value = '';
+            document.getElementById('cta-tipodoc').value = 'CC';
             document.getElementById('cta-especie').value = '';
             pintarTipoAtencionHosp('Hospitalización');
             document.getElementById('cta-cx').value = '';
@@ -14622,7 +14647,7 @@
                 }
                 if (!examenes.length && !c.existe) return;      // sin exámenes: no se crea nada
                 const egresado = !!(data.fechaEgreso && String(data.fechaEgreso).trim());
-                const firma = JSON.stringify([examenes, data.propietario, data.cedula, data.paciente, data.historia, data.tipoAtencion, egresado, data.especie, data.fecha, data.fechaEgreso]);
+                const firma = JSON.stringify([examenes, data.propietario, data.tipoDoc || 'CC', data.cedula, data.paciente, data.historia, data.tipoAtencion, egresado, data.especie, data.fecha, data.fechaEgreso]);
                 if (c.firma === firma) return;                  // nada cambió
                 const total = examenes.reduce((s, e) => s + e.p, 0);
                 const fecha = c.fecha || fechaISOLocal(new Date());
@@ -14631,7 +14656,7 @@
                     origen: 'hospitalizacion', cuentaHospId: id, tipoAtencion: data.tipoAtencion || 'Hospitalización', egresado, anulada: false,
                     especie: data.especie || '', fechaIngreso: data.fecha || '', fechaEgreso: egresado ? String(data.fechaEgreso).trim() : '',
                     fecha, fechaLarga: fechaLargaCuenta(fecha, cfg.ciudad),
-                    deudorNombre: String(data.propietario || '').trim().toUpperCase(), deudorCC: formatearCC(data.cedula || ''),
+                    deudorNombre: String(data.propietario || '').trim().toUpperCase(), deudorCC: (data.tipoDoc === 'NIT' ? String(data.cedula || '') : formatearCC(data.cedula || '')), deudorTipo: data.tipoDoc || 'CC',
                     paciente: data.paciente || '', hc: data.historia || '',
                     examenes, totalExamenes: total, valor: total, valorFmt: fmtMiles(total), valorLetras: valorEnLetras(total),
                     actualizadoDesdeHosp: new Date().toISOString(), sincronizadoPor: usuarioSesion ? usuarioSesion.nombre : ''
@@ -14845,7 +14870,7 @@
                 body: [
                     ["PACIENTE", d.paciente || '—', "ESPECIE", d.especie || '—'],
                     ["HISTORIA CLÍNICA", d.historia || '—', "FECHA INGRESO", d.fecha || '—'],
-                    ["PROPIETARIO", d.propietario || '—', "CÉDULA", d.cedula || '—'],
+                    ["PROPIETARIO", d.propietario || '—', (TIPOS_DOC_HOSP[d.tipoDoc] || TIPOS_DOC_HOSP.CC).pdf, d.cedula || '—'],
                     ["FECHA EGRESO", d.fechaEgreso || '—', "", ""],
                 ],
                 theme: 'grid', styles: { fontSize: 8, cellPadding: 4, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
@@ -16087,7 +16112,7 @@
                 <p class="text-gray-500 text-sm">${esc(d.fechaLarga) || '<span class="text-gray-300">Fecha…</span>'}</p>
                 <div class="h-8"></div>
                 <p class="font-bold">${esc(d.deudorNombre) || '<span class="text-gray-300">NOMBRE DEL DEUDOR</span>'}</p>
-                <p class="font-bold">${d.deudorCC ? 'CC ' + esc(d.deudorCC) : '<span class="text-gray-300">CC …</span>'}</p>
+                <p class="font-bold">${d.deudorCC ? (d.deudorTipo === 'CE' ? 'CE ' : d.deudorTipo === 'NIT' ? 'NIT ' : 'CC ') + esc(d.deudorCC) : '<span class="text-gray-300">CC …</span>'}</p>
                 <div class="h-3"></div>
                 <p class="font-bold">DEBE A:</p>
                 <p class="font-bold">${esc(d.acreedorNombre)} identificado con CC ${esc(d.acreedorCC)} de ${esc(d.ciudad)}</p>
@@ -16286,7 +16311,7 @@
             };
 
             bloque(d.deudorNombre, true, 13, 2);
-            bloque("CC " + d.deudorCC, true, 13, 22);
+            bloque((d.deudorTipo === 'CE' ? 'CE ' : d.deudorTipo === 'NIT' ? 'NIT ' : 'CC ') + d.deudorCC, true, 13, 22);
             bloque("DEBE A:", true, 12.5, 6);
             bloque(d.acreedorNombre + " identificado con CC " + d.acreedorCC + " de " + d.ciudad, true, 12.5, 22);
             bloque("LA SUMA DE: " + d.valorLetras, true, 12.5, 2);
