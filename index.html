@@ -2113,7 +2113,7 @@
                 <button onclick="nuevaCuentaHosp()" class="px-3 py-1.5 text-sm bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-1.5 border border-blue-200 justify-center whitespace-nowrap"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
                 <button onclick="abrirCuentasGuardadasHosp()" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-folder-open"></i> Guardadas</button>
                 <button id="cta-btn-ingresos" onclick="abrirIngresosHosp()" title="Reporte de ingresos (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-lg font-semibold flex items-center gap-1.5 border border-emerald-200 justify-center whitespace-nowrap"><i class="fa-solid fa-chart-column"></i> Ingresos</button>
-                <button id="cta-btn-precios" onclick="abrirPreciosHosp()" title="Buscar y modificar los precios de insumos, servicios, medicamentos y exámenes" class="hidden px-3 py-1.5 text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-1.5 border border-amber-200 justify-center whitespace-nowrap"><i class="fa-solid fa-tags"></i> Precios</button>
+                <button id="cta-btn-precios" onclick="abrirPreciosHosp()" title="Buscar y modificar precios, y agregar insumos nuevos a la lista" class="hidden px-3 py-1.5 text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-1.5 border border-amber-200 justify-center whitespace-nowrap"><i class="fa-solid fa-tags"></i> Precios e insumos</button>
                 <button onclick="abrirInformeHosp()" title="Informe de insumos por rango de fecha y hora" class="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-semibold flex items-center gap-1.5 border border-indigo-200 justify-center whitespace-nowrap"><i class="fa-solid fa-magnifying-glass-chart"></i> Informe</button>
                 <button onclick="abrirAgregadosHosp()" title="Ver los insumos agregados a mano en todas las cuentas" class="px-3 py-1.5 text-sm bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-1.5 border border-amber-200 justify-center whitespace-nowrap"><i class="fa-solid fa-hand-pointer"></i> Insumos agregados</button>
                 <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-1.5 border border-red-200 justify-center whitespace-nowrap"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
@@ -2122,6 +2122,23 @@
 
         <!-- Pacientes en curso (sin fecha de egreso): dos tarjetas separadas por tipo -->
         <div id="cta-encurso" class="space-y-4">
+            <!-- Conteo de pacientes en curso -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white rounded-xl shadow-md p-3 sm:p-5 border border-gray-200 flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 sm:w-12 sm:h-12 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-base sm:text-xl shrink-0"><i class="fa-solid fa-shield-dog"></i></div>
+                    <div class="min-w-0">
+                        <p id="cta-cnt-hosp" class="text-3xl font-extrabold text-[#154390] leading-none">—</p>
+                        <p class="text-xs sm:text-sm font-semibold text-gray-600 mt-1">Hospitalizaciones en curso</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-3 sm:p-5 border border-gray-200 flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 sm:w-12 sm:h-12 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center text-base sm:text-xl shrink-0"><i class="fa-solid fa-person-walking"></i></div>
+                    <div class="min-w-0">
+                        <p id="cta-cnt-amb" class="text-3xl font-extrabold text-emerald-700 leading-none">—</p>
+                        <p class="text-xs sm:text-sm font-semibold text-gray-600 mt-1">Ambulatorios en curso</p>
+                    </div>
+                </div>
+            </div>
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
                 <h2 class="text-lg font-bold text-[#154390] mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i class="fa-solid fa-shield-dog"></i> Hospitalizaciones en curso</h2>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
@@ -2310,6 +2327,11 @@
                 <div><label class="fmt-lbl">Historia clínica <span class="text-red-500">*</span></label><input type="number" inputmode="numeric" min="0" step="1" id="cta-historia" oninput="validarDatosCuentaHosp()" onchange="verificarDuplicadoHosp()" class="fmt-in" placeholder="Solo números"></div>
             </div>
             <div id="cta-aviso-duplicado" class="hidden mt-3 bg-orange-50 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 text-sm"></div>
+            <!-- Nota importante (solo Hospitalización) -->
+            <div id="cta-nota-ingreso" class="mt-3 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-3 py-2 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-bell mt-0.5 shrink-0"></i>
+                <p><b>Importante:</b> no olvide registrar en la cuenta la consulta de ingreso, el cuidado paciente y los materiales.</p>
+            </div>
         </section>
 
         <div id="cta-aviso-datos" class="hidden bg-amber-50 border-2 border-amber-300 rounded-xl p-3 text-center text-amber-800 font-semibold text-sm">
@@ -2323,11 +2345,13 @@
                 <button type="button" onclick="toggleExtraPanelHosp()" id="cta-extra-btn" class="px-3 py-1.5 text-sm font-semibold bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-200 flex items-center gap-2"><i class="fa-solid fa-list-ul"></i> Ver agregados <span id="cta-extra-btn-n" class="px-1.5 py-0.5 rounded-full text-[11px] bg-white border border-amber-200">0</span><i id="cta-extra-btn-chev" class="fa-solid fa-chevron-down text-xs"></i></button>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-end mt-3">
-                <div class="flex-1"><label class="fmt-lbl">Nombre del insumo</label><input type="text" id="cta-extra-nombre" class="fmt-in" style="text-transform:capitalize" placeholder="Ej: Medicamento especial"></div>
+                <div class="flex-1"><label class="fmt-lbl">Nombre del insumo</label><input type="text" id="cta-extra-nombre" class="fmt-in" style="text-transform:capitalize" placeholder="Ej: Medicamento especial" oninput="ocultarAvisoExtraHosp()"></div>
                 <div class="w-full sm:w-40"><label class="fmt-lbl">Valor unitario</label><input type="number" min="0" id="cta-extra-valor" class="fmt-in" placeholder="0"></div>
                 <div class="w-full sm:w-40"><label class="fmt-lbl">Va en</label><select id="cta-extra-grupo" class="fmt-in"><option value="Insumos">Insumos</option><option value="Servicios">Servicios</option><option value="Tableta">Tableta</option><option value="Inyectables ML">Inyectables ML</option><option value="Inyectables Ampolla">Inyectables Ampolla</option><option value="Laboratorio">Laboratorio</option></select></div>
                 <button onclick="agregarInsumoExtraHosp()" class="js-editar px-4 py-2 bg-[#154390] text-white rounded-lg font-semibold hover:bg-[#0f3268] flex items-center justify-center gap-2 h-[42px]"><i class="fa-solid fa-plus"></i> Agregar</button>
             </div>
+            <!-- Aviso: el insumo escrito ya está en la lista (por ejemplo, Materiales) -->
+            <p id="cta-extra-aviso" class="hidden mt-2 bg-red-50 border border-red-300 text-red-700 rounded-lg px-3 py-2 text-sm"></p>
             <!-- Insumos agregados a mano en esta cuenta: ver, filtrar por categoría, editar y eliminar -->
             <div id="cta-extra-panel" class="hidden mt-4 border border-amber-200 rounded-xl bg-amber-50/40 p-3">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -2367,6 +2391,11 @@
                 <input type="text" id="cta-buscar" oninput="filtrarCatalogoHosp()" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50" placeholder="Buscar insumo, servicio o medicamento...">
             </div>
             <p class="text-[11px] text-gray-400 mb-1">Escribe la cantidad usada en cada ítem. Solo los que tengan cantidad suman al total.</p>
+            <!-- Nota importante: solo en Hospitalización y cuando el día elegido es el día de ingreso -->
+            <div id="cta-nota-ingreso-dia" class="hidden mb-2 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg px-3 py-2 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-bell mt-0.5 shrink-0"></i>
+                <p><b>Importante:</b> no olvide registrar en la cuenta la consulta de ingreso, el cuidado paciente y los materiales.</p>
+            </div>
             <div id="cta-agregados-ins"></div>
             <div id="cta-lista-extra"></div>
             <div id="cta-catalogo" class="max-h-[420px] overflow-y-auto pr-1"></div>
@@ -2756,10 +2785,27 @@
     <div id="cta-precios-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-2">
-                <h3 class="text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-tags"></i> Precios de cuentas de cobro</h3>
+                <h3 class="text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-tags"></i> Precios e insumos de cuentas de cobro</h3>
                 <button onclick="cerrarPreciosHosp()" class="w-9 h-9 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100" aria-label="Cerrar"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Busca el insumo, servicio, medicamento o examen y pulsa el lápiz para cambiar su precio. El cambio se guarda para todos.</p>
+            <p class="text-xs text-gray-500 mb-3">Busca el insumo, servicio, medicamento o examen y pulsa el lápiz para cambiar su precio, o agrega un insumo nuevo a la lista. Los cambios se guardan para todos.</p>
+            <!-- Agregar un insumo nuevo a la lista, de forma permanente -->
+            <div class="mb-3">
+                <button type="button" id="cta-nuevo-ins-btn" onclick="toggleNuevoInsumoHosp()" class="w-full px-3 py-2 text-sm font-semibold text-[#154390] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Agregar insumo a la lista</button>
+                <div id="cta-nuevo-ins" class="hidden border border-blue-200 bg-blue-50/60 rounded-lg p-3">
+                    <p class="text-sm font-bold text-[#154390] mb-2"><i class="fa-solid fa-plus"></i> Agregar insumo a la lista (permanente)</p>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
+                        <div class="flex-1"><label class="fmt-lbl">Nombre</label><input type="text" id="cta-nuevo-ins-nombre" class="fmt-in" style="text-transform:capitalize" autocomplete="off" placeholder="Ej: Sonda nasogástrica"></div>
+                        <div class="w-full sm:w-40"><label class="fmt-lbl">Valor unitario</label><input type="text" inputmode="numeric" id="cta-nuevo-ins-valor" oninput="formatearMilesInput(this)" class="fmt-in" placeholder="0"></div>
+                        <div class="w-full sm:w-40"><label class="fmt-lbl">Va en</label><select id="cta-nuevo-ins-grupo" class="fmt-in"><option value="Insumos">Insumos</option><option value="Servicios">Servicios</option><option value="Tableta">Tableta</option><option value="Inyectables ML">Inyectables ML</option><option value="Inyectables Ampolla">Inyectables Ampolla</option><option value="Laboratorio">Laboratorio</option></select></div>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-2">Quedará disponible en todas las cuentas de cobro, en la sección que elijas.</p>
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button type="button" onclick="toggleNuevoInsumoHosp(false)" class="px-3 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancelar</button>
+                        <button type="button" onclick="agregarInsumoPermanenteHosp()" class="px-4 py-2 text-sm font-semibold text-white bg-[#154390] hover:bg-[#0f3268] rounded-lg flex items-center gap-2"><i class="fa-solid fa-plus"></i> Agregar a la lista</button>
+                    </div>
+                </div>
+            </div>
             <div class="relative mb-2">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
                 <input type="text" id="cta-precios-buscar" oninput="renderPreciosHospModal()" autocomplete="off" placeholder="Buscar por nombre..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm">
@@ -5508,7 +5554,7 @@
                         </label>
                         <label class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-600 cursor-pointer">
                             <input type="checkbox" ${u.cuentas_hosp_precios === true ? 'checked' : ''} onchange="setPermisoPreciosHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-amber-600">
-                            <i class="fa-solid fa-tags text-amber-600"></i> Puede <b>modificar precios</b> en cuentas de cobro
+                            <i class="fa-solid fa-tags text-amber-600"></i> Puede <b>modificar precios y agregar insumos</b> en cuentas de cobro
                         </label>
                         <label class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-600 cursor-pointer">
                             <input type="checkbox" ${u.cuentas_hosp_borrar_agregados === true ? 'checked' : ''} onchange="setPermisoBorrarAgregadosHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-red-600">
@@ -12031,10 +12077,13 @@
         function normalizarCuentaHosp(d) {
             let subM = 0, subL = 0;
             d.items = (d.items || []).filter(it => {
+                let sesAbiertas = false;
                 if (it && it.dias && typeof it.dias === 'object' && !it.x) {
+                    // Oxigenoterapia: las horas de cada día salen de sus sesiones (por si se combinaron sesiones de dos personas)
+                    if (esOxigenoHosp(it)) Object.values(it.dias).forEach(x => { if (x && Array.isArray(x.ses)) { x.am = Math.min(MAX_CANT_HOSP, horasSesionesOxi(x.ses)); x.pm = 0; if (x.ses.length) sesAbiertas = true; } });
                     it.cant = Object.values(it.dias).reduce((s, x) => s + (Number((x || {}).am) || 0) + (Number((x || {}).pm) || 0), 0);
                 }
-                return (Number(it.cant) || 0) > 0;
+                return (Number(it.cant) || 0) > 0 || sesAbiertas;
             });
             d.items.forEach(it => { const t = (Number(it.cant) || 0) * (Number(it.v) || 0); if (it.g === 'Laboratorio') subL += t; else subM += t; });
             d.subMascotas = subM; d.subLab = subL;
@@ -12086,6 +12135,7 @@
             cuentaHospVersion++;
             cuentaHospDirty = true;
             try { revisarDiasHosp(); } catch (e) {}
+            try { actualizarNotaIngresoDiaHosp(); } catch (e) {}
             const est = document.getElementById('cta-estado-guardado');
             if (est) est.innerHTML = '<span class="text-amber-600"><i class="fa-solid fa-circle" style="font-size:7px"></i> Cambios sin guardar…</span>';
             clearTimeout(cuentaHospAutosaveTimer);
@@ -12416,11 +12466,132 @@
         // Días (con datos) de un ítem, ordenados
         function desglosePorDia(idx) {
             const arr = [];
-            for (const f in cuentaHospPorDia) { const s = cuentaHospPorDia[f][idx]; if (s && ((s.am || 0) + (s.pm || 0)) > 0) arr.push({ fecha: f, am: s.am || 0, pm: s.pm || 0 }); }
+            for (const f in cuentaHospPorDia) {
+                const s = cuentaHospPorDia[f][idx];
+                const ses = (s && Array.isArray(s.ses) && s.ses.length) ? s.ses : null;   // sesiones de oxigenoterapia
+                if (s && (((s.am || 0) + (s.pm || 0)) > 0 || ses)) {
+                    const x = { fecha: f, am: s.am || 0, pm: s.pm || 0 };
+                    if (ses) x.ses = ses.map(o => ({ ...o }));
+                    arr.push(x);
+                }
+            }
             arr.sort((a, b) => a.fecha.localeCompare(b.fecha));
             return arr;
         }
         function fechaCortaHosp(f) { const p = (f || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] : f; }
+
+        // ===== Oxigenoterapia: se cobra por hora, con hora de inicio y de finalización =====
+        // Cada día guarda sus sesiones en dias[fecha].ses = [{ id, ini, fin, ts, por }].
+        // Las horas del día (campo "am") se calculan solas: cada sesión se redondea
+        // hacia arriba a la media hora. Si la hora de fin es menor que la de inicio,
+        // la sesión terminó al día siguiente.
+        const ID_OXIGENO_HOSP = 'x775025034e';
+        function esOxigenoHosp(it) { return !!it && (it.id === ID_OXIGENO_HOSP || sinTildes(it.n || '') === 'oxigenoterapia'); }
+        function idxOxigenoHosp() { return CATALOGO_CUENTAS.findIndex(esOxigenoHosp); }
+        function minutosHoraOxi(h) { const m = /^(\d{1,2}):(\d{2})/.exec(h || ''); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+        function minutosSesionOxi(s) {
+            const a = minutosHoraOxi(s && s.ini), b = minutosHoraOxi(s && s.fin);
+            if (a == null || b == null) return null;
+            let d = b - a; if (d < 0) d += 1440;
+            return d;
+        }
+        function horasSesionOxi(s) { const m = minutosSesionOxi(s); return m ? Math.ceil(m / 30) / 2 : 0; }
+        function horasSesionesOxi(ses) { return (ses || []).reduce((t, s) => t + horasSesionOxi(s), 0); }
+        function numOxi(h) { return (Number(h) || 0).toLocaleString('es-CO', { maximumFractionDigits: 2 }); }
+        function fmtHorasOxi(h) { return numOxi(h) + ' h'; }
+        function fmtDuracionOxi(min) { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h} h ${m} min` : (h ? `${h} h` : `${m} min`); }
+        // Cantidad para mostrar: "3,5 h" en oxigenoterapia, "3×" en lo demás
+        function cantTxtHosp(n, cant) { return esOxigenoHosp({ n }) ? fmtHorasOxi(cant) : cant + '×'; }
+        // Texto de las sesiones de un día (para el PDF): "08:00–11:30 (3,5 h); 20:00–21:00 (1 h)"
+        function textoSesionesOxi(ses) {
+            return (ses || []).filter(s => minutosSesionOxi(s) > 0)
+                .map(s => `${s.ini}–${s.fin}${minutosHoraOxi(s.fin) < minutosHoraOxi(s.ini) ? ' (+1 día)' : ''} (${fmtHorasOxi(horasSesionOxi(s))})`).join('; ');
+        }
+
+        function renderOxigenoHosp() {
+            const idx = idxOxigenoHosp(); if (idx < 0) return;
+            const cont = document.getElementById('cta-oxi-ses'); if (!cont) return;
+            const s = (cuentaHospPorDia[cuentaHospDia] || {})[idx] || {};
+            const ses = Array.isArray(s.ses) ? s.ses : [];
+            const puede = puedeEditar('cuentas_hosp');
+            const hEl = document.getElementById('cta-oxh-' + idx); if (hEl) hEl.textContent = fmtHorasOxi((s.am || 0) + (s.pm || 0));
+            let html = '';
+            if (!ses.length && ((s.am || 0) + (s.pm || 0)) > 0) {
+                html += `<p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 mb-1"><i class="fa-solid fa-circle-info"></i> Este día tiene ${fmtHorasOxi((s.am || 0) + (s.pm || 0))} registradas sin hora de inicio ni de finalización.</p>`;
+            }
+            ses.forEach((x, i) => {
+                const min = minutosSesionOxi(x);
+                let estado;
+                if (!x.ini && !x.fin) estado = '<span class="text-amber-600">Escribe la hora de inicio</span>';
+                else if (!x.ini) estado = '<span class="text-amber-600">Falta la hora de inicio</span>';
+                else if (!x.fin) estado = '<span class="text-amber-600"><i class="fa-solid fa-hourglass-half"></i> En curso: falta la hora de finalización</span>';
+                else if (!min) estado = '<span class="text-amber-600">La hora de inicio y la de finalización son iguales</span>';
+                else estado = `<b class="text-[#154390]">${fmtHorasOxi(horasSesionOxi(x))}</b> <span class="text-gray-400">· ${fmtDuracionOxi(min)}${minutosHoraOxi(x.fin) < minutosHoraOxi(x.ini) ? ', termina al día siguiente' : ''}</span>`;
+                html += `<div class="flex flex-wrap items-center gap-2 py-1 border-l-2 border-blue-200 pl-2 mb-1">
+                    <span class="text-[11px] font-bold text-gray-500">Sesión ${i + 1}</span>
+                    <label class="text-[11px] text-gray-500 flex items-center gap-1">Inicio <input type="time" value="${x.ini || ''}" onchange="setHoraOxiHosp(${i}, 'ini', this.value)" id="cta-oxi-ini-${i}" class="border border-gray-300 rounded-md px-1 py-0.5 text-sm bg-gray-50"${puede ? '' : ' disabled'}></label>
+                    <label class="text-[11px] text-gray-500 flex items-center gap-1">Fin <input type="time" value="${x.fin || ''}" onchange="setHoraOxiHosp(${i}, 'fin', this.value)" class="border border-gray-300 rounded-md px-1 py-0.5 text-sm bg-gray-50"${puede ? '' : ' disabled'}></label>
+                    <span class="text-xs">${estado}</span>
+                    ${puede ? `<button type="button" onclick="quitarSesionOxiHosp(${i})" class="js-editar text-red-400 hover:text-red-600 px-1 text-xs" title="Quitar sesión"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                </div>`;
+            });
+            if (puede) html += `<button type="button" onclick="agregarSesionOxiHosp()" class="js-editar text-xs font-semibold text-[#154390] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg px-2 py-1"><i class="fa-solid fa-plus"></i> Agregar sesión (${fechaCortaHosp(cuentaHospDia)})</button>`;
+            else if (!ses.length && !(((s.am || 0) + (s.pm || 0)) > 0)) html += '<p class="text-[11px] text-gray-400 italic">Sin sesiones este día.</p>';
+            cont.innerHTML = html;
+        }
+
+        // Recalcula las horas del día a partir de las sesiones y actualiza la cuenta
+        function aplicarHorasOxiHosp(idx) {
+            const st = diaStoreHosp(cuentaHospDia); st[idx] = st[idx] || { am: 0, pm: 0 };
+            const prev = (st[idx].am || 0) + (st[idx].pm || 0);
+            const nuevo = Math.min(MAX_CANT_HOSP, horasSesionesOxi(st[idx].ses));
+            st[idx].am = nuevo; st[idx].pm = 0;
+            const it = CATALOGO_CUENTAS[idx];
+            if (nuevo - prev > 0) registrarSalidaFueraTurno(it.n, nuevo - prev, tipoItemCuentaFT(it));
+            else if (nuevo - prev < 0) corregirSalidasFueraTurno(it.n);
+            marcarCambioCuentaHosp();
+            renderOxigenoHosp();
+            recalcularCuentaHosp();
+        }
+        window.agregarSesionOxiHosp = async function() {
+            if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const idx = idxOxigenoHosp(); if (idx < 0) return;
+            const st = diaStoreHosp(cuentaHospDia); st[idx] = st[idx] || { am: 0, pm: 0 };
+            if (!Array.isArray(st[idx].ses)) {
+                const previas = (st[idx].am || 0) + (st[idx].pm || 0);
+                if (previas > 0) {
+                    const ok = await rmConfirmar("¿Registrar con hora de inicio y finalización?",
+                        `Este día ya tiene ${fmtHorasOxi(previas)} de oxigenoterapia registradas sin horario. Al agregar sesiones, las horas del día se calcularán con las horas de inicio y finalización, y esas ${fmtHorasOxi(previas)} se reemplazarán.`, "Continuar");
+                    if (!ok) return;
+                }
+                st[idx].ses = [];
+            }
+            st[idx].ses.push({ id: 'ox' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ini: '', fin: '', ts: new Date().toISOString(), por: usuarioSesion ? usuarioSesion.nombre : '' });
+            aplicarHorasOxiHosp(idx);
+            const n = st[idx].ses.length - 1;
+            setTimeout(() => { const el = document.getElementById('cta-oxi-ini-' + n); if (el) el.focus(); }, 30);
+        };
+        window.setHoraOxiHosp = function(i, campo, valor) {
+            if (!puedeEditar('cuentas_hosp')) return;
+            const idx = idxOxigenoHosp(); if (idx < 0) return;
+            const s = (cuentaHospPorDia[cuentaHospDia] || {})[idx];
+            if (!s || !Array.isArray(s.ses) || !s.ses[i]) return;
+            s.ses[i][campo] = valor || '';
+            aplicarHorasOxiHosp(idx);
+        };
+        window.quitarSesionOxiHosp = async function(i) {
+            if (!puedeEditar('cuentas_hosp')) return;
+            const idx = idxOxigenoHosp(); if (idx < 0) return;
+            const s = (cuentaHospPorDia[cuentaHospDia] || {})[idx];
+            if (!s || !Array.isArray(s.ses) || !s.ses[i]) return;
+            const x = s.ses[i];
+            if (x.ini || x.fin) {
+                const ok = await rmConfirmar("¿Quitar la sesión " + (i + 1) + " de oxigenoterapia?", `${x.ini || '—'} a ${x.fin || '—'}${minutosSesionOxi(x) ? ' · ' + fmtHorasOxi(horasSesionOxi(x)) : ''}`, "Quitar");
+                if (!ok) return;
+            }
+            s.ses.splice(i, 1);
+            aplicarHorasOxiHosp(idx);
+        };
 
         // Pinta en las casillas AM/PM lo del día seleccionado
         function pintarDiaHosp() {
@@ -12429,6 +12600,7 @@
                 const a = document.getElementById('cta-am-' + idx); if (a) a.value = s.am || '';
                 const p = document.getElementById('cta-pm-' + idx); if (p) p.value = s.pm || '';
             });
+            renderOxigenoHosp();
         }
 
         function renderChipsDiasHosp() {
@@ -12446,9 +12618,14 @@
         }
 
         // ===== Revisión de días de hospitalización =====
-        // Compara los días que lleva hospitalizado con lo cobrado cada día ("Cuidado paciente" o "Cuidado paciente UCI")
+        // Compara los días que lleva hospitalizado con lo cobrado cada día: algún cargo, algún tipo de
+        // cuidado de paciente (Cuidado Paciente, Cuidado Paciente UCI, Cuidado Infecciosos) y materiales
+        // (Materiales, Materiales Infecciosos)
         function idxCuidadoHosp() {
-            return CATALOGO_CUENTAS.map((c, i) => ({ c, i })).filter(x => /^cuidado paciente/.test(sinTildes(x.c.n))).map(x => x.i);
+            return CATALOGO_CUENTAS.map((c, i) => ({ c, i })).filter(x => /^cuidado /.test(sinTildes(x.c.n))).map(x => x.i);
+        }
+        function idxMaterialesHosp() {
+            return CATALOGO_CUENTAS.map((c, i) => ({ c, i })).filter(x => /^materiales/.test(sinTildes(x.c.n))).map(x => x.i);
         }
         function revisarDiasHosp() {
             const cont = document.getElementById('cta-revision-dias'); if (!cont) return;
@@ -12463,14 +12640,20 @@
             const dias = []; const d = new Date(ini + 'T00:00:00'), dFin = new Date(fin + 'T00:00:00');
             let g = 0; while (d <= dFin && g++ < 120) { dias.push(iso(d)); d.setDate(d.getDate() + 1); }
             const sinNada = dias.filter(f => !Object.values(cuentaHospPorDia[f] || {}).some(x => ((x.am || 0) + (x.pm || 0)) > 0));
+            const cobradoDia = (f, idxs) => idxs.some(i => { const x = (cuentaHospPorDia[f] || {})[i]; return !!x && ((x.am || 0) + (x.pm || 0)) > 0; });
+            const iCuid = idxCuidadoHosp(), iMat = idxMaterialesHosp();
+            const sinCuidado = iCuid.length ? dias.filter(f => !cobradoDia(f, iCuid)) : [];
+            const sinMateriales = iMat.length ? dias.filter(f => !cobradoDia(f, iMat)) : [];
             const chip = (f, cls) => `<button type="button" onclick="cambiarDiaHosp('${f}')" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${cls}" title="Ir a este día">${fechaCortaHosp(f)}</button>`;
             const nDias = dias.length;
-            if (!sinNada.length) {
-                cont.innerHTML = `<div class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1"><i class="fa-solid fa-circle-check"></i> Revisión de días: <b>${nDias}</b> día${nDias === 1 ? '' : 's'} de hospitalización, todos con cargos registrados.</div>`;
+            if (!sinNada.length && !sinCuidado.length && !sinMateriales.length) {
+                cont.innerHTML = `<div class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1"><i class="fa-solid fa-circle-check"></i> Revisión de días: <b>${nDias}</b> día${nDias === 1 ? '' : 's'} de hospitalización, todos con cuidado de paciente y materiales cobrados.</div>`;
             } else {
                 cont.innerHTML = `<div class="text-[11px] text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1.5 space-y-1">
                     <div><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> <b>Revisión de días:</b> ${nDias} día${nDias === 1 ? '' : 's'} de hospitalización (${fechaCortaHosp(ini)} → ${egr ? fechaCortaHosp(egr) : 'hoy'}).</div>
                     ${sinNada.length ? `<div class="flex flex-wrap items-center gap-1"><span>Días <b>sin ningún cargo</b> (${sinNada.length}):</span> ${sinNada.map(f => chip(f, 'bg-white text-amber-800 border-amber-300 hover:bg-amber-100')).join('')}</div>` : ''}
+                    ${sinCuidado.length ? `<div class="flex flex-wrap items-center gap-1"><span>Días <b>sin cobro de cuidado de paciente</b> (${sinCuidado.length}):</span> ${sinCuidado.map(f => chip(f, 'bg-white text-amber-800 border-amber-300 hover:bg-amber-100')).join('')}</div>` : ''}
+                    ${sinMateriales.length ? `<div class="flex flex-wrap items-center gap-1"><span>Días <b>sin cobro de materiales</b> (${sinMateriales.length}):</span> ${sinMateriales.map(f => chip(f, 'bg-white text-amber-800 border-amber-300 hover:bg-amber-100')).join('')}</div>` : ''}
                 </div>`;
             }
             cont.classList.remove('hidden');
@@ -12957,7 +13140,7 @@
             const grupos = ['Insumos', 'Servicios', 'Tableta', 'Inyectables ML', 'Inyectables Ampolla', 'Laboratorio', 'PCR · Perfiles caninos', 'PCR · Perfiles felinos', 'PCR · Individuales'];
             let html = '', htmlLab = '';
             grupos.forEach(g => {
-                const items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx })).filter(it => (it.cat || it.g) === g)
+                const items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx })).filter(it => !it.oculto && (it.cat || it.g) === g)
                     .sort((a, b) => (a.n || "").localeCompare((b.n || ""), 'es', { sensitivity: 'base' }));
                 if (!items.length) return;
                 const esLab = items[0] && items[0].g === 'Laboratorio';
@@ -12978,6 +13161,17 @@
                             <input type="number" min="0" max="${MAX_CANT_HOSP}" step="${esMl ? 'any' : '1'}" id="cta-${campo}-${it.idx}" oninput="onAmPmHosp(this, ${it.idx}, '${campo}')" class="cta-cant w-9 border border-gray-300 rounded-md px-0.5 py-1 text-sm text-center bg-gray-50" placeholder="0" title="${esMl ? 'ml' : 'Cantidad'} ${titulo}">
                             <button type="button" onclick="pasoAmPmHosp(${it.idx}, '${campo}', ${paso})" class="js-editar w-6 h-7 rounded-md bg-blue-100 hover:bg-blue-200 text-[#154390] font-bold flex items-center justify-center shrink-0">+</button>
                         </div>`;
+                    if (esOxigenoHosp(it)) {
+                        // Oxigenoterapia: valor por hora; las horas salen de las sesiones (inicio y fin) del día
+                        bloque += `<div class="cta-fila flex flex-wrap items-center gap-1 py-1.5 px-1" data-nombre="${sinTildes(it.n)}">
+                            <div class="flex-1 min-w-0"><p class="text-sm text-gray-700 truncate" title="${it.n}">${it.n}</p><p class="text-[11px] text-gray-400">${fmtCOPHosp(it.v)} por hora</p></div>
+                            <div class="w-[96px] text-center text-sm font-bold text-[#154390] shrink-0" id="cta-oxh-${it.idx}" title="Horas del día seleccionado">0 h</div>
+                            <div class="w-8 text-center text-sm font-extrabold text-[#154390] shrink-0" id="cta-tot-${it.idx}">0</div>
+                            <div class="w-16 text-right text-sm font-semibold text-gray-700 shrink-0" id="cta-sub-${it.idx}">—</div>
+                            <div class="w-full mt-1" id="cta-oxi-ses"></div>
+                        </div>`;
+                        return;
+                    }
                     const controles = esAmPm ? (control('am', 'AM') + control('pm', 'PM')) : control('am', 'Cantidad');
                     const unidad = esMl ? 'por ml' : 'c/u';
                     bloque += `<div class="cta-fila flex items-center gap-1 py-1.5 px-1" data-nombre="${sinTildes(it.n)}">
@@ -12992,23 +13186,40 @@
             });
             cont.innerHTML = html;
             if (contLab) contLab.innerHTML = htmlLab;
+            renderOxigenoHosp();
         }
 
         // ===== Editor de precios (guardado en Firestore, compartido) =====
         let preciosHospOverrides = {};
+        let preciosHospNuevos = {};      // insumos agregados a la lista desde "Precios e insumos" (cuentas_config/precios → nuevos)
         let preciosHospCargados = false;
+        let preciosHospPromesa = null;
         function keyPrecioHosp(it) { return it.id || ((it.cat || it.g || '') + '§' + it.n); }
         async function cargarPreciosHosp() {
             try {
                 const d = await getDoc(doc(db, "cuentas_config", "precios"));
                 preciosHospOverrides = (d.exists() && d.data().precios) ? d.data().precios : {};
+                preciosHospNuevos = (d.exists() && d.data().nuevos) ? d.data().nuevos : {};
             } catch (e) { console.error(e); preciosHospOverrides = {}; }
         }
         async function guardarPreciosHosp() {
             try { await setDoc(doc(db, "cuentas_config", "precios"), { precios: preciosHospOverrides, actualizadoEn: new Date().toISOString() }); }
             catch (e) { console.error(e); showToast("No se pudo guardar el precio.", true); }
         }
+        // Pone en el catálogo los insumos agregados desde "Precios e insumos" (al final, para no mover
+        // los índices de los demás). Los que se eliminaron quedan ocultos ("oculto") en esta sesión.
+        function sincronizarNuevosHosp() {
+            Object.keys(preciosHospNuevos || {}).forEach(id => {
+                const x = preciosHospNuevos[id]; if (!x || !x.n) return;
+                const cat = x.cat || 'Insumos', g = cat === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
+                const it = CATALOGO_CUENTAS.find(c => c.id === id);
+                if (!it) CATALOGO_CUENTAS.push({ n: x.n, v: Number(x.v) || 0, g, cat, id, nuevo: true });
+                else { it.oculto = false; it.n = x.n; it.cat = cat; it.g = g; it.v = Number(x.v) || 0; }
+            });
+            CATALOGO_CUENTAS.forEach(c => { if (c.nuevo && !(preciosHospNuevos || {})[c.id]) c.oculto = true; });
+        }
         function aplicarPreciosHosp() {
+            sincronizarNuevosHosp();
             CATALOGO_CUENTAS.forEach(it => { const k = keyPrecioHosp(it); if (preciosHospOverrides[k] != null) it.v = preciosHospOverrides[k]; });
         }
         async function cargarYAplicarPreciosHosp() {
@@ -13024,6 +13235,7 @@
             if (!puedeCambiarPreciosHosp()) { showToast("No tienes permiso para modificar precios.", true); return; }
             precioHospEditando = null;
             document.getElementById('cta-precios-buscar').value = '';
+            toggleNuevoInsumoHosp(false);
             await cargarYAplicarPreciosHosp();   // trae los precios más recientes antes de editar
             renderPreciosHospModal();
             document.getElementById('cta-precios-modal').classList.remove('hidden');
@@ -13034,7 +13246,7 @@
             const cont = document.getElementById('cta-precios-lista'); if (!cont) return;
             const q = sinTildes((document.getElementById('cta-precios-buscar').value || '').trim());
             const qc = compactarBusqueda(q);
-            let items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx }))
+            let items = CATALOGO_CUENTAS.map((it, idx) => ({ ...it, idx })).filter(it => !it.oculto)
                 .filter((it, k, arr) => arr.findIndex(x => keyPrecioHosp(x) === keyPrecioHosp(it)) === k)   // sin repetidos
                 .filter(it => !q || coincideBusqueda(sinTildes(it.n), q) || (qc && compactarBusqueda(sinTildes(it.n)).includes(qc)));
             items.sort((a, b) => (a.n || '').localeCompare((b.n || ''), 'es', { sensitivity: 'base' }));
@@ -13046,7 +13258,7 @@
             cont.innerHTML = items.map(it => {
                 const cat = it.g === 'Laboratorio' ? (it.cat && it.cat !== 'Laboratorio' ? it.cat : 'Laboratorio') : (it.cat || it.g);
                 const unidad = it.cat === 'Inyectables ML' ? ' por ml' : '';
-                const izq = `<div class="flex-1 min-w-0"><p class="text-sm text-gray-800 truncate" title="${esc(it.n)}">${esc(it.n)}</p><p class="text-[10px] text-gray-400">${esc(cat)}</p></div>`;
+                const izq = `<div class="flex-1 min-w-0"><p class="text-sm text-gray-800 truncate" title="${esc(it.n)}">${esc(it.n)}</p><p class="text-[10px] text-gray-400">${esc(cat)}${it.nuevo ? ' · <span class="text-emerald-700 font-semibold">Agregado a la lista</span>' : ''}</p></div>`;
                 if (precioHospEditando === it.idx) {
                     return `<div class="flex items-center gap-2 border-2 border-amber-300 bg-amber-50 rounded-lg px-2 py-1.5">${izq}
                         <div class="flex items-center gap-1 shrink-0"><span class="text-gray-500 text-sm">$</span>
@@ -13058,6 +13270,7 @@
                 return `<div class="flex items-center gap-2 border border-gray-100 rounded-lg px-2 py-1.5 hover:bg-gray-50">${izq}
                     <span class="text-sm font-semibold text-gray-700 shrink-0">${fmtCOPHosp(it.v || 0)}<span class="text-[10px] font-normal text-gray-400">${unidad}</span></span>
                     <button type="button" onclick="editarPrecioHosp(${it.idx})" title="Modificar precio" class="w-8 h-8 rounded-lg text-[#154390] hover:bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-pen"></i></button>
+                    ${it.nuevo ? `<button type="button" onclick="eliminarInsumoPermanenteHosp(${it.idx})" title="Eliminar de la lista" class="w-8 h-8 rounded-lg text-red-500 hover:bg-red-50 border border-red-200 flex items-center justify-center shrink-0"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                 </div>`;
             }).join('') || '<p class="text-xs text-gray-400 italic py-2">Sin coincidencias.</p>';
             if (precioHospEditando != null) { const inp = document.getElementById('cta-precio-edit'); if (inp) { inp.focus(); inp.select(); } }
@@ -13093,6 +13306,70 @@
             recalcularCuentaHosp();
             renderPreciosHospModal();
             showToast(`Precio de ${it.n}: ${fmtCOPHosp(nuevo)}.`);
+        };
+
+        // ===== Agregar / eliminar insumos permanentes desde "Precios e insumos" =====
+        window.toggleNuevoInsumoHosp = function(abrir) {
+            const f = document.getElementById('cta-nuevo-ins'), b = document.getElementById('cta-nuevo-ins-btn'); if (!f) return;
+            const ver = abrir === undefined ? f.classList.contains('hidden') : !!abrir;
+            f.classList.toggle('hidden', !ver);
+            if (b) b.classList.toggle('hidden', ver);
+            if (ver) { const q = (document.getElementById('cta-precios-buscar') || {}).value || ''; const n = document.getElementById('cta-nuevo-ins-nombre'); if (n) { if (!n.value && q.trim()) n.value = q.trim(); setTimeout(() => n.focus(), 30); } }
+            else { ['cta-nuevo-ins-nombre', 'cta-nuevo-ins-valor'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); }
+        };
+        window.agregarInsumoPermanenteHosp = async function() {
+            if (!puedeCambiarPreciosHosp()) { showToast("No tienes permiso para agregar insumos a la lista.", true); return; }
+            const n = tituloCatalogo(document.getElementById('cta-nuevo-ins-nombre').value || '').trim();
+            const v = parseInt(String(document.getElementById('cta-nuevo-ins-valor').value || '').replace(/\D/g, ''), 10) || 0;
+            const cat = document.getElementById('cta-nuevo-ins-grupo').value || 'Insumos';
+            const g = cat === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
+            if (!n) { showToast("Escribe el nombre del insumo.", true); return; }
+            if (v <= 0) { showToast("Escribe un valor válido.", true); return; }
+            const clave = t => compactarBusqueda(sinTildes(t));
+            const repetido = CATALOGO_CUENTAS.find(c => !c.oculto && clave(c.n) === clave(n));
+            if (repetido) {
+                showToast(`«${repetido.n}» ya está en la lista (${repetido.cat || repetido.g}). Búscalo y cambia su precio si es necesario.`, true);
+                const b = document.getElementById('cta-precios-buscar'); if (b) { b.value = repetido.n; renderPreciosHospModal(); }
+                return;
+            }
+            if (!confirm(`¿Agregar "${n}" a la lista de forma permanente?\n\nValor: ${fmtCOPHosp(v)}\nVa en: ${cat}\n\nQuedará disponible en todas las cuentas de cobro.`)) return;
+            const id = 'xn' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            const reg = { n, v, cat, g, creadoEn: new Date().toISOString(), creadoPor: usuarioSesion ? usuarioSesion.nombre : '' };
+            try {
+                await setDoc(doc(db, "cuentas_config", "precios"), { nuevos: { [id]: reg }, actualizadoEn: new Date().toISOString(), actualizadoPor: usuarioSesion ? usuarioSesion.nombre : '' }, { merge: true });
+            } catch (e) { console.error(e); showToast("No se pudo agregar el insumo. Revisa la conexión o los permisos.", true); return; }
+            preciosHospNuevos[id] = reg;
+            aplicarPreciosHosp();
+            renderCatalogoCuentasHosp();
+            pintarDiaHosp();
+            recalcularCuentaHosp();
+            toggleNuevoInsumoHosp(false);
+            const b = document.getElementById('cta-precios-buscar'); if (b) b.value = n;
+            renderPreciosHospModal();
+            showToast(`«${n}» quedó agregado a la lista (${cat}).`);
+        };
+        window.eliminarInsumoPermanenteHosp = async function(idx) {
+            if (!puedeCambiarPreciosHosp()) { showToast("No tienes permiso para eliminar insumos de la lista.", true); return; }
+            const it = CATALOGO_CUENTAS[idx]; if (!it || !it.nuevo) return;
+            if (!confirm(`¿Eliminar "${it.n}" de la lista?\n\nYa no aparecerá para nuevos cobros. Las cuentas que ya lo tienen cobrado lo conservan con su valor.`)) return;
+            try {
+                await setDoc(doc(db, "cuentas_config", "precios"), { nuevos: { [it.id]: deleteField() }, actualizadoEn: new Date().toISOString(), actualizadoPor: usuarioSesion ? usuarioSesion.nombre : '' }, { merge: true });
+            } catch (e) { console.error(e); showToast("No se pudo eliminar el insumo. Revisa la conexión o los permisos.", true); return; }
+            delete preciosHospNuevos[it.id];
+            // Si la cuenta abierta ya lo tenía cobrado, pasa a "agregados a mano" con su cantidad y valor
+            const cant = totalItemDias(idx);
+            if (cant > 0) {
+                cuentaHospExtra.push({ n: it.n, v: it.v, cant, g: it.g, cat: it.cat || it.g });
+                for (const f in cuentaHospPorDia) { if (cuentaHospPorDia[f]) delete cuentaHospPorDia[f][idx]; }
+                marcarCambioCuentaHosp();
+                renderExtraCuentasHosp();
+            }
+            aplicarPreciosHosp();
+            renderCatalogoCuentasHosp();
+            pintarDiaHosp();
+            recalcularCuentaHosp();
+            renderPreciosHospModal();
+            showToast(`«${it.n}» se eliminó de la lista.`);
         };
 
         // Busca ignorando tildes, mayúsculas, guiones, espacios y signos:
@@ -13207,6 +13484,7 @@
             const nuevoNombre = prompt("Nombre del insumo:", it.n);
             if (nuevoNombre === null) return;
             if (!nuevoNombre.trim()) { showToast("El nombre no puede quedar vacío.", true); return; }
+            if (esInsumoBloqueadoManualHosp(nuevoNombre) && !esInsumoBloqueadoManualHosp(it.n)) { showToast(MSG_INSUMO_EN_LISTA, true); return; }
             const nuevoValorTxt = prompt("Valor unitario (solo números):", it.v);
             if (nuevoValorTxt === null) return;
             const nuevoValor = parseInt(nuevoValorTxt) || 0;
@@ -13260,6 +13538,13 @@
             recalcularCuentaHosp();
         };
 
+        // Insumos que no se dejan agregar a mano porque ya están en la lista
+        function esInsumoBloqueadoManualHosp(n) {
+            const t = sinTildes(n).trim().replace(/\s+/g, ' ');
+            return t === 'materiales' || t === 'material';
+        }
+        const MSG_INSUMO_EN_LISTA = 'El insumo «Materiales» se encuentra en la lista de insumos, por favor verifique.';
+        window.ocultarAvisoExtraHosp = function() { const a = document.getElementById('cta-extra-aviso'); if (a) a.classList.add('hidden'); };
         window.agregarInsumoExtraHosp = function() {
             if (permisosActuales['cuentas_hosp_agregar'] !== true) { showToast("No tienes permiso para agregar insumos que no están en la lista.", true); return; }
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
@@ -13268,6 +13553,12 @@
             const cat = document.getElementById('cta-extra-grupo').value || 'Insumos';
             const g = cat === 'Laboratorio' ? 'Laboratorio' : 'Insumos';
             if (!n) { showToast("Escribe el nombre del insumo.", true); return; }
+            if (esInsumoBloqueadoManualHosp(n)) {
+                const a = document.getElementById('cta-extra-aviso');
+                if (a) { a.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + MSG_INSUMO_EN_LISTA; a.classList.remove('hidden'); }
+                showToast(MSG_INSUMO_EN_LISTA, true);
+                return;
+            }
             if (v <= 0) { showToast("Escribe un valor válido.", true); return; }
             cuentaHospExtra.push({ n, v, cant: 1, g, cat });
             registrarSalidaFueraTurno(n, 1, tipoItemCuentaFT({ g, cat }));
@@ -13285,7 +13576,7 @@
                 const cant = totalItemDias(idx); // suma de todos los días
                 const sub = cant * it.v;
                 const tot = document.getElementById('cta-tot-' + idx);
-                if (tot) tot.innerText = cant || 0;
+                if (tot) tot.innerText = esOxigenoHosp(it) ? numOxi(cant) : (cant || 0);
                 const cell = document.getElementById('cta-sub-' + idx);
                 if (cell) cell.innerText = cant ? fmtCOPHosp(sub) : '—';
                 if (it.g === 'Laboratorio') subLab += sub; else subMascotas += sub;
@@ -13313,6 +13604,7 @@
             renderResumenHosp();
             renderAgregadosArriba();
             try { revisarDiasHosp(); } catch (e) { console.error(e); }
+            try { actualizarNotaIngresoDiaHosp(); } catch (e) { console.error(e); }
             return total;
         };
 
@@ -13336,7 +13628,7 @@
                 const subtotal = arr.reduce((a, x) => a + x.sub, 0);
                 const filas = arr.map(x => {
                     const det = x.esAmPm ? ` <span class="text-[10px] text-gray-400">(AM ${x.am} · PM ${x.pm})</span>` : '';
-                    return `<div class="flex justify-between gap-2 text-xs py-0.5"><span class="text-gray-700 truncate"><b class="${color}">${x.cant}×</b> ${x.n}${det}</span><span class="text-gray-500 whitespace-nowrap">${fmtCOPHosp(x.sub)}</span></div>`;
+                    return `<div class="flex justify-between gap-2 text-xs py-0.5"><span class="text-gray-700 truncate"><b class="${color}">${cantTxtHosp(x.n, x.cant)}</b> ${x.n}${det}</span><span class="text-gray-500 whitespace-nowrap">${fmtCOPHosp(x.sub)}</span></div>`;
                 }).join('');
                 cont.innerHTML = `<div class="rounded-lg border ${borde} p-2 mb-3">
                     <div class="flex justify-between items-center mb-1"><span class="text-xs font-bold ${color}"><i class="fa-solid fa-circle-check"></i> Cobrado el ${etiquetaDia} (${arr.length})</span><span class="text-xs font-bold ${color}">${fmtCOPHosp(subtotal)}</span></div>
@@ -13356,7 +13648,7 @@
             });
             cuentaHospExtra.forEach(it => { if ((it.cant || 0) > 0) (it.g === 'Laboratorio' ? lab : ins).push({ n: it.n, cant: it.cant, v: it.v, dias: 0, sub: it.cant * it.v }); });
             if (!ins.length && !lab.length) { cont.innerHTML = '<p class="text-gray-400 italic text-sm">Todavía no has agregado insumos ni servicios.</p>'; return; }
-            const fila = x => `<div class="flex justify-between gap-2 text-sm py-0.5 border-b border-gray-50"><span class="text-gray-700"><span class="font-semibold text-[#154390]">${x.cant}×</span> ${x.n}${(x.dias > 1) ? ` <span class="text-[10px] text-gray-400">(${x.dias} días)</span>` : ''}</span><span class="flex items-baseline gap-3 whitespace-nowrap"><span class="text-xs text-gray-400" title="Valor por unidad">${fmtCOPHosp(x.v)} c/u</span><span class="text-gray-600 w-24 text-right">${fmtCOPHosp(x.sub)}</span></span></div>`;
+            const fila = x => `<div class="flex justify-between gap-2 text-sm py-0.5 border-b border-gray-50"><span class="text-gray-700"><span class="font-semibold text-[#154390]">${cantTxtHosp(x.n, x.cant)}</span> ${x.n}${(x.dias > 1) ? ` <span class="text-[10px] text-gray-400">(${x.dias} días)</span>` : ''}</span><span class="flex items-baseline gap-3 whitespace-nowrap"><span class="text-xs text-gray-400" title="Valor por unidad">${fmtCOPHosp(x.v)} ${esOxigenoHosp({ n: x.n }) ? "por hora" : "c/u"}</span><span class="text-gray-600 w-24 text-right">${fmtCOPHosp(x.sub)}</span></span></div>`;
             let html = '';
             if (ins.length) html += `<h4 class="text-xs font-bold text-[#154390] mt-1 mb-1 uppercase">Insumos y servicios (${ins.length})</h4>${ins.map(fila).join('')}`;
             if (lab.length) html += `<h4 class="text-xs font-bold text-teal-700 mt-3 mb-1 uppercase">Laboratorio (${lab.length})</h4>${lab.map(fila).join('')}`;
@@ -13424,9 +13716,10 @@
             let subMascotas = 0, subLab = 0;
             CATALOGO_CUENTAS.forEach((it, idx) => {
                 const cant = totalItemDias(idx);
-                if (cant > 0) {
+                const desg = desglosePorDia(idx);
+                if (cant > 0 || desg.some(x => x.ses)) {   // oxigenoterapia: se guarda aunque la sesión siga en curso (0 h)
                     const dias = {};
-                    desglosePorDia(idx).forEach(x => { dias[x.fecha] = { am: x.am, pm: x.pm }; });
+                    desg.forEach(x => { dias[x.fecha] = x.ses ? { am: x.am, pm: x.pm, ses: x.ses } : { am: x.am, pm: x.pm }; });
                     items.push({ id: it.id, n: it.n, v: it.v, cant, g: it.g, dias });
                     if (it.g === 'Laboratorio') subLab += cant * it.v; else subMascotas += cant * it.v;
                 }
@@ -13452,6 +13745,13 @@
             };
         }
 
+        // Nota importante en el catálogo: solo en Hospitalización y el día de ingreso
+        function actualizarNotaIngresoDiaHosp() {
+            const nota = document.getElementById('cta-nota-ingreso-dia'); if (!nota) return;
+            const tipo = (document.getElementById('cta-tipo') || {}).value || 'Hospitalización';
+            const ingreso = (document.getElementById('cta-fecha') || {}).value || '';
+            nota.classList.toggle('hidden', !(tipo === 'Hospitalización' && ingreso && cuentaHospDia === ingreso));
+        }
         function pintarTipoAtencionHosp(v) {
             v = (v === 'Ambulatorio') ? 'Ambulatorio' : 'Hospitalización';
             const inp = document.getElementById('cta-tipo'); if (inp) inp.value = v;
@@ -13460,6 +13760,8 @@
             const off = 'px-3 py-2 rounded-lg text-sm font-semibold border flex items-center justify-center gap-2 bg-gray-50 text-gray-600 border-gray-200';
             if (bh) bh.className = (v === 'Hospitalización') ? on : off;
             if (ba) ba.className = (v === 'Ambulatorio') ? on : off;
+            const nota = document.getElementById('cta-nota-ingreso'); if (nota) nota.classList.toggle('hidden', v !== 'Hospitalización');
+            actualizarNotaIngresoDiaHosp();
         }
         window.setTipoAtencionHosp = function(v) {
             pintarTipoAtencionHosp(v);
@@ -13491,11 +13793,15 @@
             const diaBase = data.fecha || hoyISOHosp();
             (data.items || []).forEach(it => {
                 if (it.x) { cuentaHospExtra.push({ n: it.n, v: it.v, cant: it.cant, g: it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos', cat: it.cat || (it.g === 'Laboratorio' ? 'Laboratorio' : 'Insumos') }); return; }
-                let idx = it.id ? CATALOGO_CUENTAS.findIndex(c => c.id === it.id) : -1;
-                if (idx < 0) idx = CATALOGO_CUENTAS.findIndex(c => sinTildes(c.n) === sinTildes(it.n) && c.g === it.g);
+                let idx = it.id ? CATALOGO_CUENTAS.findIndex(c => c.id === it.id && !c.oculto) : -1;
+                if (idx < 0) idx = CATALOGO_CUENTAS.findIndex(c => !c.oculto && sinTildes(c.n) === sinTildes(it.n) && c.g === it.g);
                 if (idx >= 0) {
                     if (it.dias && typeof it.dias === 'object') {
-                        for (const f in it.dias) { diaStoreHosp(f)[idx] = { am: it.dias[f].am || 0, pm: it.dias[f].pm || 0 }; }
+                        for (const f in it.dias) {
+                            const reg = { am: it.dias[f].am || 0, pm: it.dias[f].pm || 0 };
+                            if (Array.isArray(it.dias[f].ses)) reg.ses = it.dias[f].ses.map(o => ({ ...o }));
+                            diaStoreHosp(f)[idx] = reg;
+                        }
                     } else {
                         // Cuenta antigua (sin días): todo va al día de ingreso; AM = cant si no había AM/PM
                         const am = (it.am != null || it.pm != null) ? (it.am || 0) : (it.cant || 0);
@@ -13540,7 +13846,7 @@
                 cuentaHospListo = true;
             }
             if (document.getElementById('cta-catalogo').children.length === 0) renderCatalogoCuentasHosp();
-            if (!preciosHospCargados) { preciosHospCargados = true; cargarYAplicarPreciosHosp(); }
+            if (!preciosHospCargados) { preciosHospCargados = true; preciosHospPromesa = cargarYAplicarPreciosHosp(); }
             if (!salidasCargadas) { salidasCargadas = true; cargarSalidasFueraTurno(); }
             if (!turnosCargados) { turnosCargados = true; cargarTurnosFarmacia(); }
             if (cuentaHospId === null && !document.getElementById('cta-fecha').value) {
@@ -14400,6 +14706,9 @@
                     </div>`;
 
                 const contA = document.getElementById('cta-encurso-amb-container');
+                // Conteo de pacientes en curso (arriba de las listas)
+                const cntH = document.getElementById('cta-cnt-hosp'); if (cntH) cntH.textContent = hosp.length;
+                const cntA = document.getElementById('cta-cnt-amb'); if (cntA) cntA.textContent = amb.length;
                 cont.innerHTML = hosp.length ? `<div class="space-y-2">${hosp.map(cardHtml).join('')}</div>`
                     : '<div class="text-center py-6"><p class="text-gray-400 italic text-sm mb-3">No hay hospitalizaciones en curso.</p><button type="button" onclick="nuevaCuentaHosp()" class="js-editar px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold border border-blue-200 inline-flex items-center gap-2"><i class="fa-solid fa-file-circle-plus"></i> Nueva cuenta</button></div>';
                 if (contA) contA.innerHTML = amb.length ? `<div class="space-y-2">${amb.map(cardHtml).join('')}</div>`
@@ -14701,6 +15010,8 @@
                 registrarBaseDoc(snap.ref, snap.data());
                 escucharCuentaHosp(id);
                 clearTimeout(cuentaHospAutosaveTimer);
+                if (preciosHospPromesa) { try { await preciosHospPromesa; } catch (e) {} }
+                if ((snap.data().items || []).some(it => !it.x && it.id && !CATALOGO_CUENTAS.some(c => c.id === it.id))) { try { await cargarYAplicarPreciosHosp(); } catch (e) {} }
                 if (document.getElementById('cta-catalogo').children.length === 0) renderCatalogoCuentasHosp();
                 volcarCuentaHosp(snap.data());
                 var estC = document.getElementById('cta-estado-guardado'); if (estC) estC.innerHTML = '';
@@ -14965,9 +15276,18 @@
             y = pdf.lastAutoTable.finalY + 10;
 
             // Insumos y servicios por un lado; laboratorio en su propia tabla (encabezado verde azulado)
-            const filaItem = it => [it.n, String(it.cant), fmtCOPHosp(it.v), fmtCOPHosp(it.v * it.cant)];
+            const filaItem = it => {
+                if (!esOxigenoHosp(it)) return [it.n, String(it.cant), fmtCOPHosp(it.v), fmtCOPHosp(it.v * it.cant)];
+                // Oxigenoterapia: valor por hora y, debajo, las horas de inicio y finalización de cada día
+                const lineas = Object.keys(it.dias || {}).sort().map(f => {
+                    const x = it.dias[f] || {}, h = (Number(x.am) || 0) + (Number(x.pm) || 0);
+                    const txt = Array.isArray(x.ses) && x.ses.length ? textoSesionesOxi(x.ses) : (h > 0 ? fmtHorasOxi(h) + ' (sin horario)' : '');
+                    return txt ? fechaCortaHosp(f) + ': ' + txt : '';
+                }).filter(Boolean);
+                return [it.n + ' (por hora)' + (lineas.length ? '\n' + lineas.join('\n') : ''), fmtHorasOxi(it.cant), fmtCOPHosp(it.v) + ' / h', fmtCOPHosp(it.v * it.cant)];
+            };
             const esLab = it => it.g === 'Laboratorio';
-            const filas = (d.items || []).filter(it => !esLab(it)).map(filaItem);
+            const filas = (d.items || []).filter(it => !esLab(it) && (Number(it.cant) || 0) > 0).map(filaItem);
             const filasLab = (d.items || []).filter(esLab).map(filaItem);
             const tablaItems = (titulo, body, color) => {
                 pdf.autoTable({
@@ -16865,6 +17185,31 @@
             window.scrollTo({ top: 0, behavior: 'auto' });
         };
 
+        // Marca (solo para mostrar, no se guarda) las cuentas de laboratorio hechas a mano cuyo paciente
+        // tenía una cuenta de hospitalización o ambulatorio en esa fecha: misma historia clínica y la fecha
+        // de la cuenta entre el ingreso y el egreso (hasta 15 días después del egreso, por si se cobró tarde).
+        // Si el usuario no tiene acceso a Cuentas de cobro, no se marca nada.
+        async function marcarLabDeHospital(items, fechaDe) {
+            const normHC = h => String(h || '').replace(/\D/g, '').replace(/^0+/, '');
+            const pend = items.filter(it => it.origen !== 'hospitalizacion' && normHC(it.hc));
+            if (!pend.length) return;
+            if (!(esAdmin === true || permisosActuales['cuentas_hosp'] === true)) return;
+            const snapH = await getDocs(collection(db, "cuentas_hospital"));
+            const porHC = {};
+            snapH.forEach(dd => {
+                const c = dd.data() || {};
+                if (c.eliminado) return;
+                const h = normHC(c.historia); if (!h || !c.fecha) return;
+                (porHC[h] = porHC[h] || []).push({ ini: c.fecha, egr: String(c.fechaEgreso || '').trim(), tipo: c.tipoAtencion === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización' });
+            });
+            const mas15 = f => { const d = new Date(f + 'T00:00:00'); d.setDate(d.getDate() + 15); return fechaISOLocal(d); };
+            pend.forEach(it => {
+                const f = fechaDe(it); const lista = porHC[normHC(it.hc)]; if (!f || !lista) return;
+                const ok = lista.filter(c => c.ini <= f && (!c.egr || f <= mas15(c.egr))).sort((a, b) => b.ini.localeCompare(a.ini));
+                if (ok.length) it._hospTipo = ok[0].tipo;
+            });
+        }
+
         window.abrirCuentasGuardadas = async function() {
             const cont = document.getElementById('lab-lista-container');
             const resumen = document.getElementById('lab-lista-resumen');
@@ -16885,6 +17230,10 @@
                     cont.innerHTML = '<div class="text-center py-6 text-gray-400 italic text-sm">No hay cuentas para ese rango de fechas.</div>';
                     return;
                 }
+
+                // Cuentas hechas a mano (no creadas desde Cuentas de cobro) de pacientes que estaban
+                // hospitalizados o en ambulatorio: se reconocen por la historia clínica y la fecha.
+                try { await marcarLabDeHospital(items, fechaDe); } catch (e) { console.error(e); }
 
                 // Resumen general del rango
                 const totalGeneral = items.reduce((s, it) => s + (Number(it.valor) || 0), 0);
@@ -16912,7 +17261,7 @@
                         const safeNombre = (it.deudorNombre || '').replace(/'/g, "\\'");
                         row.innerHTML = `
                             <div class="min-w-0">
-                                <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.origen === 'hospitalizacion' ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-[#154390] align-middle">' + (it.tipoAtencion === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización') + '</span>' : ''}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}${it.enviado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700"><i class="fa-solid fa-envelope"></i> Enviada</span>' : ''}</p>
+                                <p class="font-bold text-gray-800 text-sm leading-relaxed"><i class="fa-solid fa-paw text-teal-600"></i> ${it.paciente || '(sin paciente)'}${it.origen === 'hospitalizacion' ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-[#154390] align-middle">' + (it.tipoAtencion === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización') + '</span>' : (it._hospTipo ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-[#154390] align-middle" title="Paciente con cuenta de ' + (it._hospTipo === 'Ambulatorio' ? 'ambulatorio' : 'hospitalización') + ' en esa fecha (misma historia clínica)">' + it._hospTipo + '</span>' : '')}${it.hc ? ' <span class="text-gray-400 font-normal">· HC ' + it.hc + '</span>' : ''}${it.enviado ? ' <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700"><i class="fa-solid fa-envelope"></i> Enviada</span>' : ''}</p>
                                 <p class="text-xs text-gray-500 truncate">Propietario: ${it.deudorNombre || '—'} · <span class="font-semibold text-teal-700">$${fmtMiles(it.valor)}</span></p>
                             </div>
                             <div class="flex gap-2 shrink-0">
