@@ -16964,6 +16964,14 @@
         let labHospVista = 'curso';               // 'curso' | 'egresados'
         let labHospDesde = '', labHospHasta = ''; // rango de fecha de egreso
         let labHospBusqueda = '';                  // buscar por paciente / HC / propietario
+        let labHospEspecie = '';                   // '' (todos) | 'canino' | 'felino'
+        window.especieLabHosp = function(v) { labHospEspecie = v || ''; renderCuentasHospLab(); };
+        function grupoEspecieLab(esp) {
+            const e = sinTildes(esp || '');
+            if (e.includes('canino') || e.includes('perro')) return 'canino';
+            if (e.includes('felino') || e.includes('gato')) return 'felino';
+            return '';
+        }
         let labHospBuscarTimer = null;
         window.buscarLabHosp = function(v) {
             labHospBusqueda = v || '';
@@ -17058,6 +17066,7 @@
                 // Búsqueda por paciente, HC o propietario (ignora tildes, mayúsculas y signos)
                 const qBus = sinTildes(labHospBusqueda.trim());
                 if (qBus) items = items.filter(it => coincideBusqueda(sinTildes([it.paciente, it.hc, it.deudorNombre].join(' ')), qBus));
+                if (labHospEspecie) items = items.filter(it => grupoEspecieLab(it.especie) === labHospEspecie);
                 const nCurso = items.filter(it => !it.egresado).length;
                 const nEgr = items.length - nCurso;
                 const egresados = labHospVista === 'egresados';
@@ -17079,7 +17088,9 @@
                 const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const btn = (v, txt, n) => `<button type="button" onclick="vistaLabHosp('${v}')" class="flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${labHospVista === v ? 'bg-white text-[#154390] shadow' : 'text-gray-500 hover:text-gray-700'}">${txt} <span class="text-[10px] ${labHospVista === v ? 'text-gray-400' : 'text-gray-400'}">(${n})</span></button>`;
                 const escAttr = t => String(t || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-                let filtro = `<div class="relative mb-2"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i><input type="text" id="labhosp-buscar" value="${escAttr(labHospBusqueda)}" oninput="buscarLabHosp(this.value)" autocomplete="off" placeholder="Buscar paciente, historia clínica o propietario..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm"></div>
+                const btnEsp = (v, txt) => `<button type="button" onclick="especieLabHosp('${v}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border ${labHospEspecie === v ? 'bg-[#154390] text-white border-[#154390]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}">${txt}</button>`;
+                let filtro = `<div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2"><div class="relative flex-1"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i><input type="text" id="labhosp-buscar" value="${escAttr(labHospBusqueda)}" oninput="buscarLabHosp(this.value)" autocomplete="off" placeholder="Buscar paciente, historia clínica o propietario..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-gray-50 text-sm"></div>
+                <div class="flex items-center gap-1.5 shrink-0">${btnEsp('', 'Todos')}${btnEsp('canino', '<i class="fa-solid fa-dog"></i> Caninos')}${btnEsp('felino', '<i class="fa-solid fa-cat"></i> Felinos')}</div></div>
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1 mb-2">${btn('curso', '<i class="fa-solid fa-bed-pulse"></i> En curso', nCurso)}${btn('egresados', '<i class="fa-solid fa-door-open"></i> Egresados', nEgr)}</div>`;
                 if (egresados) {
                     const hoy = new Date();
@@ -17125,7 +17136,9 @@
                     </div>`;
                 }
                 if (!items.length) {
-                    const msg = qBus ? 'Ningún paciente coincide con "' + esc(labHospBusqueda.trim()) + '"' + (egresados && (labHospDesde || labHospHasta) ? ' en ese rango de fechas. Prueba con "Todo".' : '.')
+                    const nomEsp = labHospEspecie === 'canino' ? 'caninos' : 'felinos';
+                    const msg = (labHospEspecie && !qBus) ? 'No hay pacientes ' + nomEsp + (egresados ? ' egresados' + ((labHospDesde || labHospHasta) ? ' en ese rango de fechas' : '') : ' en curso') + ' con exámenes de laboratorio.'
+                        : qBus ? 'Ningún paciente' + (labHospEspecie ? ' ' + (labHospEspecie === 'canino' ? 'canino' : 'felino') : '') + ' coincide con "' + esc(labHospBusqueda.trim()) + '"' + (egresados && (labHospDesde || labHospHasta) ? ' en ese rango de fechas. Prueba con "Todo".' : '.')
                         : egresados
                         ? ((labHospDesde || labHospHasta) ? 'No hay pacientes egresados en ese rango de fechas.' : 'No hay pacientes egresados con exámenes de laboratorio.')
                         : 'No hay pacientes en curso con exámenes de laboratorio cargados en su cuenta de cobro.';
@@ -17145,7 +17158,7 @@
                             const delMes = items.filter(x => (x.fechaEgreso || '').substring(0, 7) === ym);
                             const tot = delMes.reduce((s2, x) => s2 + (Number(x.valor) || 0), 0);
                             const nom = ym ? MESES_LABHOSP[Number(ym.substring(5, 7)) - 1] + ' ' + ym.substring(0, 4) : 'Sin fecha de egreso';
-                            cab = `<div class="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5 mt-3 mb-2"><span class="font-bold text-[#154390] text-sm"><i class="fa-regular fa-calendar"></i> ${nom}</span><span class="text-xs text-gray-500">${delMes.length} · $${fmtMiles(tot)}</span></div>`;
+                            cab = `<div class="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5 mt-3 mb-2"><span class="font-bold text-[#154390] text-sm"><i class="fa-regular fa-calendar"></i> ${nom}</span><span class="text-xs text-gray-500">${delMes.length}${esAdmin ? ' · $' + fmtMiles(tot) : ''}</span></div>`;
                         }
                     }
                     const ex = Array.isArray(it.examenes) ? it.examenes : [];
@@ -17252,7 +17265,7 @@
                     const header = document.createElement('div');
                     header.className = "flex items-center justify-between bg-teal-50 border border-teal-100 rounded-lg px-3 py-1.5 mt-3 mb-1";
                     header.innerHTML = '<span class="font-bold text-teal-700 text-sm"><i class="fa-regular fa-calendar"></i> ' + formatoFechaLegible(fecha) +
-                                       '</span><span class="text-xs text-gray-500">' + grupo.length + ' · $' + fmtMiles(totalDia) + '</span>';
+                                       '</span><span class="text-xs text-gray-500">' + grupo.length + (esAdmin ? ' · $' + fmtMiles(totalDia) : '') + '</span>';
                     cont.appendChild(header);
 
                     grupo.forEach(it => {
