@@ -2325,6 +2325,7 @@
                     </datalist>
                 </div>
                 <div><label class="fmt-lbl">Historia clínica <span class="text-red-500">*</span></label><input type="number" inputmode="numeric" min="0" step="1" id="cta-historia" oninput="validarDatosCuentaHosp()" onchange="verificarDuplicadoHosp()" class="fmt-in" placeholder="Solo números"></div>
+                <div class="sm:col-span-2"><label class="fmt-lbl">Correo del propietario <span class="text-red-500">*</span></label><input type="email" id="cta-correo" oninput="validarDatosCuentaHosp()" placeholder="correo@ejemplo.com" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="fmt-in"><p id="cta-correo-estado" class="text-[11px] mt-1"></p></div>
             </div>
             <div id="cta-aviso-duplicado" class="hidden mt-3 bg-orange-50 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 text-sm"></div>
             <!-- Nota importante (solo Hospitalización) -->
@@ -2335,7 +2336,7 @@
         </section>
 
         <div id="cta-aviso-datos" class="hidden bg-amber-50 border-2 border-amber-300 rounded-xl p-3 text-center text-amber-800 font-semibold text-sm">
-            <i class="fa-solid fa-lock"></i> Completa Fecha de ingreso, Paciente, Propietario e Historia clínica para poder registrar insumos y medicamentos.
+            <i class="fa-solid fa-lock"></i> Completa Fecha de ingreso, Paciente, Propietario, Historia clínica y Correo del propietario para poder registrar insumos y medicamentos.
         </div>
 
         <!-- Agregar insumo nuevo -->
@@ -11936,7 +11937,7 @@
             validarDatosCuentaHosp();
         };
         const CAMPOS_HIST_HOSP = [
-            ['paciente', 'Paciente'], ['historia', 'Historia clínica'], ['propietario', 'Propietario'], ['tipoDoc', 'Tipo de documento'], ['cedula', 'Número de documento'],
+            ['paciente', 'Paciente'], ['historia', 'Historia clínica'], ['propietario', 'Propietario'], ['tipoDoc', 'Tipo de documento'], ['cedula', 'Número de documento'], ['correo', 'Correo del propietario'],
             ['especie', 'Especie'], ['tipoAtencion', 'Tipo de atención'], ['fecha', 'Fecha de ingreso'], ['fechaEgreso', 'Fecha de egreso']
         ];
         function snapDeCuentaHosp(data) {
@@ -12081,7 +12082,7 @@
                 if (it && it.dias && typeof it.dias === 'object' && !it.x) {
                     // Oxigenoterapia: las horas de cada día salen de sus sesiones (por si se combinaron sesiones de dos personas)
                     if (esOxigenoHosp(it)) Object.values(it.dias).forEach(x => { if (x && Array.isArray(x.ses)) { x.am = Math.min(MAX_CANT_HOSP, horasSesionesOxi(x.ses)); x.pm = 0; if (x.ses.length) sesAbiertas = true; } });
-                    it.cant = Object.values(it.dias).reduce((s, x) => s + (Number((x || {}).am) || 0) + (Number((x || {}).pm) || 0), 0);
+                    it.cant = redCant(Object.values(it.dias).reduce((s, x) => s + (Number((x || {}).am) || 0) + (Number((x || {}).pm) || 0), 0));
                 }
                 return (Number(it.cant) || 0) > 0 || sesAbiertas;
             });
@@ -12197,7 +12198,14 @@
 
 
         window.validarDatosCuentaHosp = function() {
-            const ok = ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-cedula', 'cta-historia', 'cta-especie']
+            // Correo del propietario: obligatorio y bien escrito
+            const inCorreo = document.getElementById('cta-correo');
+            const correo = ((inCorreo || {}).value || '').trim();
+            const correoOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+            const estCorreo = document.getElementById('cta-correo-estado');
+            if (estCorreo) estCorreo.innerHTML = !correo ? '' : (correoOk ? '<span class="text-green-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Correo válido</span>' : '<span class="text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Correo no válido</span>');
+            if (inCorreo) { inCorreo.classList.toggle('border-green-400', !!correo && correoOk); inCorreo.classList.toggle('border-red-400', !!correo && !correoOk); }
+            const ok = correoOk && ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-cedula', 'cta-historia', 'cta-especie']
                 .every(id => ((document.getElementById(id) || {}).value || '').trim() !== '');
             const aviso = document.getElementById('cta-aviso-datos');
             if (aviso) aviso.classList.toggle('hidden', ok);
@@ -12260,7 +12268,7 @@
                     </div>
                     <div class="text-right shrink-0">
                         <p class="text-sm font-bold text-gray-700">${fmtCOPHosp(x.v * x.cant)}</p>
-                        <p class="text-[11px] text-gray-400">${x.cant} × ${fmtCOPHosp(x.v)}</p>
+                        <p class="text-[11px] text-gray-400">${redCant(x.cant)} × ${fmtCOPHosp(x.v)}</p>
                     </div>
                     ${puede ? `<button type="button" onclick="eliminarAgregadoHosp(${ctaAgrDatos.indexOf(x)})" title="Eliminar de esa cuenta" class="w-8 h-8 rounded-full text-red-500 hover:bg-red-50 shrink-0"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                 </div>`).join('') : '<p class="text-sm text-gray-400 italic text-center py-6">No hay insumos agregados con estos filtros.</p>';
@@ -12285,7 +12293,7 @@
                 const quien = usuarioSesion ? usuarioSesion.nombre : '';
                 const ahora = new Date().toISOString();
                 const historial = (actual.historial || []).concat([{ por: quien, correo: usuarioSesion ? usuarioSesion.correo : '', fecha: ahora, accion: 'Modificó', total: 0,
-                    detalles: ['Retiró por completo ' + x.n + ' (tenía ' + x.cant + ') — desde «Insumos agregados»'] }]);
+                    detalles: ['Retiró por completo ' + x.n + ' (tenía ' + redCant(x.cant) + ') — desde «Insumos agregados»'] }]);
                 const nuevo = normalizarCuentaHosp({ ...actual, items, historial, actualizado: ahora, modificadoPor: quien });
                 nuevo.historial[nuevo.historial.length - 1].total = nuevo.total || 0;
                 await guardarDocSeguro(ref, nuevo, { parcial: true, clave: claveCuentaHosp, normalizar: normalizarCuentaHosp });
@@ -12458,10 +12466,13 @@
         // ===== Hoja por día (AM/PM por fecha) =====
         function diaStoreHosp(fecha) { if (!cuentaHospPorDia[fecha]) cuentaHospPorDia[fecha] = {}; return cuentaHospPorDia[fecha]; }
         // Total de un ítem sumando TODOS los días
+        // Redondea cantidades a 2 decimales: al sumar decimales (0,3 + 0,4…) el computador deja
+        // residuos como 6.199999999999999; esto los quita.
+        function redCant(n) { return Math.round((Number(n) || 0) * 100) / 100; }
         function totalItemDias(idx) {
             let t = 0;
             for (const f in cuentaHospPorDia) { const s = cuentaHospPorDia[f][idx]; if (s) t += (s.am || 0) + (s.pm || 0); }
-            return t;
+            return redCant(t);
         }
         // Días (con datos) de un ítem, ordenados
         function desglosePorDia(idx) {
@@ -12501,7 +12512,7 @@
         function fmtHorasOxi(h) { return numOxi(h) + ' h'; }
         function fmtDuracionOxi(min) { const h = Math.floor(min / 60), m = min % 60; return h && m ? `${h} h ${m} min` : (h ? `${h} h` : `${m} min`); }
         // Cantidad para mostrar: "3,5 h" en oxigenoterapia, "3×" en lo demás
-        function cantTxtHosp(n, cant) { return esOxigenoHosp({ n }) ? fmtHorasOxi(cant) : cant + '×'; }
+        function cantTxtHosp(n, cant) { return esOxigenoHosp({ n }) ? fmtHorasOxi(cant) : redCant(cant) + '×'; }
         // Texto de las sesiones de un día (para el PDF): "08:00–11:30 (3,5 h); 20:00–21:00 (1 h)"
         function textoSesionesOxi(ses) {
             return (ses || []).filter(s => minutosSesionOxi(s) > 0)
@@ -13734,6 +13745,7 @@
                 propietario: document.getElementById('cta-propietario').value.trim(),
                 tipoDoc: (document.getElementById('cta-tipodoc') || {}).value || 'CC',
                 cedula: limpiarDocHosp(document.getElementById('cta-cedula').value, (document.getElementById('cta-tipodoc') || {}).value || 'CC'),
+                correo: ((document.getElementById('cta-correo') || {}).value || '').trim().toLowerCase(),
                 especie: document.getElementById('cta-especie').value,
                 tipoAtencion: (document.getElementById('cta-tipo') || {}).value || 'Hospitalización',
                 fecha: document.getElementById('cta-fecha').value,
@@ -13775,6 +13787,7 @@
             document.getElementById('cta-propietario').value = data.propietario || '';
             document.getElementById('cta-tipodoc').value = TIPOS_DOC_HOSP[data.tipoDoc] ? data.tipoDoc : 'CC';
             document.getElementById('cta-cedula').value = data.cedula || '';
+            document.getElementById('cta-correo').value = data.correo || '';
             document.getElementById('cta-especie').value = data.especie || '';
             pintarTipoAtencionHosp(data.tipoAtencion || 'Hospitalización');
             document.getElementById('cta-fecha').value = data.fecha || '';
@@ -14214,12 +14227,12 @@
                 });
                 const nPac = Object.keys(pacientes).length;
                 const html = Object.values(pacientes).sort((a, b) => a.primero.localeCompare(b.primero)).map(p => {
-                    const totP = Object.values(p.insumos).reduce((s, x) => s + x.cant, 0);
+                    const totP = redCant(Object.values(p.insumos).reduce((s, x) => s + x.cant, 0));
                     const filas = Object.keys(p.insumos).map(n => {
                         const x = p.insumos[n];
                         return `<tr class="border-t border-blue-100">
                             <td class="px-3 py-1.5 font-semibold text-gray-800 break-words">${nombreItemFT(n, x.control, x.tipo, esc)}</td>
-                            <td class="px-3 py-1.5 text-center font-bold text-[#154390] whitespace-nowrap">${x.cant}</td>
+                            <td class="px-3 py-1.5 text-center font-bold text-[#154390] whitespace-nowrap">${redCant(x.cant)}</td>
                             <td class="px-3 py-1.5 text-xs text-gray-500">${x.horas.map(esc).join(', ')}<span class="block text-[11px] text-gray-400">${[...x.usuarios].map(esc).join(', ') || '—'}</span></td>
                         </tr>`;
                     }).join('');
@@ -14354,7 +14367,7 @@
                         const esControl = !!controlNombreDe(x.n);
                         return `
                         <div class="flex items-start justify-between gap-2 py-1 px-1.5 text-sm rounded-md ${esControl ? 'bg-sky-50 border-l-4 border-sky-300' : ''}">
-                            <span class="text-gray-700 min-w-0"><span class="font-semibold text-[#154390]">${x.cant}×</span> ${esControl ? '<i class="fa-solid fa-box-open text-sky-500 mr-0.5" title="Está en Control de Insumos Bodega"></i>' : ''}<span class="${esControl ? 'font-semibold text-sky-900 bg-sky-100 border-b-2 border-sky-300 px-1 rounded-sm' : ''}">${esc(x.n)}</span>
+                            <span class="text-gray-700 min-w-0"><span class="font-semibold text-[#154390]">${redCant(x.cant)}×</span> ${esControl ? '<i class="fa-solid fa-box-open text-sky-500 mr-0.5" title="Está en Control de Insumos Bodega"></i>' : ''}<span class="${esControl ? 'font-semibold text-sky-900 bg-sky-100 border-b-2 border-sky-300 px-1 rounded-sm' : ''}">${esc(x.n)}</span>
                                 <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${x.g === 'Laboratorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${x.g === 'Laboratorio' ? 'Lab' : 'Insumo'}</span>
                                 ${esControl ? '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-100 text-sky-800">Control</span>' : ''}
                                 ${(x.am > 0 || x.pm > 0) ? `<span class="text-[10px] text-gray-400">(AM ${x.am} · PM ${x.pm})</span>` : ''}${x.sinDetalle ? '<span class="text-[10px] text-gray-400">(sin detalle por día)</span>' : ''}
@@ -14817,6 +14830,7 @@
             document.getElementById('cta-historia').value = '';
             document.getElementById('cta-propietario').value = '';
             document.getElementById('cta-cedula').value = '';
+            document.getElementById('cta-correo').value = '';
             document.getElementById('cta-tipodoc').value = 'CC';
             document.getElementById('cta-especie').value = '';
             pintarTipoAtencionHosp('Hospitalización');
@@ -15054,6 +15068,7 @@
                     fecha, fechaLarga: fechaLargaCuenta(fecha, cfg.ciudad),
                     deudorNombre: String(data.propietario || '').trim().toUpperCase(), deudorCC: (data.tipoDoc === 'NIT' ? String(data.cedula || '') : formatearCC(data.cedula || '')), deudorTipo: data.tipoDoc || 'CC',
                     paciente: data.paciente || '', hc: data.historia || '',
+                    ...(String(data.correo || '').trim() ? { emailPropietario: String(data.correo).trim().toLowerCase() } : {}),
                     examenes, totalExamenes: total, valor: total, valorFmt: fmtMiles(total), valorLetras: valorEnLetras(total),
                     actualizadoDesdeHosp: new Date().toISOString(), sincronizadoPor: usuarioSesion ? usuarioSesion.nombre : ''
                 };
@@ -15267,7 +15282,7 @@
                     ["PACIENTE", d.paciente || '—', "ESPECIE", d.especie || '—'],
                     ["HISTORIA CLÍNICA", d.historia || '—', "FECHA INGRESO", d.fecha || '—'],
                     ["PROPIETARIO", d.propietario || '—', (TIPOS_DOC_HOSP[d.tipoDoc] || TIPOS_DOC_HOSP.CC).pdf, d.cedula || '—'],
-                    ["FECHA EGRESO", d.fechaEgreso || '—', "", ""],
+                    ["FECHA EGRESO", d.fechaEgreso || '—', "CORREO", d.correo || '—'],
                 ],
                 theme: 'grid', styles: { fontSize: 8, cellPadding: 4, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5 },
                 columnStyles: { 0: { fontStyle: 'bold', fillColor: ENCA, textColor: AZUL, cellWidth: 100 }, 2: { fontStyle: 'bold', fillColor: ENCA, textColor: AZUL, cellWidth: 100 } },
@@ -15277,7 +15292,7 @@
 
             // Insumos y servicios por un lado; laboratorio en su propia tabla (encabezado verde azulado)
             const filaItem = it => {
-                if (!esOxigenoHosp(it)) return [it.n, String(it.cant), fmtCOPHosp(it.v), fmtCOPHosp(it.v * it.cant)];
+                if (!esOxigenoHosp(it)) return [it.n, String(redCant(it.cant)), fmtCOPHosp(it.v), fmtCOPHosp(Math.round(it.v * it.cant))];
                 // Oxigenoterapia: valor por hora y, debajo, las horas de inicio y finalización de cada día
                 const lineas = Object.keys(it.dias || {}).sort().map(f => {
                     const x = it.dias[f] || {}, h = (Number(x.am) || 0) + (Number(x.pm) || 0);
