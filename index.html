@@ -2325,7 +2325,7 @@
                     </datalist>
                 </div>
                 <div><label class="fmt-lbl">Historia clínica <span class="text-red-500">*</span></label><input type="number" inputmode="numeric" min="0" step="1" id="cta-historia" oninput="validarDatosCuentaHosp()" onchange="verificarDuplicadoHosp()" class="fmt-in" placeholder="Solo números"></div>
-                <div class="sm:col-span-2"><label class="fmt-lbl">Correo del propietario <span class="text-red-500">*</span></label><input type="email" id="cta-correo" oninput="validarDatosCuentaHosp()" placeholder="correo@ejemplo.com" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="fmt-in"><p id="cta-correo-estado" class="text-[11px] mt-1"></p></div>
+                <div class="sm:col-span-2"><label class="fmt-lbl">Correo del propietario <span id="cta-correo-oblig" class="text-red-500">*</span><span id="cta-correo-opc" class="hidden normal-case font-normal text-gray-400">(opcional en esta cuenta)</span></label><input type="email" id="cta-correo" oninput="validarDatosCuentaHosp()" placeholder="correo@ejemplo.com" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="fmt-in"><p id="cta-correo-estado" class="text-[11px] mt-1"></p></div>
             </div>
             <div id="cta-aviso-duplicado" class="hidden mt-3 bg-orange-50 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 text-sm"></div>
             <!-- Nota importante (solo Hospitalización) -->
@@ -2336,7 +2336,7 @@
         </section>
 
         <div id="cta-aviso-datos" class="hidden bg-amber-50 border-2 border-amber-300 rounded-xl p-3 text-center text-amber-800 font-semibold text-sm">
-            <i class="fa-solid fa-lock"></i> Completa Fecha de ingreso, Paciente, Propietario, Historia clínica y Correo del propietario para poder registrar insumos y medicamentos.
+            <i class="fa-solid fa-lock"></i> <span id="cta-aviso-datos-txt">Completa Fecha de ingreso, Paciente, Propietario, Historia clínica y Correo del propietario para poder registrar insumos y medicamentos.</span>
         </div>
 
         <!-- Agregar insumo nuevo -->
@@ -11845,6 +11845,7 @@
         }
 
         let cuentaHospId = null;
+        let cuentaHospExigeCorreo = false;   // el correo del propietario solo es obligatorio en las cuentas creadas desde que se agregó (exigeCorreo: true)
         let cuentaHospExtra = []; // insumos agregados manualmente: {n, v, cant}
         let cuentaHospHistorial = []; // registro completo de cambios: {por, correo, fecha, accion, total}
         let cuentaHospMovimientos = []; // salidas de insumos con fecha/hora: {n, g, cant, v, fecha, por}
@@ -12205,7 +12206,16 @@
             const estCorreo = document.getElementById('cta-correo-estado');
             if (estCorreo) estCorreo.innerHTML = !correo ? '' : (correoOk ? '<span class="text-green-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Correo válido</span>' : '<span class="text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Correo no válido</span>');
             if (inCorreo) { inCorreo.classList.toggle('border-green-400', !!correo && correoOk); inCorreo.classList.toggle('border-red-400', !!correo && !correoOk); }
-            const ok = correoOk && ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-cedula', 'cta-historia', 'cta-especie']
+            const ob = document.getElementById('cta-correo-oblig'), op = document.getElementById('cta-correo-opc');
+            if (ob) ob.classList.toggle('hidden', !cuentaHospExigeCorreo);
+            if (op) op.classList.toggle('hidden', cuentaHospExigeCorreo);
+            const avisoTxt = document.getElementById('cta-aviso-datos-txt');
+            if (avisoTxt) avisoTxt.textContent = cuentaHospExigeCorreo
+                ? 'Completa Fecha de ingreso, Paciente, Propietario, Historia clínica y Correo del propietario para poder registrar insumos y medicamentos.'
+                : 'Completa Fecha de ingreso, Paciente, Propietario e Historia clínica para poder registrar insumos y medicamentos.';
+            // En cuentas anteriores el correo es opcional, pero si se escribe debe estar bien escrito
+            const correoCumple = cuentaHospExigeCorreo ? correoOk : (!correo || correoOk);
+            const ok = correoCumple && ['cta-fecha', 'cta-paciente', 'cta-propietario', 'cta-cedula', 'cta-historia', 'cta-especie']
                 .every(id => ((document.getElementById(id) || {}).value || '').trim() !== '');
             const aviso = document.getElementById('cta-aviso-datos');
             if (aviso) aviso.classList.toggle('hidden', ok);
@@ -13746,6 +13756,7 @@
                 tipoDoc: (document.getElementById('cta-tipodoc') || {}).value || 'CC',
                 cedula: limpiarDocHosp(document.getElementById('cta-cedula').value, (document.getElementById('cta-tipodoc') || {}).value || 'CC'),
                 correo: ((document.getElementById('cta-correo') || {}).value || '').trim().toLowerCase(),
+                ...(cuentaHospExigeCorreo ? { exigeCorreo: true } : {}),
                 especie: document.getElementById('cta-especie').value,
                 tipoAtencion: (document.getElementById('cta-tipo') || {}).value || 'Hospitalización',
                 fecha: document.getElementById('cta-fecha').value,
@@ -13788,6 +13799,7 @@
             document.getElementById('cta-tipodoc').value = TIPOS_DOC_HOSP[data.tipoDoc] ? data.tipoDoc : 'CC';
             document.getElementById('cta-cedula').value = data.cedula || '';
             document.getElementById('cta-correo').value = data.correo || '';
+            cuentaHospExigeCorreo = data.exigeCorreo === true;
             document.getElementById('cta-especie').value = data.especie || '';
             pintarTipoAtencionHosp(data.tipoAtencion || 'Hospitalización');
             document.getElementById('cta-fecha').value = data.fecha || '';
@@ -14831,6 +14843,7 @@
             document.getElementById('cta-propietario').value = '';
             document.getElementById('cta-cedula').value = '';
             document.getElementById('cta-correo').value = '';
+            cuentaHospExigeCorreo = true;
             document.getElementById('cta-tipodoc').value = 'CC';
             document.getElementById('cta-especie').value = '';
             pintarTipoAtencionHosp('Hospitalización');
