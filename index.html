@@ -14883,16 +14883,7 @@
             if (panel && !panel.classList.contains('hidden')) await abrirCuentasGuardadasHosp();
             actualizarEstadoEgresoHosp();
             const egreso = document.getElementById('cta-fecha-egreso').value;
-            if (egreso) {
-                // Si no se pudo guardar, la cuenta queda abierta (no se pierde nada) y se avisa
-                if (cuentaHospDirty || !cuentaHospId) { showToast("No se pudo guardar el egreso. Revisa la conexión e inténtalo de nuevo; la cuenta sigue abierta.", true); return; }
-                const nombre = document.getElementById('cta-paciente').value.trim();
-                // La cuenta egresada se CIERRA: así nadie escribe el siguiente paciente encima de ella
-                await nuevaCuentaHosp();
-                vistaInicioHosp();
-                await renderHospEnCurso();
-                showToast(`Egreso registrado. La cuenta${nombre ? ' de ' + nombre : ''} se cerró y pasó a 'Cuentas guardadas'.`);
-            }
+            if (egreso) showToast("Egreso registrado. La cuenta pasó a 'Cuentas guardadas'.");
             else showToast("Se quitó la fecha de egreso. La cuenta vuelve a 'en curso'.");
         }
 
