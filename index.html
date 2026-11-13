@@ -2373,7 +2373,7 @@
                     </datalist>
                 </div>
                 <div><label class="fmt-lbl">Historia clínica <span class="text-red-500">*</span></label><input type="number" inputmode="numeric" min="0" step="1" id="cta-historia" oninput="validarDatosCuentaHosp()" onchange="verificarDuplicadoHosp()" class="fmt-in" placeholder="Solo números"></div>
-                <div class="sm:col-span-2"><label class="fmt-lbl">Correo del propietario <span id="cta-correo-oblig" class="text-red-500">*</span><span id="cta-correo-opc" class="hidden normal-case font-normal text-gray-400">(opcional en esta cuenta)</span></label><input type="email" id="cta-correo" oninput="validarDatosCuentaHosp()" placeholder="correo@ejemplo.com" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="fmt-in"><p id="cta-correo-estado" class="text-[11px] mt-1"></p></div>
+                <div class="sm:col-span-2"><label class="fmt-lbl">Correo del propietario <span id="cta-correo-oblig" class="hidden text-red-500">*</span><span id="cta-correo-opc" class="hidden normal-case font-normal text-gray-400">(opcional en esta cuenta)</span></label><input type="email" id="cta-correo" oninput="validarDatosCuentaHosp()" placeholder="correo@ejemplo.com" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="fmt-in"><p id="cta-correo-estado" class="text-[11px] mt-1"></p></div>
             </div>
             <div id="cta-aviso-duplicado" class="hidden mt-3 bg-orange-50 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 text-sm"></div>
             <div id="cta-ident-bloqueo" class="hidden mt-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs flex flex-wrap items-center gap-2">
@@ -3683,6 +3683,7 @@
 
                 // Permiso especial: borrar cuentas de hospitalización (solo admin o quien lo tenga concedido)
                 permisosActuales['cuentas_hosp_borrar'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_borrar'] === true : false);
+                permisosActuales['cuentas_hosp_eliminadas'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_eliminadas'] === true : false);
                 // Permiso especial: agregar insumos que no están en la lista (cuenta de cobro)
                 permisosActuales['cuentas_hosp_agregar'] = esAdmin || (datosUsuario ? datosUsuario['cuentas_hosp_agregar'] === true : false);
                 // Permiso especial: modificar los precios del catálogo de cuentas de cobro
@@ -5602,6 +5603,10 @@
                             <i class="fa-solid fa-trash-can text-red-500"></i> Puede <b>borrar</b> cuentas de hospitalización
                         </label>
                         <label class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-600 cursor-pointer">
+                            <input type="checkbox" ${u.cuentas_hosp_eliminadas === true ? 'checked' : ''} onchange="setPermisoEliminadasHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-emerald-600">
+                            <i class="fa-solid fa-trash-can-arrow-up text-emerald-600"></i> Puede entrar a <b>«Eliminadas»</b>, restaurar cuentas y <b>subir respaldos (.json)</b>
+                        </label>
+                        <label class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-600 cursor-pointer">
                             <input type="checkbox" ${u.cuentas_hosp_agregar === true ? 'checked' : ''} onchange="setPermisoAgregarHosp('${u.uid}', this.checked)" class="w-4 h-4 accent-[#154390]">
                             <i class="fa-solid fa-plus text-[#154390]"></i> Puede <b>agregar insumos que no están en la lista</b>
                         </label>
@@ -5632,6 +5637,15 @@
             }
         };
 
+        window.setPermisoEliminadasHosp = async function(uid, permitido) {
+            try {
+                await setDoc(doc(db, "usuarios", uid), { cuentas_hosp_eliminadas: permitido === true }, { merge: true });
+                showToast(permitido ? "Acceso a «Eliminadas» y respaldos concedido." : "Acceso a «Eliminadas» y respaldos retirado.");
+            } catch (error) {
+                showToast("No se pudo actualizar el permiso.", true);
+                console.error(error);
+            }
+        };
         window.setPermisoBorrarHosp = async function(uid, permitido) {
             try {
                 await setDoc(doc(db, "usuarios", uid), { cuentas_hosp_borrar: permitido === true }, { merge: true });
@@ -12415,8 +12429,8 @@
             if (estCorreo) estCorreo.innerHTML = !correo ? '' : (correoOk ? '<span class="text-green-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Correo válido</span>' : '<span class="text-red-500 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Correo no válido</span>');
             if (inCorreo) { inCorreo.classList.toggle('border-green-400', !!correo && correoOk); inCorreo.classList.toggle('border-red-400', !!correo && !correoOk); }
             const ob = document.getElementById('cta-correo-oblig'), op = document.getElementById('cta-correo-opc');
-            if (ob) ob.classList.toggle('hidden', !cuentaHospExigeCorreo);
-            if (op) op.classList.toggle('hidden', cuentaHospExigeCorreo);
+            if (ob) ob.classList.add('hidden');   // correo opcional: sin asterisco
+            if (op) op.classList.add('hidden');   // ni la palabra «opcional»
             const avisoTxt = document.getElementById('cta-aviso-datos-txt');
             if (avisoTxt) avisoTxt.textContent = cuentaHospExigeCorreo
                 ? 'Completa Fecha de ingreso, Paciente, Propietario, Historia clínica y Correo del propietario para poder registrar insumos y medicamentos.'
@@ -14007,7 +14021,7 @@
             document.getElementById('cta-tipodoc').value = TIPOS_DOC_HOSP[data.tipoDoc] ? data.tipoDoc : 'CC';
             document.getElementById('cta-cedula').value = data.cedula || '';
             document.getElementById('cta-correo').value = data.correo || '';
-            cuentaHospExigeCorreo = data.exigeCorreo === true;
+            cuentaHospExigeCorreo = false;   // el correo del propietario es opcional en todas las cuentas
             document.getElementById('cta-especie').value = data.especie || '';
             pintarTipoAtencionHosp(data.tipoAtencion || 'Hospitalización');
             document.getElementById('cta-fecha').value = data.fecha || '';
@@ -14098,7 +14112,7 @@
             validarDatosCuentaHosp();
             // Botón "Eliminadas": solo visible para el administrador
             const btnElim = document.getElementById('cta-btn-eliminadas');
-            if (btnElim) btnElim.classList.toggle('hidden', !esAdmin);
+            if (btnElim) btnElim.classList.toggle('hidden', !puedeEliminadasHosp());
             const btnCopia = document.getElementById('cta-btn-copia');
             if (btnCopia) btnCopia.classList.toggle('hidden', !esAdmin);
             const btnIng = document.getElementById('cta-btn-ingresos');
@@ -15067,7 +15081,7 @@
             document.getElementById('cta-propietario').value = '';
             document.getElementById('cta-cedula').value = '';
             document.getElementById('cta-correo').value = '';
-            cuentaHospExigeCorreo = true;
+            cuentaHospExigeCorreo = false;   // el correo del propietario es opcional
             document.getElementById('cta-tipodoc').value = 'CC';
             document.getElementById('cta-especie').value = '';
             pintarTipoAtencionHosp('Hospitalización');
@@ -15447,7 +15461,7 @@
             if (ver) c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         };
         window.leerRespaldoHosp = async function(input) {
-            if (!esAdmin) { showToast("Solo el administrador puede subir respaldos.", true); return; }
+            if (!puedeEliminadasHosp()) { showToast("No tienes permiso para subir respaldos.", true); return; }
             const files = Array.from(input.files || []); input.value = '';
             if (!files.length) return;
             const panel = document.getElementById('cta-rest-panel');
@@ -15499,7 +15513,7 @@
         }
         // Crea la cuenta del respaldo como una cuenta NUEVA (otro número), sin modificar la que ya está en la app
         window.restaurarComoNuevaHosp = async function(i) {
-            if (!esAdmin) return;
+            if (!puedeEliminadasHosp()) return;
             const x = restHospLista[i]; if (!x) return;
             if (!confirm(`¿Crear la cuenta de "${x.datos.paciente || 'paciente'}" del respaldo como una cuenta aparte?\n\nLa cuenta que hoy está en la app con ese número NO se modifica.`)) return;
             try {
@@ -15517,7 +15531,7 @@
             } catch (e) { console.error(e); showToast("No se pudo restaurar la cuenta.", true); }
         };
         window.restaurarRespaldoHosp = async function() {
-            if (!esAdmin) return;
+            if (!puedeEliminadasHosp()) return;
             const sel = Array.from(document.querySelectorAll('.cta-rest-chk:checked')).map(c => restHospLista[+c.dataset.i]).filter(Boolean);
             if (!sel.length) { showToast("Marca al menos una cuenta.", true); return; }
             const pisar = sel.filter(x => x.actual && !x.actual.eliminado);
@@ -15552,8 +15566,11 @@
             else vistaInicioHosp();
         };
 
+        // Entrar a «Eliminadas», restaurar cuentas y subir respaldos .json: administrador o usuarios con ese permiso
+        // (el borrado definitivo sigue siendo solo del administrador)
+        function puedeEliminadasHosp() { return esAdmin === true || permisosActuales['cuentas_hosp_eliminadas'] === true; }
         window.abrirCuentasEliminadasHosp = async function() {
-            if (!esAdmin) { showToast("Solo el administrador puede ver las cuentas eliminadas.", true); return; }
+            if (!puedeEliminadasHosp()) { showToast("No tienes acceso a las cuentas eliminadas.", true); return; }
             if (await flushGuardadoHosp() === false) return;
             const panel = document.getElementById('cta-eliminadas');
             const cont = document.getElementById('cta-eliminadas-container');
@@ -15606,7 +15623,7 @@
         };
 
         window.restaurarCuentaHosp = async function(id, nombre) {
-            if (!esAdmin) { showToast("Solo el administrador puede restaurar cuentas.", true); return; }
+            if (!puedeEliminadasHosp()) { showToast("No tienes permiso para restaurar cuentas.", true); return; }
             if (!confirm(`¿Restaurar la cuenta de "${nombre || 'este paciente'}"?\n\nVolverá a aparecer en las listas (en curso o guardadas, según su fecha de egreso).`)) return;
             try {
                 const ahora = new Date().toISOString();
