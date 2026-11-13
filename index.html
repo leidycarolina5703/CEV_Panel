@@ -2106,7 +2106,7 @@
             <div class="flex items-center gap-3 w-full sm:w-auto">
                 <button onclick="salirCuentasHosp()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
                 <div class="w-11 h-11 bg-blue-50 text-[#154390] rounded-full flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-                <h2 class="text-lg font-bold text-[#154390]">Cuentas de cobro</h2>
+                <div><h2 class="text-lg font-bold text-[#154390] leading-tight">Cuentas de cobro</h2><p class="text-[10px] text-gray-400 leading-tight" title="Si dice una versión anterior, recarga con Ctrl + F5">Versión 13-nov-2026</p></div>
             </div>
             <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
                 <button onclick="verHospEnCurso()" title="Volver a la lista de hospitalizaciones en curso" class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-shield-dog"></i> En curso</button>
@@ -11931,6 +11931,10 @@
         // guardado tarda (señal lenta o sin conexión) y entretanto se dispara otro guardado
         // (automático o "Guardar ahora"), todos usan el MISMO documento y no se crean cuentas duplicadas.
         let cuentaHospIdNueva = null;
+        // Cada vez que se abre otra cuenta o se empieza una nueva cambia la "sesión". Un guardado que
+        // termina tarde (señal lenta) solo actualiza la pantalla si sigue siendo la misma cuenta; así un
+        // guardado viejo no "adopta" la cuenta siguiente (lo que podía duplicar o mezclar pacientes).
+        let cuentaHospSesion = 0;
         // Paciente e HC de una cuenta ya guardada: no se pueden reemplazar por los de otro paciente
         let cuentaHospIdent = null;        // { paciente, historia } con que se abrió la cuenta
         let cuentaHospIdentLibre = false;  // el administrador habilitó la corrección
@@ -12039,7 +12043,8 @@
         function mostrarAvisoDupHosp(dup, historia) {
             const aviso = document.getElementById('cta-aviso-duplicado'); if (!aviso) return;
             aviso.classList.remove('hidden');
-            aviso.innerHTML = `<p><i class="fa-solid fa-triangle-exclamation"></i> Ya hay una cuenta en curso con la HC <b>${historia}</b>${dup.paciente ? ' (' + dup.paciente + ')' : ''}. <b>Esta cuenta nueva no se ha guardado</b> para no duplicar al paciente.</p>
+            const porNombre = String(historia).startsWith('n:');
+            aviso.innerHTML = `<p><i class="fa-solid fa-triangle-exclamation"></i> ${porNombre ? `Ya hay una cuenta en curso para el paciente <b>${String(dup.paciente || '').replace(/</g, '&lt;')}</b>${dup.historia ? ' (HC ' + dup.historia + ')' : ''}` : `Ya hay una cuenta en curso con la HC <b>${historia}</b>${dup.paciente ? ' (' + dup.paciente + ')' : ''}`}. <b>Esta cuenta nueva no se ha guardado</b> para no duplicar al paciente.</p>
                 <div class="flex flex-wrap gap-2 mt-2">
                     <button type="button" onclick="cargarCuentaHosp('${dup.id}')" class="px-3 py-1.5 text-xs font-bold bg-[#154390] text-white rounded-lg hover:bg-[#0f3268]"><i class="fa-solid fa-folder-open"></i> Abrir la cuenta existente</button>
                     <button type="button" onclick="confirmarDupHosp('${String(historia).replace(/'/g, "\\'")}')" class="px-3 py-1.5 text-xs font-semibold bg-white text-orange-800 border border-orange-300 rounded-lg hover:bg-orange-100">Es otra hospitalización: guardar aparte</button>
@@ -12050,6 +12055,22 @@
             const aviso = document.getElementById('cta-aviso-duplicado'); if (aviso) aviso.classList.add('hidden');
             marcarCambioCuentaHosp();
         };
+
+        // Cuenta en curso con el mismo nombre de paciente (para cuentas nuevas que aún no tienen HC)
+        async function buscarCuentaEnCursoPorNombre(nombre, idActual) {
+            const n = normNombreHosp(nombre); if (!n) return null;
+            try {
+                const snap = await getDocs(collection(db, "cuentas_hospital"));
+                let encontrada = null;
+                snap.forEach(d => {
+                    if (encontrada) return;
+                    const it = d.data();
+                    const enCurso = !(it.fechaEgreso && String(it.fechaEgreso).trim());
+                    if (d.id !== idActual && !it.eliminado && enCurso && normNombreHosp(it.paciente) === n) encontrada = { id: d.id, ...it };
+                });
+                return encontrada;
+            } catch (e) { console.error(e); return null; }
+        }
 
         window.verificarDuplicadoHosp = async function() {
             const aviso = document.getElementById('cta-aviso-duplicado');
@@ -12292,20 +12313,44 @@
         async function flushGuardadoHosp() {
             clearTimeout(cuentaHospAutosaveTimer);
             if (cuentaHospDirty) { try { await autoguardarCuentaHosp(); } catch (e) { console.error(e); } }
+            // Nunca se descarta en silencio una cuenta nueva que no se pudo guardar
+            if (cuentaHospDirty && !cuentaHospId && !cuentaHospIdNueva && hospEnFormulario) {
+                const d = recogerCuentaHosp();
+                if (d.paciente || d.historia) {
+                    const hc = String(d.historia || '').trim();
+                    const ok = confirm(`La cuenta de "${d.paciente || 'este paciente'}" NO se ha guardado` + (hc ? ` porque ya hay otra cuenta en curso con la HC ${hc}.` : '.') + `\n\n¿Salir y descartarla?\n\nPulsa «Cancelar» para quedarte y abrir la cuenta existente o confirmar que es otra hospitalización.`);
+                    if (!ok) return false;
+                    cuentaHospDirty = false;
+                }
+            }
+            return true;
         }
 
         async function autoguardarCuentaHosp() {
             if (!puedeEditar('cuentas_hosp')) return;
+            const ses = cuentaHospSesion;
             const data = recogerCuentaHosp();
             protegerIdentHosp(data);
             if (!data.paciente && !data.historia) return; // aún no hay nada identificable
-            // Cuenta nueva (aún sin guardar): se guarda solo cuando tiene HC y no hay otra en curso con esa HC
+            // Cuenta nueva (aún sin guardar): se guarda de inmediato, con o sin HC. Solo se frena si la HC
+            // escrita ya tiene otra cuenta en curso (para no duplicar al paciente) hasta que se decida.
             if (!cuentaHospId && !cuentaHospIdNueva) {
                 const hc = String(data.historia || '').trim();
                 const est0 = document.getElementById('cta-estado-guardado');
-                if (!hc) { if (est0) est0.innerHTML = '<span class="text-amber-600"><i class="fa-solid fa-circle-info"></i> Escribe la historia clínica para que la cuenta se guarde.</span>'; return; }
-                if (cuentaHospDupOk !== hc) {
+                // Sin HC: se revisa si ya hay una cuenta en curso con el mismo nombre de paciente
+                const claveNom = 'n:' + normNombreHosp(data.paciente);
+                if (!hc && normNombreHosp(data.paciente).length >= 3 && cuentaHospDupOk !== claveNom) {
+                    const dupN = await buscarCuentaEnCursoPorNombre(data.paciente, null);
+                    if (ses !== cuentaHospSesion) return;
+                    if (dupN && !cuentaHospId && !cuentaHospIdNueva && cuentaHospDupOk !== claveNom && normNombreHosp(recogerCuentaHosp().paciente) === claveNom.slice(2) && !String(recogerCuentaHosp().historia || '').trim()) {
+                        mostrarAvisoDupHosp(dupN, claveNom);
+                        if (est0) est0.innerHTML = '<span class="text-orange-700 font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> No guardada: ya hay una cuenta en curso para este paciente.</span>';
+                        return;
+                    }
+                }
+                if (hc && cuentaHospDupOk !== hc) {
                     const dup = await buscarCuentaEnCursoPorHistoria(hc, null);
+                    if (ses !== cuentaHospSesion) return;   // mientras tanto se cambió de cuenta
                     if (dup && !cuentaHospId && !cuentaHospIdNueva && cuentaHospDupOk !== hc) {
                         mostrarAvisoDupHosp(dup, hc);
                         if (est0) est0.innerHTML = '<span class="text-orange-700 font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> No guardada: ya hay una cuenta en curso con esta HC.</span>';
@@ -12329,6 +12374,7 @@
                 const esNuevaId = !cuentaHospId;
                 const final = await guardarCuentaHospSeguro(id, data);
                 sincronizarLabDesdeHosp(id, final);
+                if (ses !== cuentaHospSesion) return;   // se guardó bien, pero ya se está en otra cuenta: no tocar la pantalla
                 cuentaHospId = id;
                 if (esNuevaId) escucharCuentaHosp(id);
                 cuentaHospBaseActualizado = ahora;
@@ -12349,9 +12395,12 @@
             }
         }
 
+        window.addEventListener('beforeunload', e => {
+            if (typeof hospEnFormulario !== 'undefined' && hospEnFormulario && cuentaHospDirty && !cuentaHospId && !cuentaHospIdNueva) { e.preventDefault(); e.returnValue = ''; }
+        });
         window.salirCuentasHosp = async function() {
             // Se guarda solo antes de salir; no hace falta pulsar "Guardar en la nube"
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             cuentaHospDirty = false;
             goToDashboard();
         };
@@ -14647,7 +14696,7 @@
         // Botón "En curso": cierra el formulario y los paneles y vuelve a la
         // lista de hospitalizaciones en curso, refrescándola.
         window.verHospEnCurso = async function() {
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             vistaInicioHosp();
             await renderHospEnCurso();
             const secc = document.getElementById('cta-encurso');
@@ -14666,7 +14715,7 @@
         }
         window.abrirIngresosHosp = async function() {
             if (!esAdmin) { showToast("Solo el administrador puede ver el reporte de ingresos.", true); return; }
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             ['cta-form', 'cta-encurso', 'cta-lista', 'cta-eliminadas', 'cta-informe'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
             document.getElementById('cta-ingresos').classList.remove('hidden');
             if (!document.getElementById('ing-desde').value) rangoIngresosHosp('mes', true);
@@ -15002,8 +15051,9 @@
 
         window.nuevaCuentaHosp = async function() {
             // Guarda la cuenta actual antes de empezar una nueva
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             escucharCuentaHosp(null);
+            cuentaHospSesion++;
             cuentaHospId = null;
             cuentaHospIdNueva = null;
             cuentaHospDupOk = null; cuentaHospDupAvisada = null;
@@ -15065,6 +15115,7 @@
 
         window.guardarCuentaHosp = async function() {
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
+            const ses = cuentaHospSesion;
             const data = recogerCuentaHosp();
             protegerIdentHosp(data);
             if (!data.fecha || !data.paciente || !data.propietario || !data.cedula || !data.historia || !data.especie) {
@@ -15081,6 +15132,7 @@
             // Cuenta duplicada: otra hospitalización EN CURSO con la misma historia
             if (!data.fechaEgreso) {
                 const dup = await buscarCuentaEnCursoPorHistoria(data.historia, cuentaHospId || cuentaHospIdNueva);
+                if (ses !== cuentaHospSesion) return;
                 if (dup && !confirm(`Ya existe una hospitalización en curso con la HC ${data.historia}${dup.paciente ? ' (' + dup.paciente + ')' : ''}.\n\n¿Guardar de todas formas como una cuenta aparte?`)) return;
                 if (dup) cuentaHospDupOk = String(data.historia || '').trim();
             }
@@ -15100,6 +15152,7 @@
                 const esNuevaId2 = !cuentaHospId;
                 const final = await guardarCuentaHospSeguro(id, data);
                 sincronizarLabDesdeHosp(id, final);
+                if (ses !== cuentaHospSesion) { showToast("Cuenta guardada."); return; }
                 cuentaHospId = id;
                 if (esNuevaId2) escucharCuentaHosp(id);
                 cuentaHospBaseActualizado = ahora;
@@ -15124,7 +15177,7 @@
         };
 
         window.abrirCuentasGuardadasHosp = async function() {
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             const panel = document.getElementById('cta-lista');
             const cont = document.getElementById('cta-lista-container');
             // Al abrir "Guardadas" se oculta el formulario de llenado y la sección "en curso"
@@ -15206,10 +15259,11 @@
 
         window.cargarCuentaHosp = async function(id) {
             // Guarda lo que estabas editando antes de abrir otra cuenta
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             try {
                 const snap = await getDoc(doc(db, "cuentas_hospital", id));
                 if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
+                cuentaHospSesion++;
                 cuentaHospId = id;
                 cuentaHospIdNueva = null;
                 cuentaHospDupOk = null; cuentaHospDupAvisada = null;
@@ -15500,7 +15554,7 @@
 
         window.abrirCuentasEliminadasHosp = async function() {
             if (!esAdmin) { showToast("Solo el administrador puede ver las cuentas eliminadas.", true); return; }
-            await flushGuardadoHosp();
+            if (await flushGuardadoHosp() === false) return;
             const panel = document.getElementById('cta-eliminadas');
             const cont = document.getElementById('cta-eliminadas-container');
             const f = document.getElementById('cta-form'); if (f) f.classList.add('hidden');
