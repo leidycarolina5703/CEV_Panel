@@ -2123,7 +2123,6 @@
                 <button id="cta-btn-precios" onclick="abrirPreciosHosp()" title="Buscar y modificar precios, y agregar insumos nuevos a la lista" class="hidden px-3 py-1.5 text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-1.5 border border-amber-200 justify-center whitespace-nowrap"><i class="fa-solid fa-tags"></i> Precios e insumos</button>
                 <button onclick="abrirAgregadosHosp()" title="Ver los insumos agregados a mano en todas las cuentas" class="px-3 py-1.5 text-sm bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-1.5 border border-amber-200 justify-center whitespace-nowrap"><i class="fa-solid fa-hand-pointer"></i> Insumos agregados</button>
                 <button id="cta-btn-eliminadas" onclick="abrirCuentasEliminadasHosp()" title="Cuentas eliminadas (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-semibold flex items-center gap-1.5 border border-red-200 justify-center whitespace-nowrap"><i class="fa-solid fa-trash-can-arrow-up"></i> Eliminadas</button>
-                <button id="cta-btn-bitacora" onclick="abrirBitacoraHosp()" title="Quién creó, dio egreso, eliminó, restauró o borró cada cuenta (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-purple-100 text-purple-700 hover:opacity-80 rounded-lg font-semibold flex items-center gap-1.5 border border-gray-200 justify-center whitespace-nowrap"><i class="fa-solid fa-book"></i> Bitácora</button>
                 <button id="cta-btn-copia" onclick="abrirCopiaSeguridadHosp()" title="Enviar ahora la copia de seguridad de las cuentas de cobro al correo (solo administrador)" class="hidden px-3 py-1.5 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-semibold flex items-center gap-1.5 border border-slate-300 justify-center whitespace-nowrap"><i class="fa-solid fa-paper-plane"></i> Enviar copia de seguridad</button>
             </div>
         </div>
@@ -2227,24 +2226,6 @@
         </div>
 
         <!-- Cuentas eliminadas (solo administrador) -->
-        <!-- Bitácora de Cuentas de cobro (solo administrador) -->
-        <div id="cta-bit-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)cerrarBitacoraHosp()">
-            <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-5 max-h-[90vh] flex flex-col">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-lg font-bold text-purple-700 flex items-center gap-2"><i class="fa-solid fa-book"></i> Bitácora de Cuentas de cobro</h3>
-                    <button type="button" onclick="cerrarBitacoraHosp()" class="text-gray-400 hover:text-gray-600 text-xl leading-none" title="Cerrar">&times;</button>
-                </div>
-                <div class="flex flex-wrap items-end gap-2 mb-3">
-                    <div><label class="fmt-lbl">Mes</label><input type="month" id="cta-bit-mes" class="fmt-in" onchange="cargarBitacoraHosp()"></div>
-                    <div class="flex-1 min-w-[200px]"><label class="fmt-lbl">Buscar</label><input type="search" id="cta-bit-buscar" class="fmt-in" placeholder="Paciente, HC, persona o acción…" oninput="pintarBitacoraHosp()"></div>
-                    <div><label class="fmt-lbl">Acción</label><select id="cta-bit-accion" class="fmt-in" onchange="pintarBitacoraHosp()"><option value="">Todas</option></select></div>
-                </div>
-                <p id="cta-bit-conteo" class="text-xs text-gray-500 mb-2"></p>
-                <div id="cta-bit-lista" class="overflow-y-auto flex-1 border border-gray-100 rounded-lg"></div>
-                <p class="text-[11px] text-gray-400 mt-2">Se registra desde el 13 de noviembre de 2026. Los cambios hechos con versiones anteriores de la app no aparecen aquí.</p>
-            </div>
-        </div>
-
         <!-- Enviar copia de seguridad al correo (solo administrador) -->
         <div id="cta-copia-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)cerrarCopiaSeguridadHosp()">
             <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto">
@@ -14219,8 +14200,6 @@
             // Botón "Eliminadas": solo visible para el administrador
             const btnElim = document.getElementById('cta-btn-eliminadas');
             if (btnElim) btnElim.classList.toggle('hidden', !puedeEliminadasHosp());
-            const btnBit = document.getElementById('cta-btn-bitacora');
-            if (btnBit) btnBit.classList.toggle('hidden', !esAdmin);
             const btnCopia = document.getElementById('cta-btn-copia');
             if (btnCopia) btnCopia.classList.toggle('hidden', !esAdmin);
             const btnIng = document.getElementById('cta-btn-ingresos');
@@ -15570,7 +15549,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-13.4';
+        const APP_VERSION = '2026-11-13.5';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
@@ -15596,58 +15575,8 @@
             location.reload();
         };
 
-        // ===== Bitácora de Cuentas de cobro =====
-        // Registra quién crea, da egreso, reabre, elimina, restaura o borra una cuenta (un documento por mes
-        // en cuentas_config: bitacora_AAAA-MM). Si no hay conexión, Firebase lo envía cuando vuelve.
-        function bitacoraHosp(accion, info) {
-            try {
-                info = info || {};
-                const ahora = new Date();
-                const mes = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0');
-                const clave = 'e' + ahora.getTime() + Math.random().toString(36).slice(2, 6);
-                const ent = { f: ahora.toISOString(), por: (usuarioSesion && usuarioSesion.nombre) || '', correo: (usuarioSesion && usuarioSesion.correo) || '',
-                    accion, id: info.id || '', paciente: info.paciente || '', hc: String(info.historia || ''), total: Number(info.total) || 0, det: info.det || '', ver: APP_VERSION };
-                setDoc(doc(db, "cuentas_config", "bitacora_" + mes), { [clave]: ent }, { merge: true }).catch(e => console.error('bitácora', e));
-            } catch (e) { console.error('bitácora', e); }
-        }
-
-        let bitHospDatos = [];
-        window.abrirBitacoraHosp = function() {
-            if (!esAdmin) { showToast("Solo el administrador puede ver la bitácora.", true); return; }
-            const m = document.getElementById('cta-bit-mes');
-            if (!m.value) { const d = new Date(); m.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
-            document.getElementById('cta-bit-modal').classList.remove('hidden');
-            cargarBitacoraHosp();
-        };
-        window.cerrarBitacoraHosp = function() { document.getElementById('cta-bit-modal').classList.add('hidden'); };
-        window.cargarBitacoraHosp = async function() {
-            const lista = document.getElementById('cta-bit-lista');
-            lista.innerHTML = '<p class="text-sm text-gray-400 text-center py-6"><i class="fa-solid fa-spinner fa-spin"></i> Cargando…</p>';
-            try {
-                const mes = document.getElementById('cta-bit-mes').value;
-                const snap = await getDoc(doc(db, "cuentas_config", "bitacora_" + mes));
-                bitHospDatos = snap.exists() ? Object.values(snap.data()).filter(x => x && x.f).sort((a, b) => b.f.localeCompare(a.f)) : [];
-                const sel = document.getElementById('cta-bit-accion'), prev = sel.value;
-                sel.innerHTML = '<option value="">Todas</option>' + [...new Set(bitHospDatos.map(x => x.accion))].sort().map(a => `<option>${escRestHosp(a)}</option>`).join('');
-                sel.value = prev && bitHospDatos.some(x => x.accion === prev) ? prev : '';
-                pintarBitacoraHosp();
-            } catch (e) { console.error(e); lista.innerHTML = '<p class="text-sm text-red-600 text-center py-6">No se pudo cargar la bitácora.</p>'; }
-        };
-        window.pintarBitacoraHosp = function() {
-            const q = sinTildes((document.getElementById('cta-bit-buscar') || {}).value || '').trim();
-            const acc = (document.getElementById('cta-bit-accion') || {}).value || '';
-            const items = bitHospDatos.filter(x => (!acc || x.accion === acc) && (!q || sinTildes([x.paciente, x.hc, x.por, x.correo, x.accion, x.det].join(' ')).includes(q)));
-            document.getElementById('cta-bit-conteo').textContent = items.length + ' registro' + (items.length === 1 ? '' : 's');
-            const color = a => /Borró|papelera/.test(a) ? 'bg-red-100 text-red-700' : /Restaur/.test(a) ? 'bg-emerald-100 text-emerald-700' : /egreso|Reabrió/.test(a) ? 'bg-amber-100 text-amber-800' : /Creó/.test(a) ? 'bg-blue-100 text-[#154390]' : 'bg-gray-100 text-gray-700';
-            document.getElementById('cta-bit-lista').innerHTML = items.length ? `<table class="w-full text-xs"><thead class="sticky top-0 bg-gray-50 text-gray-500 uppercase text-[10px]"><tr><th class="text-left px-2 py-1.5">Fecha y hora</th><th class="text-left px-2 py-1.5">Quién</th><th class="text-left px-2 py-1.5">Acción</th><th class="text-left px-2 py-1.5">Paciente</th><th class="text-right px-2 py-1.5">Total</th></tr></thead><tbody>${items.map(x => `
-                <tr class="border-t border-gray-100 align-top">
-                    <td class="px-2 py-1.5 whitespace-nowrap text-gray-600">${new Date(x.f).toLocaleString('es-CO')}</td>
-                    <td class="px-2 py-1.5"><b>${escRestHosp(x.por || '—')}</b><span class="block text-[10px] text-gray-400">${escRestHosp(x.correo || '')}</span></td>
-                    <td class="px-2 py-1.5"><span class="px-1.5 py-0.5 rounded font-semibold ${color(x.accion)}">${escRestHosp(x.accion)}</span>${x.det ? `<span class="block text-[10px] text-gray-500 mt-0.5">${escRestHosp(x.det)}</span>` : ''}</td>
-                    <td class="px-2 py-1.5">${escRestHosp(x.paciente || '—')}${x.hc ? ` <span class="text-gray-400">· HC ${escRestHosp(x.hc)}</span>` : ''}</td>
-                    <td class="px-2 py-1.5 text-right whitespace-nowrap">${x.total ? fmtCOPHosp(x.total) : ''}</td>
-                </tr>`).join('')}</tbody></table>` : '<p class="text-sm text-gray-400 italic text-center py-6">No hay registros para este mes o filtro.</p>';
-        };
+        // Registro de eventos desactivado (la bitácora se retiró): las llamadas quedan sin efecto.
+        function bitacoraHosp() {}
 
         // ===== Restaurar cuentas desde los archivos .json de la copia de seguridad (solo administrador) =====
         // Acepta el archivo de un paciente ({ id, cuenta }) o el de todas ({ documentos: { id: cuenta } }).
