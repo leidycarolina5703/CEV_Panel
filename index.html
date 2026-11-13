@@ -2270,8 +2270,7 @@
                 </div>
                 <ol class="list-decimal pl-5 space-y-1.5">
                     <li>Abre el correo <b>«Copias de seguridad CEV - fecha»</b> del día que quieras recuperar (llega cada noche a cevrecepcion1@gmail.com y cevagendamientocitas@gmail.com).</li>
-                    <li>Descarga el adjunto <b>respaldo_cuentas_cobro_fecha.zip</b> al computador.</li>
-                    <li>Descomprímelo: clic derecho sobre el archivo → <b>Extraer todo</b>. Adentro hay un archivo por paciente, por ejemplo <b>Cuenta_CHILA_HC27944_2026-11-09.json</b>, y uno con todas: <b>_TODAS_las_cuentas_fecha.json</b>.</li>
+                    <li>Los respaldos vienen como <b>archivos adjuntos .json</b>: hay uno por paciente, por ejemplo <b>Cuenta_CHILA_HC27944_2026-11-09.json</b>, y uno con todas, <b>_Cuentas_respaldadas_fecha.json</b>. Descarga al computador el del paciente que necesitas. (Si alguna vez llega comprimido en <b>.zip</b>, descomprímelo primero: clic derecho → <b>Extraer todo</b>.)</li>
                     <li>Pulsa <b>«Elegir archivo de respaldo»</b> (abajo) y selecciona el archivo del paciente que necesitas. Puedes elegir varios a la vez, o el de todas.</li>
                     <li>La app compara el respaldo con lo que hay ahora y muestra cada cuenta con su estado:
                         <ul class="list-disc pl-5 mt-1 space-y-0.5 text-xs">
@@ -15751,7 +15750,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-13.11';
+        const APP_VERSION = '2026-11-13.12';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
