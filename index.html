@@ -266,11 +266,18 @@
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans antialiased">
-    <!-- Aviso de versión nueva de la app -->
-    <div id="app-version-banner" class="hidden fixed top-0 left-0 right-0 bg-[#154390] text-white text-sm shadow-lg" style="z-index:100">
-        <div class="max-w-4xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-center gap-3 text-center">
-            <span><i class="fa-solid fa-rotate"></i> Hay una <b>versión nueva</b> de la app. Recárgala para evitar errores.</span>
-            <button type="button" onclick="recargarAppNueva()" class="px-3 py-1 rounded-lg bg-white text-[#154390] font-bold hover:bg-blue-50">Recargar ahora</button>
+    <!-- Aviso de versión nueva de la app: en el centro de la pantalla y por encima de todo, en cualquier pantalla -->
+    <div id="app-version-banner" class="hidden" style="position:fixed; inset:0; z-index:200; background:rgba(15,23,42,.55); display:none; align-items:center; justify-content:center; padding:16px">
+        <div style="background:#fff; border-radius:18px; max-width:420px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,.35); overflow:hidden; text-align:center">
+            <div style="background:#154390; color:#fff; padding:18px 20px">
+                <i class="fa-solid fa-rotate" style="font-size:30px"></i>
+                <p style="font-size:17px; font-weight:800; margin-top:8px">Hay una versión nueva de la app</p>
+            </div>
+            <div style="padding:18px 20px 20px">
+                <p style="font-size:14px; color:#374151; line-height:1.5">Recárgala para seguir trabajando con la última versión y evitar errores.<br><span style="color:#6b7280; font-size:13px">Lo que esté sin guardar se guarda antes de recargar.</span></p>
+                <button type="button" onclick="recargarAppNueva()" style="margin-top:16px; width:100%; background:#154390; color:#fff; font-weight:800; font-size:15px; padding:12px; border-radius:12px; border:0; cursor:pointer"><i class="fa-solid fa-rotate"></i> Recargar ahora</button>
+                <button type="button" onclick="posponerAvisoVersion()" style="margin-top:8px; width:100%; background:#fff; color:#6b7280; font-weight:600; font-size:13px; padding:9px; border-radius:12px; border:1px solid #e5e7eb; cursor:pointer">Seguir trabajando por ahora</button>
+            </div>
         </div>
     </div>
 
@@ -2422,6 +2429,12 @@
             </div>
         </section>
 
+        <!-- Recordatorio: al registrar un cobro hay que terminar con «Guardar ahora» (al final de la cuenta) -->
+        <div id="cta-aviso-guardar" class="hidden sticky top-2 mb-3 rounded-xl shadow-lg px-4 py-3 text-sm flex flex-wrap items-center gap-3" style="z-index:45; background:#154390; color:#fff">
+            <span class="flex items-start gap-2 flex-1 min-w-[220px]"><i class="fa-solid fa-cart-plus mt-0.5"></i><span>Registraste un cobro en esta cuenta. Para terminar, baja al final y pulsa <b>«Guardar ahora»</b>.</span></span>
+            <button type="button" onclick="irAGuardarCuentaHosp()" class="px-3 py-1.5 rounded-lg bg-white text-[#154390] font-bold hover:bg-blue-50 whitespace-nowrap"><i class="fa-solid fa-arrow-down"></i> Ir a Guardar</button>
+        </div>
+
         <!-- Accesos rápidos a categorías -->
         <div class="bg-white rounded-xl shadow-md p-3 border border-gray-200 flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-gray-500 mr-1"><i class="fa-solid fa-arrow-down-short-wide"></i> Ir a:</span>
@@ -3715,6 +3728,7 @@
                 esAdmin = false;
                 esGestorUsuarios = false;
                 permisosActuales = {};
+                try { if (typeof reiniciarEnCursoHosp === 'function') reiniciarEnCursoHosp(); } catch (e) {}
                 try {
                     document.getElementById('aviso-respaldo').classList.add('hidden');
                     document.getElementById('btn-respaldo').classList.add('hidden');
@@ -12012,7 +12026,7 @@
         let cuentaHospPorDia = {};      // hoja por día: { fecha: { idx: {am, pm} } }
         let cuentaHospDia = '';         // día que se está registrando (YYYY-MM-DD)
         let guardadasHospLista = [];    // caché de "guardadas" (rango de fechas) para filtrar por paciente/HC sin re-consultar
-        let guardadasHospTodas = [];    // todas las guardadas: al buscar por paciente/HC se busca en todas las fechas
+        let guardadasHospTodas = null;  // todas las guardadas: al buscar por paciente/HC se busca en todas las fechas
         let cuentaHospGuardadoFallo = false; // para no repetir el aviso de error de guardado
         let cuentaHospDirty = false;       // hay cambios sin guardar
         let cuentaHospEsNueva = true;      // si es cuenta nueva (para el historial)
@@ -12051,22 +12065,160 @@
             } catch (e) { console.error(e); return false; }
         }
 
+        // ===== Cuentas EN CURSO compartidas (para gastar menos lecturas de Firestore) =====
+        // Antes, cada lista, cada revisión de duplicados y la Entrega de turno leían TODAS las cuentas (también las
+        // ya egresadas). Ahora se piden solo las cuentas sin egreso (unas decenas):
+        //  · mientras «Cuentas de cobro» está abierta hay UNA conexión en vivo por equipo, que después solo trae lo que cambie;
+        //  · fuera del módulo se consultan una vez y se reutilizan por un minuto.
+        // Las cuentas antiguas cuyo campo «fechaEgreso» falta o quedó guardado de otra forma no saldrían en esas
+        // consultas; por eso, una vez al día por equipo se revisa la colección completa y se reparan/incluyen igual,
+        // de modo que NINGUNA cuenta pueda quedar fuera de las dos listas (en curso y guardadas).
+        const ecHosp = { mapa: new Map(), listo: false, ts: 0, unsub: null, primera: null, legado: new Map(), raros: new Map(), legUnsubs: [], cargaLeg: null, renderT: null };
+        function qEnCursoHosp() { return query(collection(db, "cuentas_hospital"), where('fechaEgreso', '==', '')); }
+        function moduloCuentasVisible() { const sc = document.getElementById('cuentas-screen'); return !!sc && !sc.classList.contains('hidden'); }
+        function enCursoValida(it) { return !!it && !it.eliminado && !(it.fechaEgreso && String(it.fechaEgreso).trim()); }
+
+        // Clasifica una cuenta por cómo tiene guardado el egreso:
+        //  'falta'  = sin el campo (o en nulo): se cuenta como EN CURSO (como hacía la app antes) y se puede reparar
+        //  'raro'   = el campo existe con egreso pero no como texto: va a GUARDADAS
+        //  ''       = normal, lo manejan las consultas
+        function claseEgresoHosp(x) {
+            if (!x || x.eliminado) return '';
+            if (!('fechaEgreso' in x) || x.fechaEgreso == null) return 'falta';
+            if (typeof x.fechaEgreso !== 'string') return x.fechaEgreso ? 'raro' : 'falta';
+            return '';
+        }
+        async function revisarLegadoHosp() {
+            const hoy = fechaISOLocal(new Date());
+            let reg = null;
+            try { reg = JSON.parse(localStorage.getItem('cevLegadoHosp') || 'null'); } catch (e) { reg = null; }
+            if (reg && reg.fecha === hoy && Array.isArray(reg.ids) && Array.isArray(reg.raros)) {
+                await refrescarLegadoHosp(reg.ids.concat(reg.raros));
+                return;
+            }
+            const snap = await getDocs(collection(db, "cuentas_hospital"));
+            const ids = [], raros = [], reparar = [];
+            ecHosp.legado = new Map(); ecHosp.raros = new Map();
+            snap.forEach(d => {
+                const x = d.data() || {}, cl = claseEgresoHosp(x);
+                if (cl === 'falta') { ids.push(d.id); ecHosp.legado.set(d.id, { id: d.id, ...x }); if (!('fechaEgreso' in x) || x.fechaEgreso == null) reparar.push(d.id); }
+                else if (cl === 'raro') { raros.push(d.id); ecHosp.raros.set(d.id, { id: d.id, ...x }); }
+            });
+            try { localStorage.setItem('cevLegadoHosp', JSON.stringify({ fecha: hoy, ids, raros })); } catch (e) {}
+            // Arreglo de una sola vez: se le escribe el campo vacío a las cuentas antiguas que no lo tienen,
+            // así entran en las consultas normales y nunca más dependen de esta revisión.
+            if (reparar.length && puedeEditar('cuentas_hosp')) {
+                for (const id of reparar) {
+                    try { await setDoc(doc(db, "cuentas_hospital", id), { fechaEgreso: '' }, { merge: true }); } catch (e) { console.error('reparar fechaEgreso', e); }
+                }
+            }
+        }
+        async function refrescarLegadoHosp(ids) {
+            ids = ids || Array.from(ecHosp.legado.keys()).concat(Array.from(ecHosp.raros.keys()));
+            if (!ids.length) { ecHosp.legado = new Map(); ecHosp.raros = new Map(); return; }
+            const leg = new Map(), rar = new Map();
+            await Promise.all(ids.map(async id => {
+                try {
+                    const sn = await getDoc(doc(db, "cuentas_hospital", id));
+                    const x = sn.exists() ? sn.data() : null, cl = claseEgresoHosp(x);
+                    if (cl === 'falta') leg.set(id, { id, ...x });
+                    else if (cl === 'raro') rar.set(id, { id, ...x });
+                } catch (e) { console.error(e); }
+            }));
+            ecHosp.legado = leg; ecHosp.raros = rar;
+        }
+        function asegurarLegadoHosp() {
+            if (!ecHosp.cargaLeg) ecHosp.cargaLeg = revisarLegadoHosp().catch(e => { console.error('revisión de cuentas antiguas', e); ecHosp.cargaLeg = null; });
+            return ecHosp.cargaLeg || Promise.resolve();
+        }
+
+        function detenerVivoHosp() {
+            if (ecHosp.unsub) { try { ecHosp.unsub(); } catch (e) {} }
+            ecHosp.legUnsubs.forEach(u => { try { u(); } catch (e) {} });
+            ecHosp.unsub = null; ecHosp.legUnsubs = []; ecHosp.primera = null;
+        }
+        // Al cerrar sesión se olvida todo lo cargado
+        function reiniciarEnCursoHosp() {
+            detenerVivoHosp();
+            ecHosp.mapa = new Map(); ecHosp.listo = false; ecHosp.ts = 0; ecHosp.legado = new Map(); ecHosp.raros = new Map(); ecHosp.cargaLeg = null;
+        }
+        window.reiniciarEnCursoHosp = reiniciarEnCursoHosp;
+
+        function iniciarVivoHosp() {
+            if (ecHosp.unsub) return;
+            let resolver, rechazar, primeraVez = true;
+            ecHosp.primera = new Promise((res, rej) => { resolver = res; rechazar = rej; });
+            ecHosp.primera.catch(() => {});
+            ecHosp.unsub = onSnapshot(qEnCursoHosp(), snap => {
+                if (primeraVez) ecHosp.mapa = new Map();
+                snap.docChanges().forEach(ch => {
+                    if (ch.type === 'removed') ecHosp.mapa.delete(ch.doc.id);
+                    else ecHosp.mapa.set(ch.doc.id, { id: ch.doc.id, ...ch.doc.data() });
+                });
+                ecHosp.listo = true; ecHosp.ts = Date.now();
+                if (primeraVez) { primeraVez = false; resolver(); }
+                // Si ya no se está en «Cuentas de cobro», se cierra la conexión para no gastar lecturas
+                if (!moduloCuentasVisible()) { detenerVivoHosp(); return; }
+                programarRenderEnCursoHosp();
+            }, err => {
+                console.error('cuentas en curso (en vivo)', err);
+                detenerVivoHosp(); ecHosp.listo = false;
+                if (primeraVez) { primeraVez = false; rechazar(err); }
+            });
+            // Cuentas antiguas sin «fechaEgreso»: también en vivo (normalmente ninguna)
+            asegurarLegadoHosp().then(() => {
+                if (!ecHosp.unsub) return;
+                ecHosp.legado.forEach((v, id) => {
+                    ecHosp.legUnsubs.push(onSnapshot(doc(db, "cuentas_hospital", id), sn => {
+                        const x = sn.exists() ? sn.data() : null;
+                        if (x && !('fechaEgreso' in x) && !x.eliminado) ecHosp.legado.set(id, { id, ...x }); else ecHosp.legado.delete(id);
+                        programarRenderEnCursoHosp();
+                    }, e => console.error(e)));
+                });
+            });
+        }
+
+        // Cuentas en curso (sin egreso y no eliminadas). frescas=true: no reutiliza una consulta de hace menos de un minuto.
+        async function obtenerEnCursoHosp(frescas) {
+            const leg = asegurarLegadoHosp();
+            if (moduloCuentasVisible()) iniciarVivoHosp();
+            let listoVivo = false;
+            if (ecHosp.unsub && ecHosp.primera) {
+                try { await ecHosp.primera; listoVivo = !!ecHosp.unsub || ecHosp.listo; } catch (e) { listoVivo = false; }
+            }
+            // Para revisar duplicados (frescas) se consulta SIEMPRE al servidor, aunque haya conexión en vivo:
+            // son pocas cuentas y así nunca se crea un duplicado por un dato de hace un segundo.
+            if (frescas || (!listoVivo && (!ecHosp.listo || Date.now() - ecHosp.ts > 60000))) {
+                const snap = await getDocs(qEnCursoHosp());
+                const m = new Map();
+                snap.forEach(d => m.set(d.id, { id: d.id, ...d.data() }));
+                ecHosp.mapa = m; ecHosp.listo = true; ecHosp.ts = Date.now();
+                await leg;
+                if (ecHosp.legado.size) await refrescarLegadoHosp();
+            } else await leg;
+            const out = [];
+            ecHosp.mapa.forEach(v => { if (enCursoValida(v)) out.push(v); });
+            ecHosp.legado.forEach((v, id) => { if (!ecHosp.mapa.has(id) && enCursoValida(v)) out.push(v); });
+            return out;
+        }
+
+        // Cuando algo cambia en vivo, la lista «en curso» se actualiza sola (sin volver a leer)
+        function programarRenderEnCursoHosp() {
+            clearTimeout(ecHosp.renderT);
+            ecHosp.renderT = setTimeout(() => {
+                const sec = document.getElementById('cta-encurso');
+                if (moduloCuentasVisible() && sec && !sec.classList.contains('hidden')) { try { renderHospEnCurso(true); } catch (e) { console.error(e); } }
+            }, 400);
+        }
+
         // ¿Existe otra hospitalización EN CURSO (sin egreso, no eliminada) con la misma historia?
         async function buscarCuentaEnCursoPorHistoria(historia, idActual) {
             historia = (historia || '').trim();
             if (!historia) return null;
             try {
-                const snap = await getDocs(collection(db, "cuentas_hospital"));
-                let encontrada = null;
-                snap.forEach(d => {
-                    if (encontrada) return;
-                    const it = d.data();
-                    const enCurso = !(it.fechaEgreso && String(it.fechaEgreso).trim());
-                    if (d.id !== idActual && !it.eliminado && enCurso && String(it.historia || '').trim() === historia) {
-                        encontrada = { id: d.id, ...it };
-                    }
-                });
-                return encontrada;
+                const lista = await obtenerEnCursoHosp(true);
+                const it = lista.find(x => x.id !== idActual && String(x.historia || '').trim() === historia);
+                return it ? { ...it } : null;
             } catch (e) { console.error(e); return null; }
         }
 
@@ -12091,15 +12243,9 @@
         async function buscarCuentaEnCursoPorNombre(nombre, idActual) {
             const n = normNombreHosp(nombre); if (!n) return null;
             try {
-                const snap = await getDocs(collection(db, "cuentas_hospital"));
-                let encontrada = null;
-                snap.forEach(d => {
-                    if (encontrada) return;
-                    const it = d.data();
-                    const enCurso = !(it.fechaEgreso && String(it.fechaEgreso).trim());
-                    if (d.id !== idActual && !it.eliminado && enCurso && normNombreHosp(it.paciente) === n) encontrada = { id: d.id, ...it };
-                });
-                return encontrada;
+                const lista = await obtenerEnCursoHosp(true);
+                const it = lista.find(x => x.id !== idActual && normNombreHosp(x.paciente) === n);
+                return it ? { ...it } : null;
             } catch (e) { console.error(e); return null; }
         }
 
@@ -12327,6 +12473,24 @@
                 if (est) est.innerHTML = `<span class="text-blue-600"><i class="fa-solid fa-rotate"></i> Actualizada con cambios de ${remoto.modificadoPor || 'otra persona'}</span>`;
             }, err => console.error("Escucha de la cuenta:", err));
         }
+
+        // Letrero que recuerda pulsar «Guardar ahora» después de registrar un cobro
+        window.avisoGuardarCobroHosp = function () {
+            const el = document.getElementById('cta-aviso-guardar');
+            if (el) el.classList.remove('hidden');
+        };
+        function ocultarAvisoGuardarHosp() {
+            const el = document.getElementById('cta-aviso-guardar');
+            if (el) el.classList.add('hidden');
+        }
+        window.irAGuardarCuentaHosp = function () {
+            const b = document.getElementById('btn-guardar-cuenta');
+            if (!b) return;
+            b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Parpadeo para que se vea cuál es el botón
+            let n = 0;
+            const t = setInterval(() => { b.style.boxShadow = (n % 2 === 0) ? '0 0 0 6px rgba(21,67,144,.35)' : 'none'; if (++n > 5) { clearInterval(t); b.style.boxShadow = ''; } }, 300);
+        };
 
         function marcarCambioCuentaHosp() {
             cuentaHospVersion++;
@@ -13417,6 +13581,7 @@
             s[idx][campo] = v;
             if (v - prev > 0 && CATALOGO_CUENTAS[idx]) registrarSalidaFueraTurno(CATALOGO_CUENTAS[idx].n, v - prev, tipoItemCuentaFT(CATALOGO_CUENTAS[idx]));
             else if (v - prev < 0 && CATALOGO_CUENTAS[idx]) corregirSalidasFueraTurno(CATALOGO_CUENTAS[idx].n);
+            if (v > 0) avisoGuardarCobroHosp();
             recalcularCuentaHosp();
         };
 
@@ -13431,6 +13596,7 @@
             if (el) el.value = nuevo || '';
             if (nuevo - prev > 0 && CATALOGO_CUENTAS[idx]) registrarSalidaFueraTurno(CATALOGO_CUENTAS[idx].n, nuevo - prev, tipoItemCuentaFT(CATALOGO_CUENTAS[idx]));
             else if (nuevo - prev < 0 && CATALOGO_CUENTAS[idx]) corregirSalidasFueraTurno(CATALOGO_CUENTAS[idx].n);
+            if (nuevo > 0) avisoGuardarCobroHosp();
             marcarCambioCuentaHosp();
             recalcularCuentaHosp();
         };
@@ -13443,6 +13609,7 @@
             el.value = nuevo || '';
             el.dataset.prev = nuevo;
             if (nuevo - antes > 0 && CATALOGO_CUENTAS[idx]) registrarSalidaFueraTurno(CATALOGO_CUENTAS[idx].n, nuevo - antes, tipoItemCuentaFT(CATALOGO_CUENTAS[idx]));
+            if (nuevo > 0) avisoGuardarCobroHosp();
             marcarCambioCuentaHosp();
             recalcularCuentaHosp();
             if (delta > 0 && nuevo > 0 && CATALOGO_CUENTAS[idx]) showToast(`Agregaste ${delta} unidad${delta === 1 ? '' : 'es'} de ${CATALOGO_CUENTAS[idx].n}. Total: ${nuevo}.`);
@@ -13455,6 +13622,7 @@
             const prev = parseInt(el.dataset.prev || '0') || 0;
             el.dataset.prev = cant;
             if (cant <= 0) return;
+            avisoGuardarCobroHosp();
             const delta = cant - prev;
             if (delta > 0) registrarSalidaFueraTurno(CATALOGO_CUENTAS[idx].n, delta, tipoItemCuentaFT(CATALOGO_CUENTAS[idx]));
             if (delta > 0) showToast(`Agregaste ${delta} unidad${delta === 1 ? '' : 'es'} de ${CATALOGO_CUENTAS[idx].n}. Total: ${cant}.`);
@@ -13839,6 +14007,7 @@
             cuentaHospExtra[i].cant = c;
             if (c - antesX > 0) registrarSalidaFueraTurno(cuentaHospExtra[i].n, c - antesX, tipoItemCuentaFT(cuentaHospExtra[i]));
             else if (c - antesX < 0) corregirSalidasFueraTurno(cuentaHospExtra[i].n);
+            if (c > 0) avisoGuardarCobroHosp();
             recalcularCuentaHosp();
             renderPanelExtraHosp();
         };
@@ -15009,15 +15178,13 @@
         };
 
         // Lista de pacientes EN CURSO (sin fecha de egreso), separados por tipo de atención
-        window.renderHospEnCurso = async function() {
+        window.renderHospEnCurso = async function(silencioso) {
             const cont = document.getElementById('cta-encurso-container');
             if (!cont) return;
-            cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            // Con la conexión en vivo lista no hace falta mostrar «Cargando…» (no se vuelve a leer)
+            if (!silencioso && !(ecHosp.unsub && ecHosp.listo)) cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
             try {
-                const snap = await getDocs(collection(db, "cuentas_hospital"));
-                let items = [];
-                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-                items = items.filter(it => !it.eliminado && !(it.fechaEgreso && String(it.fechaEgreso).trim()));
+                let items = (await obtenerEnCursoHosp()).map(it => ({ ...it }));
                 const fechaDe = it => it.fecha || (it.creado ? it.creado.substring(0, 10) : '');
                 items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || ''));
                 const puedeBorrar = permisosActuales['cuentas_hosp_borrar'] === true;
@@ -15156,7 +15323,7 @@
             if (await flushGuardadoHosp() === false) return;
             escucharCuentaHosp(null);
             cuentaHospSesion++;
-            cuentaHospGuardadoFallo = false; bannerPendienteHosp(false);
+            cuentaHospGuardadoFallo = false; bannerPendienteHosp(false); ocultarAvisoGuardarHosp();
             cuentaHospId = null;
             cuentaHospIdNueva = null;
             cuentaHospDupOk = null; cuentaHospDupAvisada = null;
@@ -15267,6 +15434,7 @@
                 cuentaHospDirty = false;
                 clearTimeout(cuentaHospAutosaveTimer);
                 var estG = document.getElementById('cta-estado-guardado'); if (estG) estG.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-cloud"></i> Guardado</span>';
+                ocultarAvisoGuardarHosp();
                 renderHistorialHosp();
                 showToast("Cuenta guardada en la nube.");
             } catch (error) {
@@ -15295,17 +15463,17 @@
             panel.classList.remove('hidden');
             cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
             try {
-                const snap = await getDocs(collection(db, "cuentas_hospital"));
-                let items = [];
-                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-                // Solo cuentas CON fecha de egreso y que no estén eliminadas
-                items = items.filter(it => !it.eliminado && it.fechaEgreso && String(it.fechaEgreso).trim());
                 const desde = document.getElementById('cta-desde').value;
                 const hasta = document.getElementById('cta-hasta').value;
+                // Solo se leen las cuentas egresadas dentro del rango elegido (sin rango: todas las egresadas)
+                let items = await leerEgresadasHosp(desde, hasta);
+                // Solo cuentas CON fecha de egreso y que no estén eliminadas
+                items = items.filter(it => !it.eliminado && it.fechaEgreso && String(it.fechaEgreso).trim());
                 // Las guardadas se filtran por FECHA DE EGRESO (cuándo salió el paciente)
                 const fechaDe = it => String(it.fechaEgreso || '').trim().slice(0, 10);
                 items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || '') || String(b.actualizado || '').localeCompare(String(a.actualizado || '')));
-                guardadasHospTodas = items;
+                // Para buscar en todas las fechas: si no hay rango ya están todas; si hay rango, se piden solo al buscar
+                guardadasHospTodas = (!desde && !hasta) ? items : null;
                 if (desde) items = items.filter(it => fechaDe(it) >= desde);
                 if (hasta) items = items.filter(it => fechaDe(it) <= hasta);
                 guardadasHospLista = items;
@@ -15315,6 +15483,34 @@
                 console.error(error);
             }
         };
+
+        // Cuentas egresadas por rango de FECHA DE EGRESO (consulta a Firestore solo de ese rango)
+        async function leerEgresadasHosp(desde, hasta) {
+            const col = collection(db, "cuentas_hospital");
+            const cond = [];
+            if (desde) cond.push(where('fechaEgreso', '>=', desde)); else cond.push(where('fechaEgreso', '>', ''));
+            if (hasta) cond.push(where('fechaEgreso', '<=', hasta + '\uf8ff'));
+            const snap = await getDocs(query(col, ...cond));
+            const items = [];
+            snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+            // Cuentas con el egreso guardado de otra forma (no texto): se añaden para que no queden invisibles
+            try { await asegurarLegadoHosp(); ecHosp.raros.forEach(v => { if (!items.some(i => i.id === v.id)) items.push({ ...v }); }); } catch (e) { console.error(e); }
+            return items;
+        }
+        let guardadasHospTodasCarga = null;
+        async function cargarGuardadasTodasHosp() {
+            if (guardadasHospTodas) return;
+            if (!guardadasHospTodasCarga) guardadasHospTodasCarga = (async () => {
+                try {
+                    const fechaDe = it => String(it.fechaEgreso || '').trim().slice(0, 10);
+                    const items = (await leerEgresadasHosp('', '')).filter(it => !it.eliminado && it.fechaEgreso && String(it.fechaEgreso).trim());
+                    items.sort((a, b) => (fechaDe(b) || '').localeCompare(fechaDe(a) || '') || String(b.actualizado || '').localeCompare(String(a.actualizado || '')));
+                    guardadasHospTodas = items;
+                } catch (e) { console.error(e); }
+                finally { guardadasHospTodasCarga = null; }
+            })();
+            await guardadasHospTodasCarga;
+        }
 
         // Filtra la lista ya cargada por paciente o historia clínica (sin re-consultar)
         window.filtrarGuardadasHosp = function() { renderGuardadasHosp(); };
@@ -15332,6 +15528,12 @@
             if (!cont) return;
             const q = (document.getElementById('cta-buscar-guardadas') ? document.getElementById('cta-buscar-guardadas').value : '').trim().toLowerCase();
             // Al buscar por paciente o HC se busca en TODAS las guardadas, sin importar el rango de fechas
+            if (q && !guardadasHospTodas) {
+                // La búsqueda es en TODAS las fechas: se piden las egresadas una sola vez y se vuelve a mostrar
+                cont.innerHTML = '<div class="text-center py-4"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Buscando en todas las fechas...</p></div>';
+                cargarGuardadasTodasHosp().then(() => { if (guardadasHospTodas) renderGuardadasHosp(); else cont.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">No se pudo buscar. Revisa la conexión.</div>'; });
+                return;
+            }
             let items = q ? (guardadasHospTodas || []) : (guardadasHospLista || []);
             const sinT = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
             if (q) items = items.filter(it => sinT(it.paciente).includes(sinT(q)) || String(it.historia || '').toLowerCase().includes(q) || sinT(it.propietario).includes(sinT(q)));
@@ -15371,7 +15573,7 @@
                 const snap = await getDoc(doc(db, "cuentas_hospital", id));
                 if (!snap.exists()) { showToast("Esa cuenta ya no existe.", true); return; }
                 cuentaHospSesion++;
-                cuentaHospGuardadoFallo = false; bannerPendienteHosp(false);
+                cuentaHospGuardadoFallo = false; bannerPendienteHosp(false); ocultarAvisoGuardarHosp();
                 cuentaHospId = id;
                 cuentaHospIdNueva = null;
                 cuentaHospDupOk = null; cuentaHospDupAvisada = null;
@@ -15549,7 +15751,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-13.5';
+        const APP_VERSION = '2026-11-13.11';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
@@ -15562,9 +15764,23 @@
                     if (!r.ok) return;
                     const t = await r.text();
                     const v = (/APP_VERSION = '(\d{4}-\d{2}-\d{2}[^']*)'/.exec(t) || [])[1];
-                    if (v && v !== APP_VERSION) document.getElementById('app-version-banner').classList.remove('hidden');
+                    if (v && v !== APP_VERSION) mostrarAvisoVersion();
                 } catch (e) { /* sin conexión: se revisa después */ }
             }
+            // El aviso va en el centro de la pantalla, encima de cualquier módulo o ventana
+            let posponerHasta = 0;
+            window.mostrarAvisoVersion = function () {
+                if (Date.now() < posponerHasta) return;
+                const el = document.getElementById('app-version-banner');
+                if (!el) return;
+                el.classList.remove('hidden');
+                el.style.display = 'flex';
+            };
+            window.posponerAvisoVersion = function () {
+                posponerHasta = Date.now() + 5 * 60 * 1000;   // vuelve a avisar en 5 minutos
+                const el = document.getElementById('app-version-banner');
+                if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
+            };
             window.revisarVersionApp = revisarVersionApp;
             setTimeout(revisarVersionApp, 20000);
             setInterval(revisarVersionApp, 10 * 60 * 1000);
@@ -15649,6 +15865,7 @@
                 const nuevoId = 'cuenta_' + Date.now();
                 const d = JSON.parse(JSON.stringify(x.datos));
                 d.eliminado = false; d.restauradoDesdeRespaldo = ahora; d.restauradoPor = quien; d.restauradaDe = x.id;
+                if (d.fechaEgreso == null) d.fechaEgreso = '';
                 d.historial = (Array.isArray(d.historial) ? d.historial : []).concat([{ por: quien, correo: (usuarioSesion && usuarioSesion.correo) || '', fecha: ahora, accion: 'Restauró desde respaldo', total: d.total || 0, detalles: ['Restaurada como cuenta aparte desde el archivo ' + x.archivo + ' (cuenta original ' + x.id + ')'], camposIni: {}, camposTxt: {} }]);
                 await setDoc(doc(db, "cuentas_hospital", nuevoId), d);
                 bitacoraHosp('Restauró como cuenta aparte', { id: nuevoId, paciente: d.paciente, historia: d.historia, total: d.total, det: 'Desde ' + x.archivo + ' (cuenta original ' + x.id + ')' });
@@ -15672,6 +15889,7 @@
                 try {
                     const d = JSON.parse(JSON.stringify(x.datos));
                     d.eliminado = false;
+                    if (d.fechaEgreso == null) d.fechaEgreso = '';
                     d.restauradoDesdeRespaldo = ahora; d.restauradoPor = quien;
                     d.historial = (Array.isArray(d.historial) ? d.historial : []).concat([{ por: quien, correo: (usuarioSesion && usuarioSesion.correo) || '', fecha: ahora, accion: 'Restauró desde respaldo', total: d.total || 0, detalles: ['Restaurada desde el archivo ' + x.archivo], camposIni: {}, camposTxt: {} }]);
                     await setDoc(doc(db, "cuentas_hospital", x.id), d);
@@ -15757,8 +15975,12 @@
             if (!confirm(`¿Restaurar la cuenta de "${nombre || 'este paciente'}"?\n\nVolverá a aparecer en las listas (en curso o guardadas, según su fecha de egreso).`)) return;
             try {
                 const ahora = new Date().toISOString();
+                // Si la cuenta es antigua y no tiene el campo de egreso, se le pone vacío (sin tocar un egreso real)
+                let ponerEgreso = {};
+                try { const s0 = await getDoc(doc(db, "cuentas_hospital", id)); const d0 = s0.exists() ? s0.data() : null; if (d0 && (!('fechaEgreso' in d0) || d0.fechaEgreso == null)) ponerEgreso = { fechaEgreso: '' }; } catch (e) { console.error(e); }
                 await setDoc(doc(db, "cuentas_hospital", id), {
                     eliminado: false,
+                    ...ponerEgreso,
                     restauradoPor: usuarioSesion ? usuarioSesion.nombre : '',
                     restauradoEn: ahora,
                     actualizado: ahora
@@ -17783,10 +18005,16 @@
             const pend = items.filter(it => it.origen !== 'hospitalizacion' && normHC(it.hc));
             if (!pend.length) return;
             if (!(esAdmin === true || permisosActuales['cuentas_hosp'] === true)) return;
-            const snapH = await getDocs(collection(db, "cuentas_hospital"));
+            // Solo se leen las cuentas en curso y las egresadas desde 15 días antes de la cuenta más antigua de la lista
+            const fechas = pend.map(fechaDe).filter(Boolean).sort();
+            let desdeEgr = '';
+            if (fechas.length) { const d0 = new Date(fechas[0] + 'T00:00:00'); d0.setDate(d0.getDate() - 15); desdeEgr = fechaISOLocal(d0); }
+            const [enCurso, egresadas] = await Promise.all([obtenerEnCursoHosp(), leerEgresadasHosp(desdeEgr, '')]);
+            const vistos = new Set(), docsH = [];
+            enCurso.concat(egresadas).forEach(c => { if (!vistos.has(c.id)) { vistos.add(c.id); docsH.push(c); } });
             const porHC = {};
-            snapH.forEach(dd => {
-                const c = dd.data() || {};
+            docsH.forEach(c0 => {
+                const c = c0 || {};
                 if (c.eliminado) return;
                 const h = normHC(c.historia); if (!h || !c.fecha) return;
                 (porHC[h] = porHC[h] || []).push({ ini: c.fecha, egr: String(c.fechaEgreso || '').trim(), tipo: c.tipoAtencion === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización' });
@@ -22116,13 +22344,12 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         async function turnoCargarHospitalizados() {
             turnoPacSinPermiso = false;
             try {
-                const [snap, egresadoRonda] = await Promise.all([getDocs(collection(db, 'cuentas_hospital')), turnoEgresadosRonda()]);
+                const [lista, egresadoRonda] = await Promise.all([obtenerEnCursoHosp(), turnoEgresadosRonda()]);
                 const out = [];
-                snap.forEach(x => {
-                    const d = x.data();
+                lista.forEach(d => {
                     if (d.eliminado || (d.fechaEgreso && String(d.fechaEgreso).trim()) || (d.tipoAtencion || 'Hospitalización') === 'Ambulatorio') return;
                     if (egresadoRonda(d)) return;
-                    out.push({ id: 'c_' + x.id, nombre: String(d.paciente || '').trim() || '(sin nombre)', hc: String(d.historia || '').trim(), especie: d.especie || '' });
+                    out.push({ id: 'c_' + d.id, nombre: String(d.paciente || '').trim() || '(sin nombre)', hc: String(d.historia || '').trim(), especie: d.especie || '' });
                 });
                 out.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
                 return out;
