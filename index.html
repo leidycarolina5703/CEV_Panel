@@ -2999,6 +2999,7 @@
             </div>
             <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
                 <button onclick="turnoMostrarInicio()" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg font-semibold flex items-center gap-2 border border-gray-200 text-sm"><i class="fa-solid fa-table-columns"></i> Inicio</button>
+                <button onclick="turnoAbrirNovedades()" class="px-4 py-2 bg-white text-[#154390] hover:bg-blue-50 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 text-sm"><i class="fa-solid fa-paw"></i> Estado de pacientes</button>
                 <button id="tur-btn-seg" onclick="turnoAbrirSeguimiento()" class="hidden px-4 py-2 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg font-semibold flex items-center gap-2 border border-amber-200 text-sm"><i class="fa-solid fa-chart-column"></i> Seguimiento</button>
                 <button onclick="turnoAbrirAuxiliares()" class="js-editar px-4 py-2 bg-white text-[#154390] hover:bg-blue-50 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 text-sm"><i class="fa-solid fa-users-gear"></i> Auxiliares</button>
                 <button onclick="turnoNuevo()" class="js-editar px-4 py-2 bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg font-semibold flex items-center gap-2 border border-blue-200 text-sm"><i class="fa-solid fa-file-circle-plus"></i> Nueva</button>
@@ -3061,6 +3062,24 @@
                 <h3 class="font-bold text-[#154390] mb-3 flex items-center gap-2"><i class="fa-solid fa-ranking-star"></i> Tareas que más fallan</h3>
                 <div id="tur-seg-top" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </section>
+        </div>
+
+        <!-- Tablero de NOVEDADES POR PACIENTE: reúne lo registrado en todas las entregas de turno -->
+        <div id="tur-nov" class="hidden space-y-4 sm:space-y-5">
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3 mb-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-paw"></i> Estado de pacientes</h2>
+                        <p class="text-xs text-gray-500 mt-0.5">Pacientes con cuenta de cobro abierta (hospitalización y ambulatorio), con lo registrado hoy y en el turno anterior. Los egresados no aparecen.</p>
+                    </div>
+                    <div class="flex gap-2">
+                                                <button onclick="turnoMostrarInicio()" class="px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold flex items-center gap-2 border border-gray-200 text-sm"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+                    </div>
+                </div>
+                <div><label class="fmt-lbl">Buscar paciente</label><input type="text" id="tur-nov-buscar" oninput="turnoNovPintar()" placeholder="Nombre o historia clínica" class="fmt-in text-sm py-1.5"></div>
+                <p id="tur-nov-turnos" class="text-xs text-gray-500 mt-2"></p>
+            </section>
+            <div id="tur-nov-lista" class="space-y-3"></div>
         </div>
 
         <!-- Tablero inicial: quién ha entregado turno -->
@@ -3174,19 +3193,15 @@
             <div class="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 pb-2">
                 <div>
                     <h2 class="text-base sm:text-lg font-bold text-[#154390] flex items-center gap-2"><i class="fa-solid fa-paw"></i> 10. Novedades por paciente</h2>
-                    <p class="text-xs text-gray-500 mt-0.5">Pacientes hospitalizados en curso (tomados de Cuentas de cobro).</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Pacientes con cuenta de cobro abierta: hospitalización y ambulatorio.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span id="tur-pac-cnt" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"></span>
                     <button type="button" onclick="turnoActualizarPacientes()" class="js-editar px-2.5 py-1 text-xs font-semibold bg-blue-50 text-[#154390] hover:bg-blue-100 rounded-lg border border-blue-200"><i class="fa-solid fa-rotate"></i> Actualizar</button>
                 </div>
             </div>
+            <div id="tur-pac-resumen" class="mt-3"></div>
             <div id="tur-pacientes" class="grid grid-cols-1 gap-3 mt-3"></div>
-            <div class="js-editar flex flex-wrap gap-2 mt-3">
-                <input type="text" id="tur-pac-nombre" placeholder="Agregar paciente: nombre" onkeydown="if(event.key==='Enter'){event.preventDefault();turnoAgregarPaciente();}" class="flex-1 min-w-[160px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390]/30">
-                <input type="text" id="tur-pac-hc" placeholder="HC (opcional)" onkeydown="if(event.key==='Enter'){event.preventDefault();turnoAgregarPaciente();}" class="w-32 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390]/30">
-                <button type="button" onclick="turnoAgregarPaciente()" class="px-3 py-2 text-sm font-semibold bg-[#154390] text-white rounded-lg hover:bg-[#0f3268]"><i class="fa-solid fa-plus"></i> Agregar</button>
-            </div>
         </section>
 
         <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
@@ -15750,7 +15765,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-13.12';
+        const APP_VERSION = '2026-11-16.12';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
@@ -22346,9 +22361,11 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 const [lista, egresadoRonda] = await Promise.all([obtenerEnCursoHosp(), turnoEgresadosRonda()]);
                 const out = [];
                 lista.forEach(d => {
-                    if (d.eliminado || (d.fechaEgreso && String(d.fechaEgreso).trim()) || (d.tipoAtencion || 'Hospitalización') === 'Ambulatorio') return;
-                    if (egresadoRonda(d)) return;
-                    out.push({ id: 'c_' + d.id, nombre: String(d.paciente || '').trim() || '(sin nombre)', hc: String(d.historia || '').trim(), especie: d.especie || '' });
+                    // Toda cuenta de cobro abierta (sin egreso y no eliminada): hospitalización y ambulatorio
+                    if (d.eliminado || (d.fechaEgreso && String(d.fechaEgreso).trim())) return;
+                    const tipo = (d.tipoAtencion || 'Hospitalización') === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización';
+                    if (tipo === 'Hospitalización' && egresadoRonda(d)) return;
+                    out.push({ id: 'c_' + d.id, nombre: String(d.paciente || '').trim() || '(sin nombre)', hc: String(d.historia || '').trim(), especie: d.especie || '', tipo });
                 });
                 out.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
                 return out;
@@ -22361,14 +22378,15 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             const cnt = document.getElementById('tur-pac-cnt');
             if (cnt) cnt.textContent = turnoPacientes.length + ' paciente' + (turnoPacientes.length === 1 ? '' : 's');
             if (!turnoPacientes.length) {
-                cont.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-3">${turnoPacSinPermiso ? 'No se pudo leer la lista de hospitalizados (requiere acceso a Cuentas de cobro). Agrega los pacientes a mano.' : 'No hay pacientes hospitalizados en curso. Si falta alguno, agrégalo a mano.'}</p>`;
+                cont.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-3">${turnoPacSinPermiso ? 'No se pudo leer la lista de pacientes (requiere acceso a Cuentas de cobro).' : 'No hay pacientes con cuenta de cobro abierta en este momento.'}</p>`;
                 return;
             }
             cont.innerHTML = turnoPacientes.map(p => {
                 const k = turnoPacKey(p.id);
-                return `<div class="tur-pac border border-gray-200 rounded-xl p-3" data-pid="${turnoEsc(p.id)}">
+                return `<div class="tur-pac border border-gray-200 rounded-xl p-3" data-pid="${turnoEsc(p.id)}" data-k="${k}" style="border-left-width:5px">
                     <div class="flex items-center justify-between gap-2 mb-2">
-                        <p class="text-sm font-bold text-gray-800"><i class="fa-solid fa-paw text-[#154390] mr-1"></i>${turnoEsc(p.nombre)}${p.hc ? ` <span class="font-normal text-gray-500">· HC ${turnoEsc(p.hc)}</span>` : ''}${p.especie ? ` <span class="ml-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-[#154390]">${turnoEsc(p.especie)}</span>` : ''}</p>
+                        <p class="text-sm font-bold text-gray-800"><i class="fa-solid fa-paw text-[#154390] mr-1"></i>${turnoEsc(p.nombre)}${p.hc ? ` <span class="font-normal text-gray-500">· HC ${turnoEsc(p.hc)}</span>` : ''}${p.especie ? ` <span class="ml-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-[#154390]">${turnoEsc(p.especie)}</span>` : ''}${p.tipo ? ` <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded align-middle ${p.tipo === 'Ambulatorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${turnoEsc(p.tipo)}</span>` : ''}</p>
+                        <span class="tur-pac-estado text-[11px] font-bold px-2 py-0.5 rounded-full ml-auto mr-1 whitespace-nowrap"></span>
                         ${editable ? `<button type="button" onclick="turnoQuitarPaciente('${k}')" title="Quitar de esta lista" class="w-7 h-7 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 shrink-0"><i class="fa-solid fa-xmark"></i></button>` : ''}
                     </div>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -22377,7 +22395,10 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                                 ${c.op.map(op => `<label class="cursor-pointer"><input type="radio" name="tur-pac-${k}-${c.id}" value="${op}" class="sr-only peer" onclick="turnoMarcar(this)"><span class="block px-2.5 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-50 peer-checked:text-white ${TURNO_PAC_COLOR[op]}">${op}</span></label>`).join('')}
                             </div></div>`).join('')}
                     </div>
-                    <input type="text" id="tur-pac-${k}-obs" oninput="turnoCambio()" placeholder="Novedad u observación del paciente" class="mt-2 w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390]/30">
+                    <div class="tur-pac-obs-box mt-2">
+                        <label class="block text-[11px] font-semibold text-gray-500 mb-1"><i class="fa-solid fa-pen-to-square"></i> Novedad u observación de este paciente</label>
+                        <textarea id="tur-pac-${k}-obs" rows="2" oninput="turnoCambio(); turnoPintarNovedades();" placeholder="Qué pasó, qué quedó pendiente, qué debe revisar el siguiente turno…" class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] focus:border-transparent"></textarea>
+                    </div>
                 </div>`;
             }).join('');
             // valores guardados
@@ -22386,18 +22407,86 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 TURNO_PAC_CAMPOS.forEach(c => document.querySelectorAll(`input[name="tur-pac-${k}-${c.id}"]`).forEach(x => { x.checked = v[c.id] === x.value; x.dataset.on = x.checked ? '1' : ''; }));
                 const o = document.getElementById(`tur-pac-${k}-obs`); if (o) o.value = v.obs || '';
             });
-            if (!editable) cont.querySelectorAll('input').forEach(x => x.disabled = true);
+            if (!editable) cont.querySelectorAll('input, textarea').forEach(x => x.disabled = true);
+            turnoPintarNovedades();
         }
 
         function turnoRecogerPacientes() {
             return turnoPacientes.map(p => {
-                const k = turnoPacKey(p.id), o = { id: p.id, nombre: p.nombre, hc: p.hc || '', especie: p.especie || '', manual: !!p.manual };
+                const k = turnoPacKey(p.id), o = { id: p.id, nombre: p.nombre, hc: p.hc || '', especie: p.especie || '', tipo: p.tipo || '', manual: !!p.manual };
                 TURNO_PAC_CAMPOS.forEach(c => { const m = document.querySelector(`input[name="tur-pac-${k}-${c.id}"]:checked`); o[c.id] = m ? m.value : ''; });
                 const ob = document.getElementById(`tur-pac-${k}-obs`); o.obs = ob ? ob.value.trim() : '';
                 return o;
             });
         }
         const turnoPacConDatos = p => TURNO_PAC_CAMPOS.some(c => p[c.id]) || (p.obs || '').trim();
+
+        // ----- Novedades por paciente: estado visible de cada uno y resumen del turno -----
+        // novedad  = algo que el siguiente turno debe saber (No, Poco, Pendiente u observación escrita)
+        // ok       = las cuatro preguntas respondidas y todo normal
+        // falta    = todavía sin registrar (o a medias)
+        function turnoEstadoPac(p) {
+            if (turnoPacConNovedad(p)) return 'novedad';
+            if (TURNO_PAC_CAMPOS.every(c => p[c.id])) return 'ok';
+            return 'falta';
+        }
+        const TURNO_PAC_EST = {
+            novedad: { borde: '#dc2626', fondo: '#ffffff', chip: 'bg-red-100 text-red-700', txt: 'Con novedad', ico: 'fa-triangle-exclamation' },
+            ok:      { borde: '#059669', fondo: '#ffffff', chip: 'bg-emerald-100 text-emerald-700', txt: 'Sin novedad', ico: 'fa-circle-check' },
+            falta:   { borde: '#d1d5db', fondo: '#ffffff', chip: 'bg-gray-100 text-gray-500', txt: 'Falta registrar', ico: 'fa-circle-dot' }
+        };
+        // Lo que se le marcó al paciente, en texto («Comió: No · Medicación: Pendiente»)
+        const turnoPacDetalle = p => TURNO_PAC_CAMPOS.map(c => p[c.id] && c.n + ': ' + p[c.id]).filter(Boolean).join(' · ');
+        // Solo lo que es novedad, para el resumen
+        function turnoPacDetalleNovedad(p) {
+            const malo = { comio: ['No', 'Poco'], orino: ['No'], defeco: ['No'], medic: ['Pendiente'] };
+            return TURNO_PAC_CAMPOS.filter(c => (malo[c.id] || []).includes(p[c.id])).map(c => c.n + ': ' + p[c.id]).join(' · ');
+        }
+
+        window.turnoPintarNovedades = function () {
+            const cont = document.getElementById('tur-pacientes');
+            const caja = document.getElementById('tur-pac-resumen');
+            if (!cont || !caja || !turnoPacientes.length) { if (caja) caja.innerHTML = ''; return; }
+            const pacs = turnoRecogerPacientes();
+            let nov = 0, ok = 0, falta = 0;
+            pacs.forEach(p => {
+                const est = turnoEstadoPac(p);
+                if (est === 'novedad') nov++; else if (est === 'ok') ok++; else falta++;
+                const cfg = TURNO_PAC_EST[est];
+                const card = cont.querySelector('.tur-pac[data-k="' + turnoPacKey(p.id) + '"]');
+                if (!card) return;
+                card.style.borderLeftColor = cfg.borde;
+                card.style.background = cfg.fondo;
+                const chip = card.querySelector('.tur-pac-estado');
+                if (chip) { chip.className = 'tur-pac-estado text-[11px] font-bold px-2 py-0.5 rounded-full ml-auto mr-1 whitespace-nowrap ' + cfg.chip; chip.innerHTML = '<i class="fa-solid ' + cfg.ico + '"></i> ' + cfg.txt; }
+                const ta = document.getElementById('tur-pac-' + turnoPacKey(p.id) + '-obs');
+                if (ta) { ta.style.borderColor = est === 'novedad' ? '#fca5a5' : ''; ta.style.background = ''; }
+            });
+            const cnt = document.getElementById('tur-pac-cnt');
+            if (cnt) {
+                cnt.textContent = turnoPacientes.length + ' paciente' + (turnoPacientes.length === 1 ? '' : 's') + (nov ? ' · ' + nov + ' con novedad' : '');
+                cnt.className = 'text-xs font-semibold px-2 py-0.5 rounded-full ' + (nov ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500');
+            }
+            const conNov = pacs.filter(p => turnoEstadoPac(p) === 'novedad');
+            const filas = conNov.map(p => {
+                const d = turnoPacDetalleNovedad(p), o = (p.obs || '').trim();
+                return '<li class="flex gap-2 py-1 border-t border-red-100 first:border-0">' +
+                    '<i class="fa-solid fa-paw text-red-500 mt-1 shrink-0"></i>' +
+                    '<span><b class="text-gray-800">' + turnoEsc(p.nombre) + '</b>' + (p.hc ? ' <span class="text-gray-500">· HC ' + turnoEsc(p.hc) + '</span>' : '') +
+                    (d ? '<span class="block text-red-700 font-semibold">' + turnoEsc(d) + '</span>' : '') +
+                    (o ? '<span class="block text-gray-600">' + turnoEsc(o) + '</span>' : '') + '</span></li>';
+            }).join('');
+            caja.innerHTML = conNov.length
+                ? '<div class="rounded-xl border border-red-200 bg-red-50 p-3">' +
+                    '<p class="text-sm font-bold text-red-800 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Novedades para el siguiente turno (' + conNov.length + ')</p>' +
+                    '<ul class="text-xs">' + filas + '</ul>' +
+                    (falta ? '<p class="text-[11px] text-red-700 mt-2"><i class="fa-solid fa-circle-info"></i> Faltan ' + falta + ' paciente(s) por registrar.</p>' : '') +
+                  '</div>'
+                : '<div class="rounded-xl border ' + (falta ? 'border-gray-200 bg-gray-50' : 'border-emerald-200 bg-emerald-50') + ' p-3">' +
+                    '<p class="text-sm font-bold ' + (falta ? 'text-gray-600' : 'text-emerald-800') + '">' +
+                    (falta ? '<i class="fa-solid fa-circle-dot"></i> Sin novedades registradas todavía — faltan ' + falta + ' de ' + pacs.length + ' paciente(s).'
+                           : '<i class="fa-solid fa-circle-check"></i> Ningún paciente con novedad: los ' + pacs.length + ' quedaron al día.') + '</p></div>';
+        };
         const turnoPacConNovedad = p => p.comio === 'No' || p.comio === 'Poco' || p.orino === 'No' || p.defeco === 'No' || p.medic === 'Pendiente' || (p.obs || '').trim();
 
         window.turnoActualizarPacientes = async function() {
@@ -22406,17 +22495,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             let nuevos = 0;
             hosp.forEach(h => { if (!turnoPacientes.some(p => p.id === h.id)) { turnoPacientes.push(h); nuevos++; } });
             turnoRenderPacientes(actuales);
-            showToast(turnoPacSinPermiso ? 'No se pudo leer la lista de hospitalizados.' : (nuevos ? nuevos + ' paciente(s) agregado(s).' : 'La lista ya está al día.'), turnoPacSinPermiso);
-        };
-        window.turnoAgregarPaciente = function() {
-            const n = document.getElementById('tur-pac-nombre'), h = document.getElementById('tur-pac-hc');
-            const nombre = (n.value || '').trim();
-            if (!nombre) { n.focus(); return; }
-            const actuales = turnoRecogerPacientes();
-            turnoPacientes.push({ id: 'm_' + Date.now(), nombre, hc: (h.value || '').trim(), especie: '', manual: true });
-            n.value = ''; h.value = '';
-            turnoRenderPacientes(actuales);
-            turnoCambio();
+            showToast(turnoPacSinPermiso ? 'No se pudo leer la lista de pacientes.' : (nuevos ? nuevos + ' paciente(s) agregado(s).' : 'La lista ya está al día.'), turnoPacSinPermiso);
         };
         window.turnoQuitarPaciente = function(k) {
             const actuales = turnoRecogerPacientes();
@@ -22538,7 +22617,8 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             if (ch) ch.className = 'fa-solid fa-chevron-' + (oculto ? 'down' : 'up') + ' text-xs';
         };
 
-        // Prepara una lista nueva: pacientes hospitalizados y turno anterior
+        // Prepara una lista nueva: trae los pacientes con cuenta de cobro abierta
+        // (hospitalización y ambulatorio) y el turno anterior
         async function turnoPrepararNueva() {
             const [hosp] = await Promise.all([turnoCargarHospitalizados(), turnoCargarTodos()]);
             if (turnoId) return;   // ya se guardó o se abrió otra mientras cargaba
@@ -22585,6 +22665,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 const id = el.name.slice(4); turnoMostrarObsNo(id);
                 if (el.checked && el.value === 'No') { const t = document.getElementById('tur-obsno-' + id); if (t) setTimeout(() => t.focus({ preventScroll: true }), 30); }
             }
+            if (el.name.startsWith('tur-pac-')) { try { turnoPintarNovedades(); } catch (e) {} }
             turnoCambio();
         };
 
@@ -22720,7 +22801,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             TURNO_ITEMS.forEach(it => { const t = document.getElementById('tur-obsno-' + it.id); if (t) t.value = on[it.id] || ''; turnoMostrarObsNo(it.id); });
             const md = d.medidas || {};
             TURNO_MEDIDAS_TODAS.forEach(m => { const el = document.getElementById('tur-med-' + m.id); if (el) el.value = md[m.id] || ''; turnoPintarEstadoMedida(m); });
-            turnoPacientes = (d.pacientes || []).map(p => ({ id: p.id, nombre: p.nombre, hc: p.hc || '', especie: p.especie || '', manual: !!p.manual }));
+            turnoPacientes = (d.pacientes || []).map(p => ({ id: p.id, nombre: p.nombre, hc: p.hc || '', especie: p.especie || '', tipo: p.tipo || '', manual: !!p.manual }));
             turnoRenderPacientes(d.pacientes || []);
             turnoPendRec = (d.pendientesRec || []).map(p => ({ ...p }));
             turnoActualizarAvance();
@@ -22853,11 +22934,12 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         // ---------- Tablero inicial del módulo ----------
         function turnoMostrarForm() {
             const i = document.getElementById('tur-inicio'); if (i) i.classList.add('hidden');
+            const nv = document.getElementById('tur-nov'); if (nv) nv.classList.add('hidden');
             document.getElementById('tur-form').classList.remove('hidden');
         }
         window.turnoMostrarInicio = async function() {
             if (turnoPendiente) await turnoGuardar();
-            ['tur-form', 'tur-lista', 'tur-seg'].forEach(x => { const e = document.getElementById(x); if (e) e.classList.add('hidden'); });
+            ['tur-form', 'tur-lista', 'tur-seg', 'tur-nov'].forEach(x => { const e = document.getElementById(x); if (e) e.classList.add('hidden'); });
             document.getElementById('tur-inicio').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'auto' });
             await turnoCargarInicio();
@@ -23199,6 +23281,144 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         let turnoSegDatos = [];                // listas del rango consultado
         let turnoEsperados = ['Noche', 'Domingo / Festivo'];   // por defecto: noche siempre; domingo/festivo cuando corresponde
         let turnoPrimeraFecha = '';            // fecha de la primera lista registrada (desde ahí se cuentan los turnos sin entrega)
+
+        // ====== TABLERO: ESTADO DE PACIENTES ======
+        // Reúne lo que cada turno registró de cada paciente y lo muestra agrupado por paciente,
+        // con su historial por turno. Se vuelve a leer cada vez que se abre o se pulsa «Actualizar».
+        let turnoNovDatos = [];          // [{ clave, nombre, hc, especie, registros:[...] }]
+        const turnoNovNorm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+        window.turnoAbrirNovedades = async function () {
+            if (turnoPendiente) await turnoGuardar();
+            ['tur-form', 'tur-lista', 'tur-seg', 'tur-inicio'].forEach(x => { const e = document.getElementById(x); if (e) e.classList.add('hidden'); });
+            document.getElementById('tur-nov').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            await turnoNovCargar();
+        };
+        window.turnoNovCargar = async function () {
+            const cont = document.getElementById('tur-nov-lista'); if (!cont) return;
+            cont.innerHTML = '<div class="text-center py-6"><div class="loader mx-auto mb-2"></div><p class="text-gray-500 text-sm">Cargando...</p></div>';
+            try {
+                const snap = await getDocs(collection(db, TURNO_COL));
+                const turnos = [];
+                snap.forEach(x => { if (!x.id.startsWith('_')) turnos.push({ id: x.id, ...x.data() }); });
+                const orden = { 'Día completo': 0, 'Mañana': 1, 'Tarde': 2, 'Noche': 3, 'Domingo / Festivo': 4 };
+                // Solo los turnos de HOY y el turno inmediatamente anterior (normalmente el de anoche)
+                const hoy = turnoHoy();
+                const deHoy = turnos.filter(t => (t.fecha || '') === hoy)
+                    .sort((a, b) => (orden[b.turno] || 0) - (orden[a.turno] || 0));
+                const anteriores = turnos.filter(t => (t.fecha || '') && (t.fecha || '') < hoy)
+                    .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '') || (orden[b.turno] || 0) - (orden[a.turno] || 0));
+                const usar = deHoy.concat(anteriores.slice(0, 1));
+                const etiq = t => turnoDiaSem(t.fecha) + ' ' + turnoFechaCorta(t.fecha) + ' · ' + (t.turno || '—');
+                const pt = document.getElementById('tur-nov-turnos');
+                if (pt) pt.innerHTML = usar.length
+                    ? '<i class="fa-solid fa-clock-rotate-left"></i> Turnos incluidos: ' + usar.map(t => turnoEsc(etiq(t))).join(' · ')
+                    : '<i class="fa-solid fa-clock-rotate-left"></i> Todavía no hay entregas de turno registradas.';
+                // Pacientes con cuenta de cobro ABIERTA (hospitalización y ambulatorio).
+                // Los que ya tienen egreso no se muestran, aunque hayan salido en un turno de hoy.
+                let abiertas = null;
+                // true = se consultan de nuevo al servidor, para que al entrar al tablero esté siempre al día
+                try { abiertas = await obtenerEnCursoHosp(true); } catch (e) { console.warn('No se pudieron leer las cuentas abiertas:', e); }
+                const porId = {}, porHC = {}, porNom = {};
+                (abiertas || []).forEach(c => {
+                    const t = (c.tipoAtencion || 'Hospitalización') === 'Ambulatorio' ? 'Ambulatorio' : 'Hospitalización';
+                    const reg = { id: c.id, nombre: String(c.paciente || '').trim() || '(sin nombre)', hc: String(c.historia || '').trim(), especie: c.especie || '', tipo: t };
+                    porId[c.id] = reg;
+                    const h = reg.hc.replace(/\D/g, ''); if (h) porHC[h] = reg;
+                    const n = turnoNovNorm(reg.nombre); if (n) porNom[n] = reg;
+                });
+                // Busca a qué cuenta abierta corresponde el paciente de una entrega de turno
+                const cuentaDe = p => {
+                    const id = String(p.id || '');
+                    if (id.startsWith('c_') && porId[id.slice(2)]) return porId[id.slice(2)];
+                    const h = String(p.hc || '').replace(/\D/g, '');
+                    if (h && porHC[h]) return porHC[h];
+                    return porNom[turnoNovNorm(p.nombre)] || null;
+                };
+
+                const grupos = new Map();
+                usar.forEach(t => {
+                    (t.pacientes || []).forEach(p => {
+                        if (!turnoPacConDatos(p)) return;                      // sin nada registrado: no aporta
+                        const c = abiertas ? cuentaDe(p) : null;
+                        if (abiertas && !c) return;                            // ya egresó o su cuenta se cerró: no se muestra
+                        const hc = String((c && c.hc) || p.hc || '').trim();
+                        const clave = c ? 'c:' + c.id : (hc ? 'hc:' + hc.replace(/\D/g, '') : 'n:' + turnoNovNorm(p.nombre));
+                        if (!grupos.has(clave)) grupos.set(clave, { clave, nombre: (c && c.nombre) || p.nombre || '(sin nombre)', hc, especie: (c && c.especie) || p.especie || '', tipo: (c && c.tipo) || p.tipo || '', registros: [] });
+                        const g = grupos.get(clave);
+                        if (!g.especie && p.especie) g.especie = p.especie;
+                        if (!g.tipo && p.tipo) g.tipo = p.tipo;
+                        if (!g.hc && hc) g.hc = hc;
+                        g.registros.push({
+                            fecha: t.fecha || '', turno: t.turno || '', auxiliar: t.auxiliar || '', recibe: t.recibe || '', turnoId: t.id,
+                            comio: p.comio || '', orino: p.orino || '', defeco: p.defeco || '', medic: p.medic || '', tipo: p.tipo || '',
+                            obs: String(p.obs || '').trim(), novedad: turnoPacConNovedad(p)
+                        });
+                    });
+                });
+                // Pacientes con cuenta abierta de los que todavía no se registró nada en estos turnos
+                (abiertas || []).forEach(c => {
+                    const r = porId[c.id], clave = 'c:' + c.id;
+                    if (!grupos.has(clave)) grupos.set(clave, { clave, nombre: r.nombre, hc: r.hc, especie: r.especie, tipo: r.tipo, registros: [] });
+                });
+                turnoNovDatos = [...grupos.values()];
+                turnoNovDatos.forEach(g => g.registros.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '') || (orden[b.turno] || 0) - (orden[a.turno] || 0)));
+                turnoNovDatos.sort((a, b) => {
+                    const ua = (a.registros[0] || {}).fecha || '', ub = (b.registros[0] || {}).fecha || '';
+                    return (b.registros.some(r => r.novedad) - a.registros.some(r => r.novedad))
+                        || ((b.registros.length > 0) - (a.registros.length > 0))
+                        || ub.localeCompare(ua) || a.nombre.localeCompare(b.nombre, 'es');
+                });
+                turnoNovPintar();
+            } catch (e) {
+                console.error(e);
+                cont.innerHTML = '<div class="text-center py-5 text-red-500 text-sm">No se pudieron cargar las entregas de turno.</div>';
+            }
+        };
+
+        window.turnoNovPintar = function () {
+            const cont = document.getElementById('tur-nov-lista');
+            if (!cont) return;
+            const q = turnoNovNorm(document.getElementById('tur-nov-buscar').value);
+            let lista = turnoNovDatos;
+            if (q) lista = lista.filter(g => turnoNovNorm(g.nombre).includes(q) || String(g.hc || '').includes(q));
+
+            if (!lista.length) {
+                cont.innerHTML = '<div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 text-center text-sm text-gray-400 italic">'
+                    + (turnoNovDatos.length ? 'Ningún paciente coincide con el filtro.' : 'No hay pacientes con cuenta de cobro abierta.') + '</div>';
+                return;
+            }
+            const chip = (n, v) => {
+                if (!v) return '';
+                const malo = ['No', 'Pendiente'].includes(v), medio = v === 'Poco';
+                const cls = malo ? 'bg-red-100 text-red-700' : (medio ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700');
+                return '<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ' + cls + '">' + n + ': ' + turnoEsc(v) + '</span>';
+            };
+            cont.innerHTML = lista.map(g => {
+                const nov = g.registros.filter(r => r.novedad).length;
+                const filas = g.registros.map(r => `
+                    <div class="flex flex-wrap items-start gap-2 py-2 border-t border-gray-100 first:border-0">
+                        <div class="w-full sm:w-44 shrink-0">
+                            <p class="text-xs font-bold text-gray-700">${turnoEsc(turnoDiaSem(r.fecha))} ${turnoEsc(turnoFechaCorta(r.fecha))} · ${turnoEsc(r.turno || '—')}</p>
+                            <p class="text-[11px] text-gray-500">${turnoEsc(r.auxiliar || '—')}</p>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="flex flex-wrap gap-1">${chip('Comió', r.comio)}${chip('Orinó', r.orino)}${chip('Defecó', r.defeco)}${chip('Medicación', r.medic)}</div>
+                            ${r.obs ? `<p class="text-xs text-gray-700 mt-1"><i class="fa-solid fa-comment-dots text-gray-400"></i> ${turnoEsc(r.obs)}</p>` : ''}
+                        </div>
+                        <button type="button" onclick="turnoAbrir('${r.turnoId}')" class="text-[11px] font-semibold text-[#154390] hover:underline shrink-0" title="Abrir esa entrega de turno"><i class="fa-solid fa-up-right-from-square"></i> Ver turno</button>
+                    </div>`).join('');
+                return `<section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden" style="border-left:5px solid #154390">
+                    <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-gray-100">
+                        <p class="font-bold text-gray-800"><i class="fa-solid fa-paw text-[#154390]"></i> ${turnoEsc(g.nombre)}${g.hc ? ` <span class="font-normal text-gray-500">· HC ${turnoEsc(g.hc)}</span>` : ''}${g.especie ? etiquetaEspecie(g.especie) : ''}${g.tipo ? ` <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded align-middle ${g.tipo === 'Ambulatorio' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-[#154390]'}">${turnoEsc(g.tipo)}</span>` : ''}</p>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${nov ? nov + ' turno(s) con novedad' : 'Sin novedades'} · ${g.registros.length} registro(s)</span>
+                    </div>
+                    <div class="px-4 py-2">${filas || '<p class="text-xs text-gray-400 italic py-2">Todavía no se le ha registrado nada en estos turnos.</p>'}</div>
+                </section>`;
+            }).join('');
+        };
+
         function turnoPuedeSeguimiento() { return esAdmin === true || permisosActuales['turno_seguimiento'] === true; }
         const turnoISO = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const turnoFechaCorta = f => { const p = String(f || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] : f; };
@@ -23217,6 +23437,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
             await turnoSegCargar();
         };
         window.turnoCerrarSeguimiento = function() {
+            { const nv = document.getElementById('tur-nov'); if (nv) nv.classList.add('hidden'); }
             const seg = document.getElementById('tur-seg'); if (!seg) return;
             seg.classList.add('hidden');
             document.getElementById('tur-form').classList.remove('hidden');
