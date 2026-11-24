@@ -6018,6 +6018,7 @@
             return y + h + 16;
         }
 
+
         function encabezadoInformePDF(pdf, titulo, subtitulo) {
             const AZUL = [21, 67, 144], GRIS = [130, 130, 130];
             const M = 40, W = pdf.internal.pageSize.getWidth() - 2 * M;
@@ -7560,7 +7561,11 @@
             prepararPDFInforme(pdf);
             let y = encabezadoInformePDF(pdf, "Ortopedia", "Examen ortopédico en pequeños animales");
 
-            const seccionKV = (titulo, filas) => {
+            // Solo sale lo que se llenó; los datos del paciente salen siempre completos (completo = true)
+            const lleno = v => String(v == null ? '' : v).trim() !== '';
+            const seccionKV = (titulo, filas, completo) => {
+                if (!completo) filas = filas.filter(f => lleno(f[1]));
+                if (!filas.length) return;
                 pdf.autoTable({
                     startY: y,
                     head: [[{ content: titulo, colSpan: 2, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
@@ -7578,16 +7583,18 @@
                 ["Historia clínica", d.hc], ["Propietario", d.propietario], ["Fecha", d.fecha],
                 ["Paciente", d.paciente], ["Especie", d.especie], ["Raza", d.raza], ["Edad", d.edad],
                 ["Sexo", d.sexo], ["Peso", d.peso]
-            ]);
-            pdf.autoTable({
-                startY: y,
-                head: [[{ content: "ANAMNESIS", styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
-                body: [[d.anamnesis || '']],
-                theme: 'grid',
-                styles: { fontSize: 8, cellPadding: 4, textColor: [40, 40, 40] },
-                margin: { left: M, right: M }
-            });
-            y = pdf.lastAutoTable.finalY + 10;
+            ], true);
+            if (lleno(d.anamnesis)) {
+                pdf.autoTable({
+                    startY: y,
+                    head: [[{ content: "ANAMNESIS", styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
+                    body: [[d.anamnesis || '']],
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 4, textColor: [40, 40, 40] },
+                    margin: { left: M, right: M }
+                });
+                y = pdf.lastAutoTable.finalY + 10;
+            }
             seccionKV("PRICE", [
                 ["Dolor", d["price-dolor"]], ["Rango de movimiento", d["price-rango"]],
                 ["Efusión", d["price-efusion"]], ["Crépito", d["price-crepito"]],
@@ -7616,6 +7623,11 @@
                 } catch (e) { return null; }
             };
             ORTO_REGIONES.forEach((reg, idx) => {
+                const od0 = regs[reg.id + '_d'] || {}, oi0 = regs[reg.id + '_i'] || {};
+                const filasReg = reg.pruebas.filter(p => !p.enPar).map(p => [p.label, valorPruebaOrto(od0, p), valorPruebaOrto(oi0, p)])
+                    .filter(f => lleno(f[1]) || lleno(f[2]));
+                if (lleno(od0.notas) || lleno(oi0.notas)) filasReg.push(["Observaciones", od0.notas || '', oi0.notas || '']);
+                if (!filasReg.length) return;   // región sin datos: no sale
                 const etD = reg.grupo === 'anterior' ? 'MTD — derecho' : 'MPD — derecho';
                 const etI = reg.grupo === 'anterior' ? 'MTI — izquierdo' : 'MPI — izquierdo';
                 pdf.setFontSize(8);
@@ -7649,9 +7661,7 @@
                     y += caja + 8;
                 }
 
-                const od = regs[reg.id + '_d'] || {}, oi = regs[reg.id + '_i'] || {};
-                const body = reg.pruebas.filter(p => !p.enPar).map(p => [p.label, valorPruebaOrto(od, p), valorPruebaOrto(oi, p)]);
-                body.push(["Observaciones", od.notas || '', oi.notas || '']);
+                const body = filasReg;
                 pdf.autoTable({
                     startY: y,
                     head: [["Prueba", etD, etI]],
@@ -7667,6 +7677,8 @@
             });
 
             // Procedimientos especiales: sigue en la misma página si cabe el título, la imagen y el inicio de la tabla
+            let yFin = y;
+            if (lleno(d.especiales)) {
             const imgE = ORTO_IMGS['especiales'];
             let wE = 0, hE = 0;
             try { if (imgE) { const p = pdf.getImageProperties(imgE); hE = 150; wE = hE * p.width / p.height; if (wE > anchoUtil * 0.5) { wE = anchoUtil * 0.5; hE = wE * p.height / p.width; } } } catch (e) { hE = 0; }
@@ -7684,9 +7696,11 @@
                 styles: { fontSize: 8, cellPadding: 4 },
                 margin: { left: M, right: M }
             });
+            yFin = pdf.lastAutoTable.finalY + 12;
+            }
             // Plan terapéutico, diagnósticos diferenciales y conclusiones
-            let yFin = pdf.lastAutoTable.finalY + 12;
             const bloqueTextoOrto = (titulo, texto) => {
+                if (!lleno(texto)) return;
                 pdf.autoTable({
                     startY: yFin,
                     head: [[{ content: titulo, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
@@ -8550,7 +8564,11 @@
             prepararPDFInforme(pdf);
             let y = encabezadoInformePDF(pdf, "Neurología", "Examen neurológico del paciente");
 
-            const tabla = (titulo, filas) => {
+            // Solo sale lo que se llenó; los datos del paciente salen siempre completos (completo = true)
+            const lleno = v => String(v == null ? '' : v).trim() !== '';
+            const tabla = (titulo, filas, completo) => {
+                if (!completo) filas = filas.filter(f => lleno(f[1]));
+                if (!filas.length) return;
                 pdf.autoTable({
                     startY: y,
                     head: [[{ content: titulo, colSpan: 2, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
@@ -8567,10 +8585,11 @@
             tabla("DATOS DEL PACIENTE", [
                 ["Nombre", d.nombre], ["HC", d.hc], ["Fecha", d.fecha],
                 ["Especie", d.especie], ["Raza", d.raza], ["Edad", d.edad], ["Sexo", d.sexo]
-            ]);
+            ], true);
             const campos = d.campos || {};
             // Bloque de texto libre: título arriba y el texto en la fila de abajo, a todo el ancho
             const bloqueLibre = (titulo, texto) => {
+                if (!lleno(texto)) return;
                 pdf.autoTable({
                     startY: y,
                     head: [[{ content: titulo, styles: { fillColor: AZUL, textColor: 255, halign: 'left' } }]],
@@ -9064,7 +9083,10 @@
                     if (i < lineasPorBloque.length) { pdf.addPage(); y = 44; } else y += 12;
                 }
             }
+            // Solo sale lo que se llenó (las tarjetas de arriba, con los datos del paciente, salen siempre completas)
+            const lleno = v => String(v == null ? '' : v).trim() !== '';
             function seccionTexto(titulo, texto) {
+                if (!lleno(texto)) return;
                 const t = (texto || '').toString().trim() || '—';
                 pdf.setFont(undefined, 'normal'); pdf.setFontSize(8.5);
                 const lineas = pdf.splitTextToSize(t, W - 24);
@@ -9076,6 +9098,8 @@
                 });
             }
             function grillaCampos(titulo, items) {
+                items = items.filter(it => lleno(it[1]));
+                if (!items.length) return;
                 const cols = 3, cg = 10, cellW = (W - cg * (cols - 1)) / cols, cellH = 34;
                 const filas = Math.ceil(items.length / cols);
                 if (y + 12 + cellH + 20 > PH - 44) { pdf.addPage(); y = 44; }   // título + primera fila
@@ -9106,6 +9130,8 @@
             }
 
             function seccionLista(titulo, pares) {
+                pares = pares.filter(p => lleno(p[1]));
+                if (!pares.length) return;
                 pdf.setFontSize(8.5);
                 const anchoVal = W - 24;
                 let alto = 0;
@@ -9135,6 +9161,8 @@
 
             // Tabla de dos columnas (Sistema | Hallazgos); se parte sola entre páginas
             function tablaSistemas(titulo, pares) {
+                pares = pares.filter(p => lleno(p[1]));
+                if (!pares.length) return;
                 if (y + 12 + 14 + 44 > PH - 44) { pdf.addPage(); y = 44; }   // título + encabezado + primera fila
                 tituloSeccion(titulo);
                 pdf.autoTable({
@@ -9402,6 +9430,7 @@
                 y += 12;
             }
             function seccionTexto(tit, texto) {
+                if (!String(texto == null ? '' : texto).trim()) return;   // vacío: no sale
                 const t = (texto || '').toString().trim() || '—';
                 pdf.setFont(undefined, 'normal'); pdf.setFontSize(9);
                 let lineas = pdf.splitTextToSize(t, W - 24);
@@ -9527,15 +9556,18 @@
             }
             // Recuadro con filas (etiqueta: valor); si no cabe, sigue en la página siguiente
             function seccionFilas(tit, pares) {
+                pares = pares.filter(pr => String(pr[1] == null ? '' : pr[1]).trim());   // solo lo que se llenó
+                if (!pares.length) return;
                 const LH = 11.5, padTop = 13, anchoVal = W - 24;
                 pdf.setFontSize(8.5);
                 const filas = pares.map(pr => {
+                    const sinEtiqueta = !String(pr[0]).trim();   // texto libre: va sin etiqueta, a todo el ancho
                     const lbl = String(pr[0]) + ':';
                     pdf.setFont(undefined, 'bold'); const lblW = pdf.getTextWidth(lbl);
                     pdf.setFont(undefined, 'normal');
                     const txt = (pr[1] || '').toString().trim() || '—';
-                    const ancho = pares.length > 1 ? anchoVal - lblW - 6 : anchoVal;
-                    return { lbl, lblW, lineas: pdf.splitTextToSize(txt, ancho), solo: pares.length === 1 };
+                    const ancho = sinEtiqueta ? anchoVal : anchoVal - lblW - 6;
+                    return { lbl, lblW, lineas: pdf.splitTextToSize(txt, ancho), solo: sinEtiqueta };
                 });
                 if (y + 12 + padTop + LH * 2 + 20 > LIM) { pdf.addPage(); y = TOP; }
                 tituloSeccion(tit);
@@ -9563,9 +9595,13 @@
 
             // ---------- Contenido ----------
             seccionFilas("Motivo de la consulta y antecedentes", [["", campos.motivo]]);
-            if (y + 30 > LIM) { pdf.addPage(); y = TOP; }
-            pdf.setFont(undefined, 'bold'); pdf.setFontSize(11); pdf.setTextColor(...AZUL);
-            pdf.text("Hallazgos endoscópicos", M, y + 2); y += 16;
+            const hayHallazgos = ['vestibulo_d', 'etmo_d', 'maxilo_d', 'concl_d', 'vestibulo_i', 'etmo_i', 'maxilo_i', 'concl_i', 'nasofaringe', 'concl_n']
+                .some(k => String(campos[k] == null ? '' : campos[k]).trim());
+            if (hayHallazgos) {
+                if (y + 30 > LIM) { pdf.addPage(); y = TOP; }
+                pdf.setFont(undefined, 'bold'); pdf.setFontSize(11); pdf.setTextColor(...AZUL);
+                pdf.text("Hallazgos endoscópicos", M, y + 2); y += 16;
+            }
             seccionFilas("1. Fosa nasal derecha", [
                 ["Vestíbulo nasal y meato común", campos.vestibulo_d], ["Cornetes nasales (etmoturbinales)", campos.etmo_d],
                 ["Cornetes nasales (maxiloturbinales)", campos.maxilo_d], ["Conclusión", campos.concl_d]
@@ -9667,15 +9703,18 @@
             }
             // Recuadro con filas (etiqueta: valor); si no cabe, sigue en la página siguiente
             function seccionFilas(tit, pares) {
+                pares = pares.filter(pr => String(pr[1] == null ? '' : pr[1]).trim());   // solo lo que se llenó
+                if (!pares.length) return;
                 const LH = 11.5, padTop = 13, anchoVal = W - 24;
                 pdf.setFontSize(8.5);
                 const filas = pares.map(pr => {
+                    const sinEtiqueta = !String(pr[0]).trim();   // texto libre: va sin etiqueta, a todo el ancho
                     const lbl = String(pr[0]) + ':';
                     pdf.setFont(undefined, 'bold'); const lblW = pdf.getTextWidth(lbl);
                     pdf.setFont(undefined, 'normal');
                     const txt = (pr[1] || '').toString().trim() || '—';
-                    const ancho = pares.length > 1 ? anchoVal - lblW - 6 : anchoVal;
-                    return { lbl, lblW, lineas: pdf.splitTextToSize(txt, ancho), solo: pares.length === 1 };
+                    const ancho = sinEtiqueta ? anchoVal : anchoVal - lblW - 6;
+                    return { lbl, lblW, lineas: pdf.splitTextToSize(txt, ancho), solo: sinEtiqueta };
                 });
                 if (y + 12 + padTop + LH * 2 + 20 > LIM) { pdf.addPage(); y = TOP; }
                 tituloSeccion(tit);
@@ -9972,8 +10011,10 @@
                 return !!valor(c);
             };
             secciones.forEach(sec => {
-                // secciones sin ningún dato no salen en el PDF (solo en los informes que lo piden)
-                if (opts.omitirVacios && !sec.campos.some(campoConDato)) return;
+                // Lo vacío no sale (en los informes que lo piden). Los datos del paciente (opts.completas) salen siempre completos.
+                const omitir = opts.omitirVacios && !(opts.completas || []).includes(sec.id);
+                // secciones sin ningún dato no salen en el PDF
+                if (omitir && !sec.campos.some(campoConDato)) return;
                 // la sección no empieza sola al final de la hoja: su título va con al menos la primera fila
                 if (y + 52 > PHq - 46) { pdf.addPage(); y = 62; }
                 const tituloSec = { content: sec.titulo.toUpperCase(), styles: { fillColor: AZUL, textColor: 255, halign: 'left', fontStyle: 'bold', fontSize: 8.5 } };
@@ -9996,10 +10037,10 @@
                 const tabla = c => {
                     const n = c.cols.length, k = nFijas(c);
                     let cuerpo = filasTabla(c).map(x => c.fijas
-                        ? x.f.slice(0, k).map((v, j) => ({ content: pdfTxt(v), styles: j === 0 ? { fontStyle: 'bold' } : { textColor: [100, 100, 100], fontSize: 7 } }))
+                        ? x.f.slice(0, k).map((v, j) => ({ content: pdfTxt(j === 0 ? rxNombreParam(v, x.o.pref) : v), styles: j === 0 ? { fontStyle: 'bold' } : { textColor: [100, 100, 100], fontSize: 7 } }))
                             .concat(c.cols.slice(k).map(col => ({ content: texto(x.o[col.id]), styles: k > 1 ? { halign: 'center' } : {} })))
                         : c.cols.map(col => texto(x.o[col.id])));
-                    if (!cuerpo.length && opts.omitirVacios) return;
+                    if (!cuerpo.length && omitir) return;
                     if (!cuerpo.length) cuerpo = [[{ content: 'Sin registros', colSpan: n, styles: { halign: 'center', fontStyle: 'italic', textColor: [150, 150, 150] } }]];
                     const head = [];
                     if (conTitulo) head.push([{ ...tituloSec, colSpan: n }]);
@@ -10016,7 +10057,7 @@
                 sec.campos.forEach(c => {
                     if (c.controla) return;   // si aplica, la sección se muestra completa sin la pregunta
                     if (opts.responsable && c.id === 'firma') return;   // va en el recuadro del médico responsable
-                    if (opts.omitirVacios && c.tipo !== 'tabla' && !(c.junto && c.gtitulo) && !campoConDato(c)) return;
+                    if (omitir && c.tipo !== 'tabla' && !(c.junto && c.gtitulo) && !campoConDato(c)) return;
                     if (c.si && (c.si.casilla ? !(campos[c.si.campo] || []).includes(c.si.valor) : texto(campos[c.si.campo]) !== c.si.valor)) return;
                     if (c.tipo === 'tabla') { volcarCampos(); tabla(c); return; }
                     // en las secciones en cuadrícula los datos cortos van de a dos por fila; lo largo, a todo el ancho
@@ -10025,7 +10066,7 @@
                         if (ant && ant.junto === c.junto) return;   // el grupo ya se escribió con su primer campo
                         cerrarPar();
                         const lineas = sec.campos.filter(x => x.junto === c.junto).map(x => { const v = valor(x); return v ? pdfTxt(x.label) + ': ' + v : ''; }).filter(Boolean).join('\n');
-                        if (opts.omitirVacios && !lineas) return;
+                        if (omitir && !lineas) return;
                         body.push([{ content: pdfTxt(c.gtitulo), styles: etq }, { content: lineas, colSpan: 3 }]);
                         return;
                     }
@@ -10106,32 +10147,32 @@
             ]},
             { id: 'mediciones', titulo: '7. Mediciones angulares y longitudinales', icono: 'fa-ruler-combined', nota: '*Referencia: valor de referencia, contralateral o según la raza.', campos: [
                 { id: 'med_femur', label: '7.1 Fémur', tipo: 'tabla', cols: RX_COLS_ANG, fijas: [
-                    ['mLPFA', 'Ángulo femoral proximal lateral mecánico (frontal)', '≈ 90–100°'],
-                    ['mLDFA', 'Ángulo femoral distal lateral mecánico (frontal)', '≈ 93–99°'],
-                    ['mCrDFA', 'Ángulo femoral distal craneal mecánico (sagital)', 'Contralat. / raza'],
-                    ['mCaDFA', 'Ángulo femoral distal caudal mecánico (sagital)', 'Contralat. / raza'],
+                    ['mLPFA', 'Ángulo femoral proximal lateral (frontal)', '≈ 90–100°'],
+                    ['mLDFA', 'Ángulo femoral distal lateral (frontal)', '≈ 93–99°'],
+                    ['mCrDFA', 'Ángulo femoral distal craneal (sagital)', 'Contralat. / raza'],
+                    ['mCaDFA', 'Ángulo femoral distal caudal (sagital)', 'Contralat. / raza'],
                     ['Anteversión / torsión', 'Ángulo de anteversión femoral (TC)', 'Contralat. / TC']
                 ]},
                 { id: 'med_tibia', label: '7.2 Tibia', tipo: 'tabla', cols: RX_COLS_ANG, fijas: [
-                    ['mMPTA', 'Ángulo tibial proximal medial mecánico (frontal)', '≈ 90–96°'],
-                    ['mMDTA', 'Ángulo tibial distal medial mecánico (frontal)', '≈ 92–99°'],
-                    ['mCrPTA / TPA', 'Ángulo tibial proximal craneal mecánico / pendiente del platillo tibial (sagital)', 'Contralat. / raza'],
-                    ['mCrDTA', 'Ángulo tibial distal craneal mecánico (sagital)', 'Contralat. / raza'],
+                    ['mMPTA', 'Ángulo tibial proximal medial (frontal)', '≈ 90–96°'],
+                    ['mMDTA', 'Ángulo tibial distal medial (frontal)', '≈ 92–99°'],
+                    ['mCrPTA / TPA', 'Ángulo tibial proximal craneal / pendiente del platillo tibial (sagital)', 'Contralat. / raza'],
+                    ['mCrDTA', 'Ángulo tibial distal craneal (sagital)', 'Contralat. / raza'],
                     ['Torsión tibial', 'Rotación tibial (TC)', 'Contralat. / TC']
                 ]},
                 { id: 'med_radio', label: '7.3 Radio / cúbito', tipo: 'tabla', cols: RX_COLS_ANG, fijas: [
-                    ['mMPRA', 'Ángulo radial proximal medial mecánico (frontal)', 'Contralat. / raza'],
-                    ['mLDRA', 'Ángulo radial distal lateral mecánico (frontal)', '≈ 75–85°'],
-                    ['mCrPRA', 'Ángulo radial proximal craneal mecánico (sagital)', 'Contralat. / raza'],
-                    ['mCaDRA', 'Ángulo radial distal caudal mecánico (sagital)', 'Contralat. / raza'],
+                    ['mMPRA', 'Ángulo radial proximal medial (frontal)', 'Contralat. / raza'],
+                    ['mLDRA', 'Ángulo radial distal lateral (frontal)', '≈ 75–85°'],
+                    ['mCrPRA', 'Ángulo radial proximal craneal (sagital)', 'Contralat. / raza'],
+                    ['mCaDRA', 'Ángulo radial distal caudal (sagital)', 'Contralat. / raza'],
                     ['Rotación antebraquial', 'Pronación / supinación (TC)', 'Contralat. / TC']
                 ]},
                 { id: 'codo_rc', label: 'Escalón radio-cubital', tipo: 'texto', unidad: 'mm', junto: 'codo', gtitulo: 'Congruencia articular del codo' },
                 { id: 'codo_hr', label: 'Escalón húmero-radial', tipo: 'texto', unidad: 'mm', junto: 'codo', gtitulo: 'Congruencia articular del codo' },
                 { id: 'codo_sin', label: 'Incongruencia', tipo: 'checks', op: ['Sin incongruencia'], junto: 'codo', gtitulo: 'Congruencia articular del codo' },
                 { id: 'med_humero', label: '7.4 Húmero', tipo: 'tabla', cols: RX_COLS_ANG, fijas: [
-                    ['mLPHA', 'Ángulo humeral proximal lateral mecánico (frontal)', 'Contralat. / raza'],
-                    ['mLDHA', 'Ángulo humeral distal lateral mecánico (frontal)', 'Contralat. / raza'],
+                    ['mLPHA', 'Ángulo humeral proximal lateral (frontal)', 'Contralat. / raza'],
+                    ['mLDHA', 'Ángulo humeral distal lateral (frontal)', 'Contralat. / raza'],
                     ['mCrPHA / mCaDHA', 'Ángulos humerales proximal craneal / distal caudal (sagital)', 'Contralat. / raza'],
                     ['Torsión humeral', 'Rotación humeral (TC)', 'Contralat. / TC']
                 ]},
@@ -10202,7 +10243,7 @@
         ];
         // El PDF usa el mismo diseño del Registro quirúrgico, con su propio título y sin campos vacíos
         function construirRxPDF(titulo, secciones, d) {
-            return construirRegQxPDF(titulo, secciones, d, { titulo: 'Informe radiográfico', sub: 'Evaluación radiográfica ortopédica', omitirVacios: true, responsable: true });
+            return construirRegQxPDF(titulo, secciones, d, { titulo: 'Informe radiográfico', sub: 'Evaluación radiográfica ortopédica', omitirVacios: true, completas: ['paciente_sec'], responsable: true });
         }
 
 
@@ -10494,7 +10535,8 @@
             },
             regqx: {
                 pref: 'rq-', col: 'formatos_registro_qx', secciones: REGQX_SECCIONES, perm: 'fmt_regqx', screen: 'fmt-regqx',
-                titulo: 'REGISTRO QUIRÚRGICO Y ANESTÉSICO', archivo: 'Registro_quirurgico', nombreArchivo: 'Registro quirúrgico y anestésico', construirPDF: construirRegQxPDF,
+                titulo: 'REGISTRO QUIRÚRGICO Y ANESTÉSICO', archivo: 'Registro_quirurgico', nombreArchivo: 'Registro quirúrgico y anestésico',
+                construirPDF: (t, s, d) => construirRegQxPDF(t, s, d, { omitirVacios: true, completas: ['ident'] }),
                 ids: { secc: 'rq-secciones', lista: 'rq-lista', cont: 'rq-lista-container', desde: 'rq-desde', hasta: 'rq-hasta', imgs: 'rq-imagenes', dz: 'rq-dropzone', file: 'rq-file', btn: 'btn-guardar-rq' },
                 fns: { quitar: 'quitarImagenRegQx', cargar: 'cargarRegQx', pdf: 'descargarRegQxPDF', del: 'eliminarRegQx' },
                 id: null, imagenes: []
@@ -10525,11 +10567,32 @@
         // ---- Tablas con filas (Registro quirúrgico): materiales, protocolo, monitoreo, etc. ----
         const ENDO_TABLAS = {};
         function endoEscAttr(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+        // Mediciones del Informe radiográfico: en parámetros como mLPFA la letra inicial («m») se puede cambiar.
+        // Si el nombre tiene dos parámetros (mCrPHA / mCaDHA), la letra cambia en los dos.
+        const rxConPrefijo = (col, nombre) => col.id === 'param' && /^m[A-Z]/.test(String(nombre || ''));
+        // pref sin definir (informes de antes de que existiera la casilla) → el nombre original (mLPFA);
+        // casilla vacía → sin letra (LPFA); con letra → esa letra (aLPFA).
+        function rxNombreParam(nombre, pref) {
+            if (pref == null || !/^m[A-Z]/.test(String(nombre || ''))) return nombre;
+            const p = String(pref).trim();
+            return String(nombre).replace(/(^|\/\s*)m(?=[A-Z])/g, (_, a) => a + p);
+        }
+        window.rxNombreParam = rxNombreParam;
+        window.rxEcoPrefijo = function (inp) {
+            const v = (inp.value || '').trim();
+            inp.closest('td').querySelectorAll('.rx-pref-eco').forEach(x => { x.textContent = v; });
+        };
         function endoTablaFilaHTML(c, i, vals) {
             vals = vals || {};
             const fija = c.fijas ? c.fijas[i] : null;
             const fijasFila = Array.isArray(fija) ? fija : (fija != null ? [fija] : []);
             const celdas = c.cols.map((col, j) => {
+                if (j === 0 && fija != null && rxConPrefijo(col, fijasFila[0])) {
+                    // Formulario nuevo: la casilla va vacía. Informe guardado antes de que existiera la casilla: conserva la «m».
+                    const pref = ('pref' in vals) ? String(vals.pref == null ? '' : vals.pref).trim() : (Object.keys(vals).length ? 'm' : '');
+                    const resto = String(fijasFila[0]).slice(1).replace(/(\/\s*)m(?=[A-Z])/g, `$1<span class="rx-pref-eco">${endoEscAttr(pref)}</span>`);
+                    return `<td class="px-2 py-1 border-b border-gray-100 font-semibold text-gray-700 whitespace-nowrap"><span class="inline-flex items-center"><input type="text" data-col="pref" value="${endoEscAttr(pref)}" maxlength="3" autocomplete="off" oninput="rxEcoPrefijo(this)" title="Letra inicial del parámetro (se puede cambiar)" class="fmt-in text-sm font-semibold text-center text-[#154390]" style="width:28px;min-width:28px;padding:3px 0;margin-right:1px"><span>${resto}</span></span></td>`;
+                }
                 if (j === 0 && fija != null) return `<td class="px-2 py-1.5 border-b border-gray-100 font-semibold text-gray-700 whitespace-nowrap">${fijasFila[0]}</td>`;
                 // columnas de solo lectura (p. ej. Definición y Referencia en las mediciones del Informe radiográfico)
                 if (col.fija && j < fijasFila.length) return `<td class="px-2 py-1.5 border-b border-gray-100 text-xs text-gray-500 ${j === 1 ? 'min-w-[180px]' : 'whitespace-nowrap'}">${fijasFila[j]}</td>`;
@@ -10602,7 +10665,7 @@
         // Las filas no se eliminan: el botón borra lo escrito en la fila, y si tiene datos pregunta antes (para evitar accidentes)
         window.endoBorrarFila = async function(btn) {
             const tr = btn.closest('tr'); if (!tr) return;
-            const inputs = [...tr.querySelectorAll('input[data-col]')];
+            const inputs = [...tr.querySelectorAll('input[data-col]')].filter(i => i.dataset.col !== 'pref');
             if (!inputs.some(i => i.value.trim())) return;
             if (!(await rmConfirmar('¿Estás seguro de borrar lo escrito en esta fila?', 'Se quitarán los datos de esta fila.', 'Sí, borrar'))) return;
             inputs.forEach(i => { i.value = ''; });
@@ -11074,26 +11137,42 @@
             function tit(t) { if (y + 80 > PH - 46) { pdf.addPage(); y = 48; }   // el subtítulo pasa con su tabla a la página siguiente
                 y += 10; pdf.setFont(undefined, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...AZUL); pdf.text(t, M, y); y += 4; }
             function leyenda() { pdf.setFont(undefined, 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(120, 120, 120); pdf.text("Código: normal = 0 · medio = 1 · moderado = 2 · severo = 3", M, y + 9); y += 12; }
-            const marca = v => ((v || '').toString().trim() ? '(X) ' : '( ) ');
+            // Solo sale lo que se llenó: de las listas de opciones, solo las marcadas.
+            // Los datos del paciente salen siempre completos.
+            const lleno = v => Array.isArray(v) ? v.some(x => String(x == null ? '' : x).trim()) : String(v == null ? '' : v).trim() !== '';
+            const CAMPOS_PACIENTE = ['fecha', 'historia', 'paciente', 'especie', 'raza', 'edad'];
+            const lesionesConDato = v => (Array.isArray(v) ? v : []).filter(l => (l.cod !== '' && l.cod != null) || lleno(l.com));
+            const seleccion = v => (Array.isArray(v) ? v : []).filter(x => String(x == null ? '' : x).trim());
 
             let pending = [];
             const flush = () => { if (pending.length) { tablaDatos(pending); pending = []; } };
             secciones.forEach(sec => {
                 const esSeg = sec.campos.some(c => c.tipo === 'lesiones');
-                if (esSeg) { flush(); tit(sec.titulo); }
+                if (esSeg) {
+                    // el segmento (esófago, estómago…) solo sale si se marcó algo o se codificó alguna lesión
+                    const conDato = sec.campos.some(c => c.tipo === 'lesiones' ? lesionesConDato(campos[c.id]).length
+                        : (c.tipo === 'checks' ? seleccion(campos[c.id]).length : (c.id !== 'firma' && lleno(campos[c.id]))));
+                    if (!conDato) return;
+                    flush(); tit(sec.titulo);
+                }
                 sec.campos.forEach(c => {
                     if (c.id === 'firma') return;
                     if (c.tipo === 'checks') {
-                        flush();
+                        const sel = seleccion(campos[c.id]);
+                        if (!sel.length) return;
                         let pt = c.label;
-                        if (/_hallazgo$/.test(c.id)) pt = sec.titulo;
+                        if (/_hallazgo$/.test(c.id)) pt = 'Hallazgos';
                         else if (/_sitio$/.test(c.id)) pt = 'Sitio de la lesión';
-                        tablaOpciones(pt.toUpperCase(), c.op, campos[c.id]);
+                        pending.push([pt, sel.join(', ')]);
                     } else if (c.tipo === 'lesiones') {
-                        flush(); leyenda(); tablaLesiones(campos[c.id]);
+                        const filas = lesionesConDato(campos[c.id]);
+                        if (!filas.length) return;
+                        flush(); leyenda(); tablaLesiones(filas);
                     } else if (sec.lista) {
-                        pending.push([marca(campos[c.id]) + c.label.toUpperCase(), campos[c.id]]);
+                        if (!lleno(campos[c.id])) return;
+                        pending.push(['(X) ' + c.label.toUpperCase(), campos[c.id]]);
                     } else {
+                        if (!lleno(campos[c.id]) && !(sec.id === 'datos' && CAMPOS_PACIENTE.includes(c.id))) return;
                         pending.push([c.label, campos[c.id]]);
                     }
                 });
@@ -15765,7 +15844,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-16.12';
+        const APP_VERSION = '2026-11-24.5';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
@@ -19167,12 +19246,6 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
         };
 
         window.rmVolverTablero = async function() {
-            const falt = (rmActual && rmActual.activo !== false && puedeEditar('ronda')) ? rmFaltantes(rmActual) : [];
-            if (falt.length && !(await rmAvisoObligatorios(falt))) {
-                const sec = document.getElementById('rm-sec-ident'); if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                const pri = document.querySelector('#rm-sec-ident .rm-falta'); if (pri) setTimeout(() => pri.focus(), 400);
-                return;
-            }
             try { await rmGuardarPendiente(); } catch (e) { console.error(e); }
             rmDejarDeEscuchar(); rmBase = null;
             document.getElementById('ronda-ficha-screen').classList.add('hidden');
@@ -19694,8 +19767,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 const bar = alta ? "border-l-8 border-red-600" : "border-l-4 border-blue-400";
                 const nombre = rmEsc((p.paciente||"(sin nombre)"));
                 const sub = rmEsc([p.especie, p.raza, p.edad].filter(Boolean).join(" · "));
-                const faltan = p.activo !== false ? rmFaltantes(p) : [];
-                const incompleta = faltan.length ? `<span class="ml-2 inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded align-middle" title="Faltan: ${rmAttr(faltan.join(', '))}"><i class="fa-solid fa-circle-exclamation"></i> Ficha incompleta</span>` : '';
+                const incompleta = '';
                 const egresado = p.activo === false ? '<span class="ml-2 text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">EGRESADO</span>' : '';
                 const sinReg = (p.activo !== false && typeof rmEtDosisHoy === 'function') ? rmEtDosisHoy(p).reduce((t, d) => t + d.horas.filter(x => x.estado === 'falta').length, 0) : 0;
                 const avisoDosis = sinReg ? `<span class="ml-2 inline-flex items-center gap-1 text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded align-middle animate-pulse" title="Dosis de hoy cuya hora ya pasó y no tienen iniciales"><i class="fa-solid fa-syringe"></i> ${sinReg} dosis sin registrar</span>` : '';
@@ -19867,50 +19939,17 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 <textarea data-rm="f|${field}" rows="3" class="mt-1 w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">${rmEsc(val)}</textarea></label>`;
         }
 
-        // Datos obligatorios de la ficha (todos menos la foto y la nota sobre el propietario)
-        const RM_OBLIGATORIOS = [["paciente", "Nombre"], ["especie", "Especie"], ["raza", "Raza"], ["edad", "Edad"], ["sexo", "Sexo"], ["hc", "N.º historia clínica"],
-            ["jaula", "N.º de canil"], ["mv", "MV tratante"], ["fechaIngreso", "Fecha de ingreso"], ["estado", "Estado del paciente"], ["actitud", "Actitud del paciente"],
-            ["propNombre", "Propietario"], ["propContacto", "Contacto propietario"], ["perfilProp", "Perfil del propietario"]];
-        function rmFaltantes(p) { return RM_OBLIGATORIOS.filter(([k]) => !String((p || {})[k] || '').trim()).map(([, l]) => l); }
-        // Marca con * los campos obligatorios, resalta en rojo los vacíos y muestra el aviso con lo que falta
+        // Ningún dato de la ficha es obligatorio: los campos siguen estando, pero no se exigen
+        // ni se marcan de ninguna forma (ni asterisco, ni aviso, ni etiqueta de opcional).
+        const RM_OBLIGATORIOS = [];
+        function rmFaltantes() { return []; }
+        // Ya no se marca ningún campo: se limpian los asteriscos, los resaltados y el aviso
+        // por si la ficha quedó pintada con una versión anterior de la app.
         function rmMarcarObligatorios() {
-            const sec = document.getElementById('rm-sec-ident'); if (!sec || !rmActual) return;
-            RM_OBLIGATORIOS.forEach(([k]) => {
-                const inp = sec.querySelector(`[data-rm="f|${k}"]`); if (!inp) return;
-                const cont = inp.closest('label, .block');
-                const lbl = cont && cont.querySelector('span.text-xs');
-                if (lbl && !lbl.querySelector('.rm-oblig-ast')) lbl.insertAdjacentHTML('beforeend', '<span class="rm-oblig-ast" title="Obligatorio">*</span>');
-                inp.classList.toggle('rm-falta', !String(rmActual[k] || '').trim());
-            });
-            const falt = rmFaltantes(rmActual);
-            let av = document.getElementById('rm-oblig-aviso');
-            if (!av) { av = document.createElement('div'); av.id = 'rm-oblig-aviso'; sec.querySelector('h2').insertAdjacentElement('afterend', av); }
-            av.className = falt.length ? 'mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700' : 'hidden';
-            av.innerHTML = falt.length ? `<i class="fa-solid fa-circle-exclamation"></i> <b>Faltan ${falt.length} dato${falt.length === 1 ? '' : 's'} obligatorio${falt.length === 1 ? '' : 's'}:</b> ${rmEsc(falt.join(', '))}` : '';
-        }
-        // Al salir de la ficha con datos obligatorios vacíos: completar ahora o salir de todos modos
-        function rmAvisoObligatorios(falt) {
-            return new Promise(resolve => {
-                const prev = document.getElementById('rm-oblig-modal'); if (prev) prev.remove();
-                const ov = document.createElement('div');
-                ov.id = 'rm-oblig-modal';
-                ov.className = 'fixed inset-0 z-[80] bg-black/40 flex items-center justify-center p-4';
-                ov.innerHTML = `<div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-                    <div class="p-5 flex gap-3">
-                        <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                        <div class="min-w-0">
-                            <h3 class="font-bold text-gray-800">Faltan datos obligatorios en la ficha</h3>
-                            <p class="text-sm text-gray-500 mt-1">${rmEsc(falt.join(', '))}</p>
-                        </div>
-                    </div>
-                    <div class="px-5 py-3 bg-gray-50 flex justify-end gap-2">
-                        <button type="button" data-r="1" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-200 rounded-lg">Salir de todos modos</button>
-                        <button type="button" data-r="0" class="px-4 py-2 text-sm font-semibold bg-[#154390] text-white hover:bg-[#0f3268] rounded-lg"><i class="fa-solid fa-pen"></i> Completar ahora</button>
-                    </div>
-                </div>`;
-                ov.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (b) { ov.remove(); resolve(b.dataset.r === '1'); } });
-                document.body.appendChild(ov);
-            });
+            const sec = document.getElementById('rm-sec-ident'); if (!sec) return;
+            sec.querySelectorAll('.rm-oblig-ast').forEach(x => x.remove());
+            sec.querySelectorAll('.rm-falta').forEach(x => x.classList.remove('rm-falta'));
+            const av = document.getElementById('rm-oblig-aviso'); if (av) av.remove();
         }
         function rmSecIdent(p) {
             const tieneFotoPropia = !!(rmFotos[p.id] && rmFotos[p.id].foto);
