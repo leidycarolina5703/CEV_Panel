@@ -9614,15 +9614,15 @@
                 pdf.setFont(undefined, 'bold'); pdf.setFontSize(11); pdf.setTextColor(...AZUL);
                 pdf.text("Hallazgos endoscópicos", M, y + 2); y += 16;
             }
-            seccionFilas("1. Fosa nasal derecha", [
+            seccionFilas("Fosa nasal derecha", [
                 ["Vestíbulo nasal y meato común", campos.vestibulo_d], ["Cornetes nasales (etmoturbinales)", campos.etmo_d],
                 ["Cornetes nasales (maxiloturbinales)", campos.maxilo_d], ["Conclusión", campos.concl_d]
             ]);
-            seccionFilas("2. Fosa nasal izquierda", [
+            seccionFilas("Fosa nasal izquierda", [
                 ["Vestíbulo nasal y meato común", campos.vestibulo_i], ["Cornetes nasales (etmoturbinales)", campos.etmo_i],
                 ["Cornetes nasales (maxiloturbinales)", campos.maxilo_i], ["Conclusión", campos.concl_i]
             ]);
-            seccionFilas("3. Nasofaringe / coanas", [["Nasofaringe / coanas", campos.nasofaringe], ["Conclusión", campos.concl_n]]);
+            seccionFilas("Nasofaringe / coanas", [["Nasofaringe / coanas", campos.nasofaringe], ["Conclusión", campos.concl_n]]);
             seccionFilas("Muestras obtenidas para análisis", [["", campos.muestras]]);
             seccionFilas("Complicaciones", [["", campos.complicaciones]]);
             seccionFilas("Impresión diagnóstica", [["", campos.impresion]]);
@@ -9984,6 +9984,10 @@
             });
         });
 
+        // Quita la numeración inicial de un título para los PDF ("1. Datos" → "Datos", "7.1 Fémur" → "Fémur").
+        function pdfSinNumero(t) {
+            return String(t == null ? '' : t).replace(/^\s*(?:\d+(?:\.\d+)*\.\s+|\d+(?:\.\d+)+\s+)/, '');
+        }
         function construirRegQxPDF(titulo, secciones, d, opts) {
             opts = opts || {};
             d = edadConUnidad(d);   // edad guardada solo con número → "5 años"
@@ -10028,7 +10032,7 @@
                 if (omitir && !sec.campos.some(campoConDato)) return;
                 // la sección no empieza sola al final de la hoja: su título va con al menos la primera fila
                 if (y + 52 > PHq - 46) { pdf.addPage(); y = 62; }
-                const tituloSec = { content: sec.titulo.toUpperCase(), styles: { fillColor: AZUL, textColor: 255, halign: 'left', fontStyle: 'bold', fontSize: 8.5 } };
+                const tituloSec = { content: pdfSinNumero(sec.titulo).toUpperCase(), styles: { fillColor: AZUL, textColor: 255, halign: 'left', fontStyle: 'bold', fontSize: 8.5 } };
                 let conTitulo = true;
                 let body = [], par = [];
                 const cerrarPar = () => {
@@ -10055,7 +10059,7 @@
                     if (!cuerpo.length) cuerpo = [[{ content: 'Sin registros', colSpan: n, styles: { halign: 'center', fontStyle: 'italic', textColor: [150, 150, 150] } }]];
                     const head = [];
                     if (conTitulo) head.push([{ ...tituloSec, colSpan: n }]);
-                    head.push([{ content: pdfTxt(c.label), colSpan: n, styles: { fillColor: CLARO, textColor: AZUL, fontStyle: 'bold', halign: 'left' } }]);
+                    head.push([{ content: pdfTxt(pdfSinNumero(c.label)), colSpan: n, styles: { fillColor: CLARO, textColor: AZUL, fontStyle: 'bold', halign: 'left' } }]);
                     head.push(c.cols.map(col => ({ content: pdfTxt(col.label), styles: { fillColor: [241, 245, 249], textColor: [60, 70, 90], fontStyle: 'bold', halign: 'center' } })));
                     pdf.autoTable({ startY: y, head, body: cuerpo, theme: 'grid', styles: estilos, rowPageBreak: 'avoid', margin: { left: M, right: M } });
                     y = pdf.lastAutoTable.finalY; conTitulo = false;
@@ -15904,7 +15908,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-26.3';
+        const APP_VERSION = '2026-11-26.4';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
@@ -23244,7 +23248,7 @@ const RM_STOY = [[1,70,20,1.3,40,78],[2,118,33.6,2.2,67,105],[3,160,45.6,3.0,91,
                 });
                 pdf.autoTable({
                     startY: y + 6, theme: 'grid',
-                    head: [[s.titulo.toUpperCase() + (s.sub ? '  (' + s.sub + ')' : ''), 'Sí', 'No', 'N.A.']],
+                    head: [[pdfSinNumero(s.titulo).toUpperCase() + (s.sub ? '  (' + s.sub + ')' : ''), 'Sí', 'No', 'N.A.']],
                     body,
                     styles: { fontSize: 7.8, cellPadding: 3.5, textColor: [30, 30, 30], lineColor: BORDE, lineWidth: 0.5, valign: 'middle' },
                     headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold', fontSize: 7.8 },
