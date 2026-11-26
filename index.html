@@ -867,7 +867,8 @@
                     <button onclick="rangoRapidoFmt('fmt','mes','abrirFormatosGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                     <button onclick="rangoRapidoFmt('fmt','todo','abrirFormatosGuardados')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                 </div>
-            </div>
+            <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="fmt-lista-container" data-desde="fmt-desde" data-hasta="fmt-hasta" data-recargar="abrirFormatosGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
+                </div>
             <div id="fmt-lista-container" class="space-y-2"></div>
         </div>
 
@@ -1097,6 +1098,7 @@
                         <button onclick="rangoRapidoFmt('orto','mes','abrirOrtoGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('orto','todo','abrirOrtoGuardados')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="orto-lista-container" data-desde="orto-desde" data-hasta="orto-hasta" data-recargar="abrirOrtoGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="orto-lista-container" class="space-y-2"></div>
             </div>
@@ -1252,6 +1254,7 @@
                         <button onclick="rangoRapidoFmt('neuro','mes','abrirNeuroGuardados')" class="px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('neuro','todo','abrirNeuroGuardados')" class="px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="neuro-lista-container" data-desde="neuro-desde" data-hasta="neuro-hasta" data-recargar="abrirNeuroGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="neuro-lista-container" class="space-y-2"></div>
             </div>
@@ -1335,6 +1338,7 @@
                         <button onclick="rangoRapidoFmt('consulta','mes','abrirConsultaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('consulta','todo','abrirConsultaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="consulta-lista-container" data-desde="consulta-desde" data-hasta="consulta-hasta" data-recargar="abrirConsultaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="consulta-lista-container" class="space-y-2"></div>
             </div>
@@ -1400,6 +1404,7 @@
                         <button onclick="rangoRapidoFmt('endo','mes','abrirEndoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('endo','todo','abrirEndoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="endo-lista-container" data-desde="endo-desde" data-hasta="endo-hasta" data-recargar="abrirEndoscopiaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="endo-lista-container" class="space-y-2"></div>
             </div>
@@ -1463,6 +1468,7 @@
                         <button onclick="rangoRapidoFmt('endoalta','mes','abrirEndoscopiaAltaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('endoalta','todo','abrirEndoscopiaAltaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="endoalta-lista-container" data-desde="endoalta-desde" data-hasta="endoalta-hasta" data-recargar="abrirEndoscopiaAltaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="endoalta-lista-container" class="space-y-2"></div>
             </div>
@@ -1525,6 +1531,7 @@
                         <button onclick="rangoRapidoFmt('tac','mes','abrirTomografiaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('tac','todo','abrirTomografiaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="tac-lista-container" data-desde="tac-desde" data-hasta="tac-hasta" data-recargar="abrirTomografiaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="tac-lista-container" class="space-y-2"></div>
             </div>
@@ -1587,6 +1594,7 @@
                         <button onclick="rangoRapidoFmt('rino','mes','abrirRinoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('rino','todo','abrirRinoscopiaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="rino-lista-container" data-desde="rino-desde" data-hasta="rino-hasta" data-recargar="abrirRinoscopiaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="rino-lista-container" class="space-y-2"></div>
             </div>
@@ -1651,6 +1659,7 @@
                         <button onclick="rangoRapidoFmt('rq','mes','abrirRegQxGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('rq','todo','abrirRegQxGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="rq-lista-container" data-desde="rq-desde" data-hasta="rq-hasta" data-recargar="abrirRegQxGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="rq-lista-container" class="space-y-2"></div>
             </div>
@@ -1712,6 +1721,7 @@
                         <button onclick="rangoRapidoFmt('rmag','mes','abrirResonanciaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('rmag','todo','abrirResonanciaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="rmag-lista-container" data-desde="rmag-desde" data-hasta="rmag-hasta" data-recargar="abrirResonanciaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="rmag-lista-container" class="space-y-2"></div>
             </div>
@@ -1773,6 +1783,7 @@
                         <button onclick="rangoRapidoFmt('usm','mes','abrirUsmGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('usm','todo','abrirUsmGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="usm-lista-container" data-desde="usm-desde" data-hasta="usm-hasta" data-recargar="abrirUsmGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="usm-filtro-art" class="flex flex-wrap items-center gap-2 mb-3"></div>
                 <div id="usm-lista-container" class="space-y-2"></div>
@@ -1834,6 +1845,7 @@
                         <button onclick="rangoRapidoFmt('rx','mes','abrirRadiografiaGuardados')" class="js-ver px-3 py-1 bg-white text-teal-700 rounded-full text-xs font-semibold border border-teal-200 hover:bg-teal-50">Este mes</button>
                         <button onclick="rangoRapidoFmt('rx','todo','abrirRadiografiaGuardados')" class="js-ver px-3 py-1 bg-white text-gray-500 rounded-full text-xs font-semibold border border-gray-200 hover:bg-gray-100">Todo</button>
                     </div>
+                <p class="fmt-lbl text-gray-700 mb-1 mt-3"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar paciente</p><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" class="fmt-buscar-guardados js-ver w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154390] bg-white text-sm" data-lista="rx-lista-container" data-desde="rx-desde" data-hasta="rx-hasta" data-recargar="abrirRadiografiaGuardados" autocomplete="off" oninput="fmtFiltrarGuardados(this)" placeholder="Escribe el nombre o la historia clínica..."></div>
                 </div>
                 <div id="rx-lista-container" class="space-y-2"></div>
             </div>
@@ -9789,7 +9801,6 @@
                 { id: 'lateralidad', label: 'Lateralidad', tipo: 'opciones', op: ['Derecha', 'Izquierda', 'Bilateral', 'No aplica'] },
                 { id: 'abordaje', label: 'Lugar exacto de abordaje', tipo: 'texto' },
                 { id: 'posicion', label: 'Posición del paciente', tipo: 'texto' },
-                { id: 'planos', label: 'Planos anatómicos atravesados / estructuras expuestas', tipo: 'area', rows: 2 },
                 { id: 'tecnica', label: 'Técnica quirúrgica empleada — descripción paso a paso', tipo: 'area', rows: 4 },
                 { id: 'diseccion', label: 'Método de disección y manipulación tisular', tipo: 'texto' },
                 { id: 'hemostasia', label: 'Método de hemostasia', tipo: 'texto' },
@@ -11001,6 +11012,55 @@
             document.getElementById(r.ids.hasta).value = '';
             endoListaGuardados(r);
         }
+
+
+        // ===== Buscador de «Informes guardados» en los formatos clínicos =====
+        // Filtra la lista que se ve (por nombre o historia clínica) a medida que se escribe.
+        const fmtNormBusca = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        function fmtAplicarFiltroGuardados(inp) {
+            const cont = document.getElementById(inp.dataset.lista); if (!cont) return;
+            const q = fmtNormBusca(inp.value).trim();
+            const hijos = [...cont.children].filter(x => !x.classList.contains('fmt-buscar-vacio'));
+            const esFila = el => !!el.querySelector('button');
+            let visibles = 0, filas = 0;
+            hijos.forEach(el => {
+                if (!esFila(el)) return;
+                filas++;
+                const ok = !q || fmtNormBusca(el.innerText).includes(q);
+                el.style.display = ok ? '' : 'none';
+                if (ok) visibles++;
+            });
+            // los encabezados de fecha solo se ven si tienen algún informe visible debajo
+            hijos.forEach((el, i) => {
+                if (esFila(el)) return;
+                let hay = false;
+                for (let j = i + 1; j < hijos.length && esFila(hijos[j]); j++) if (hijos[j].style.display !== 'none') { hay = true; break; }
+                el.style.display = (!q || hay) ? '' : 'none';
+            });
+            let vacio = cont.querySelector(':scope > .fmt-buscar-vacio');
+            if (q && filas && !visibles) {
+                const conRango = (document.getElementById(inp.dataset.desde) || {}).value || (document.getElementById(inp.dataset.hasta) || {}).value;
+                if (!vacio) { vacio = document.createElement('div'); vacio.className = 'fmt-buscar-vacio text-center py-6 text-gray-400 italic text-sm'; cont.appendChild(vacio); }
+                vacio.innerHTML = 'Ningún informe coincide con «' + inp.value.trim().replace(/</g, '&lt;') + '»' + (conRango
+                    ? ' en este rango de fechas. <button type="button" class="not-italic font-semibold text-[#154390] underline ml-1" onclick="fmtBuscarTodasFechas(\'' + inp.dataset.lista + '\')">Buscar en todas las fechas</button>'
+                    : '.');
+            } else if (vacio) vacio.remove();
+        }
+        window.fmtFiltrarGuardados = function (inp) { fmtAplicarFiltroGuardados(inp); };
+        // Quita el rango de fechas y vuelve a consultar, conservando lo escrito en el buscador
+        window.fmtBuscarTodasFechas = function (lista) {
+            const inp = document.querySelector('.fmt-buscar-guardados[data-lista="' + lista + '"]'); if (!inp) return;
+            ['desde', 'hasta'].forEach(k => { const el = document.getElementById(inp.dataset[k]); if (el) el.value = ''; });
+            if (typeof window[inp.dataset.recargar] === 'function') window[inp.dataset.recargar]();
+        };
+        // Cuando la lista se vuelve a cargar (Consultar, Hoy, Este mes, Todo…), el filtro se aplica de nuevo solo
+        document.querySelectorAll('.fmt-buscar-guardados').forEach(inp => {
+            const cont = document.getElementById(inp.dataset.lista); if (!cont) return;
+            new MutationObserver(muts => {
+                const soloAviso = muts.every(m => [...m.addedNodes, ...m.removedNodes].every(n => n.classList && n.classList.contains('fmt-buscar-vacio')));
+                if (!soloAviso && inp.value.trim()) fmtAplicarFiltroGuardados(inp);
+            }).observe(cont, { childList: true });
+        });
 
         async function endoListaGuardados(r) {
             const panel = document.getElementById(r.ids.lista);
@@ -15844,7 +15904,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-24.5';
+        const APP_VERSION = '2026-11-26.3';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
