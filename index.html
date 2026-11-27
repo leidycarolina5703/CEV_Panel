@@ -2849,6 +2849,21 @@
         </div>
     </div>
 
+    <!-- Cuentas de cobro: al dar egreso se pregunta si la cuenta ya se facturó -->
+    <div id="cta-factura-modal" class="hidden fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 text-center" style="position:relative">
+            <button type="button" onclick="window.avisoFacturacionHosp()" title="Cerrar" class="text-gray-400 hover:text-gray-600" style="position:absolute;top:10px;right:14px;font-size:20px"><i class="fa-solid fa-xmark"></i></button>
+            <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-blue-50 text-[#154390] flex items-center justify-center text-2xl"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">¿Se realizó la facturación de la cuenta?</h3>
+            <p id="cta-factura-pac" class="text-sm text-gray-600 mb-5"></p>
+            <p id="cta-factura-aviso" class="hidden mb-4 flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> Por favor responde si se realizó la facturación.</p>
+            <div class="flex gap-2">
+                <button type="button" onclick="window.responderFacturacionHosp(true)" class="flex-1 py-2.5 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> Sí</button>
+                <button type="button" onclick="window.responderFacturacionHosp(false)" class="flex-1 py-2.5 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> No</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Control de Insumos: cantidades ideales (normal / post-festivo), solo con permiso -->
     <div id="inv-ideales-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] flex flex-col">
@@ -12175,6 +12190,8 @@
             if (!cuentaHospIdNueva) cuentaHospIdNueva = 'cuenta_' + Date.now();
             return cuentaHospIdNueva;
         }
+        let cuentaHospEgresoGuardado = '';   // fecha de egreso ya aplicada; mientras se responde la facturación se guarda esta y no la nueva
+        let cuentaHospFacturada = null;   // true / false: respuesta a «¿Se realizó la facturación?» al dar egreso (null: sin responder)
         let cuentaHospExigeCorreo = false;   // el correo del propietario solo es obligatorio en las cuentas creadas desde que se agregó (exigeCorreo: true)
         let cuentaHospExtra = []; // insumos agregados manualmente: {n, v, cant}
         let cuentaHospHistorial = []; // registro completo de cambios: {por, correo, fecha, accion, total}
@@ -14393,7 +14410,8 @@
                 especie: document.getElementById('cta-especie').value,
                 tipoAtencion: (document.getElementById('cta-tipo') || {}).value || 'Hospitalización',
                 fecha: document.getElementById('cta-fecha').value,
-                fechaEgreso: document.getElementById('cta-fecha-egreso').value,
+                fechaEgreso: ctaFacturaResolver ? cuentaHospEgresoGuardado : document.getElementById('cta-fecha-egreso').value,
+                ...(cuentaHospFacturada === true || cuentaHospFacturada === false ? { facturada: cuentaHospFacturada } : {}),
                 items, cx, subMascotas, subLab, deposito, total, resta: total - deposito,
                 cirugias: ((l) => (l.length === 1 && !(Number(l[0].valor) > 0) && !(l[0].desc || '').trim()) ? [] : l)(cuentaHospCirugias.filter((c, i) => i === 0 || (c.desc || '').trim() || (Number(c.valor) || 0) > 0)).map(c => ({ id: c.id, desc: (c.desc || '').trim(), valor: Number(c.valor) || 0 })),
                 abonos: cuentaHospAbonos.map(a => ({ ...a })),
@@ -14437,6 +14455,8 @@
             pintarTipoAtencionHosp(data.tipoAtencion || 'Hospitalización');
             document.getElementById('cta-fecha').value = data.fecha || '';
             document.getElementById('cta-fecha-egreso').value = data.fechaEgreso || '';
+            cuentaHospEgresoGuardado = data.fechaEgreso || '';
+            cuentaHospFacturada = (data.facturada === true || data.facturada === false) ? data.facturada : null;
             document.getElementById('cta-cx').value = data.cx ? Number(data.cx).toLocaleString('es-CO') : '';
             cuentaHospCirugias = cirugiasDeDatosHosp(data);
             renderCirugiasHosp();
@@ -15405,6 +15425,7 @@
 
         // Guarda el egreso (o su retiro) y refresca las listas. NO vuelve a preguntar.
         async function aplicarEgresoHosp() {
+            cuentaHospEgresoGuardado = document.getElementById('cta-fecha-egreso').value;
             marcarCambioCuentaHosp();
             await autoguardarCuentaHosp();
             await renderHospEnCurso();
@@ -15416,7 +15437,7 @@
                 // Si no se pudo guardar, la cuenta queda abierta (no se pierde nada) y se avisa
                 if (cuentaHospDirty || !cuentaHospId) { showToast("No se pudo guardar el egreso. Revisa la conexión e inténtalo de nuevo; la cuenta sigue abierta.", true); return; }
                 const nombre = document.getElementById('cta-paciente').value.trim();
-                bitacoraHosp('Dio egreso', { id: cuentaHospId, paciente: nombre, historia: document.getElementById('cta-historia').value, det: 'Egreso ' + egreso });
+                bitacoraHosp('Dio egreso', { id: cuentaHospId, paciente: nombre, historia: document.getElementById('cta-historia').value, det: 'Egreso ' + egreso + (cuentaHospFacturada === true ? ' · Facturada' : cuentaHospFacturada === false ? ' · No facturada' : '') });
                 // La cuenta egresada se CIERRA: así nadie escribe el siguiente paciente encima de ella
                 await nuevaCuentaHosp();
                 vistaInicioHosp();
@@ -15426,6 +15447,32 @@
             else { bitacoraHosp('Quitó el egreso', { id: cuentaHospId, paciente: document.getElementById('cta-paciente').value, historia: document.getElementById('cta-historia').value }); showToast("Se quitó la fecha de egreso. La cuenta vuelve a 'en curso'."); }
         }
 
+        // Ventana «¿Se realizó la facturación de la cuenta?»: devuelve true (Sí), false (No) o null (cerró: no se da egreso)
+        let ctaFacturaResolver = null;
+        function preguntarFacturacionHosp() {
+            return new Promise(res => {
+                const m = document.getElementById('cta-factura-modal');
+                if (!m) { res(null); return; }
+                const nom = document.getElementById('cta-paciente').value.trim();
+                document.getElementById('cta-factura-pac').textContent = nom ? 'Cuenta de ' + nom : '';
+                if (ctaFacturaResolver) ctaFacturaResolver(null);
+                ctaFacturaResolver = res;
+                const av = document.getElementById('cta-factura-aviso'); if (av) av.classList.add('hidden');
+                m.classList.remove('hidden');
+            });
+        }
+        // La ✕ no cierra la ventana: pide responder Sí o No
+        window.avisoFacturacionHosp = function() {
+            const av = document.getElementById('cta-factura-aviso'); if (!av) return;
+            av.classList.add('hidden'); void av.offsetWidth;
+            setTimeout(() => av.classList.remove('hidden'), 60);
+        };
+        window.responderFacturacionHosp = function(v) {
+            const m = document.getElementById('cta-factura-modal'); if (m) m.classList.add('hidden');
+            const r = ctaFacturaResolver; ctaFacturaResolver = null;
+            if (r) r(v === true ? true : v === false ? false : null);
+        };
+
         // Botón "Dar egreso hoy": trae la fecha de hoy y pregunta antes de aplicar
         window.egresarHoyHosp = async function() {
             if (!puedeEditar('cuentas_hosp')) { showToast("No tienes permiso para editar aquí.", true); return; }
@@ -15433,6 +15480,9 @@
             const ingreso = document.getElementById('cta-fecha').value;
             if (ingreso && hoy < ingreso) { showToast("La fecha de ingreso es posterior a hoy. Revisa la fecha de ingreso.", true); return; }
             if (!confirm(`¿La fecha de egreso es HOY, ${fechaLegibleHosp(hoy)}?\n\nLa cuenta se cerrará y pasará a 'Cuentas guardadas'.`)) return;
+            const fac = await preguntarFacturacionHosp();
+            if (fac === null) return;
+            cuentaHospFacturada = fac;
             document.getElementById('cta-fecha-egreso').value = hoy;
             await aplicarEgresoHosp();
         };
@@ -15471,6 +15521,13 @@
                     actualizarEstadoEgresoHosp();
                     return;
                 }
+                const fac = await preguntarFacturacionHosp();
+                if (fac === null) {
+                    inp.value = '';
+                    actualizarEstadoEgresoHosp();
+                    return;
+                }
+                cuentaHospFacturada = fac;
             }
             await aplicarEgresoHosp();
         };
@@ -15495,6 +15552,7 @@
             document.getElementById('cta-cedula').value = '';
             document.getElementById('cta-correo').value = '';
             cuentaHospExigeCorreo = false;   // el correo del propietario es opcional
+            cuentaHospFacturada = null; cuentaHospEgresoGuardado = '';
             document.getElementById('cta-tipodoc').value = 'CC';
             document.getElementById('cta-especie').value = '';
             pintarTipoAtencionHosp('Hospitalización');
@@ -15710,7 +15768,7 @@
                     <div class="min-w-0">
                         <p class="font-bold text-gray-800 text-sm truncate"><i class="fa-solid fa-paw text-[#154390]"></i> ${it.paciente || '(sin paciente)'}${etiquetaEspecie(it.especie)}</p>
                         <p class="text-xs text-gray-500">${it.historia ? 'HC ' + it.historia + ' · ' : ''}${it.fecha ? 'Ingreso ' + fdmy(it.fecha) + ' · ' : ''}<span class="font-semibold text-gray-700">${fmtCOPHosp(it.total || 0)}</span></p>
-                        ${it.fechaEgreso ? `<p class="mt-0.5"><span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200"><i class="fa-solid fa-right-from-bracket"></i> Egreso ${fdmy(it.fechaEgreso)}</span></p>` : ''}
+                        ${it.fechaEgreso ? `<p class="mt-0.5"><span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200"><i class="fa-solid fa-right-from-bracket"></i> Egreso ${fdmy(it.fechaEgreso)}</span>${it.facturada === true ? ' <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-600 text-white"><i class="fa-solid fa-circle-check"></i> Facturada</span>' : it.facturada === false ? ' <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-600 text-white"><i class="fa-solid fa-circle-xmark"></i> No facturada</span>' : ''}</p>` : ''}
                         ${it.modificadoPor ? `<p class="text-[11px] text-gray-400"><i class="fa-solid fa-user-pen"></i> ${it.modificadoPor}${it.actualizado ? ' · ' + new Date(it.actualizado).toLocaleString('es-CO') : ''}</p>` : ''}
                     </div>
                     <div class="flex gap-2 shrink-0">
@@ -15908,7 +15966,7 @@
 
         // ===== Versión de la app: avisa cuando hay una más nueva publicada =====
         // Al publicar cambios hay que actualizar APP_VERSION (año-mes-día.número).
-        const APP_VERSION = '2026-11-26.4';
+        const APP_VERSION = '2026-11-27.6';
         (function () {
             const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(APP_VERSION);
